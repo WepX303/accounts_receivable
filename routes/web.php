@@ -1,0 +1,70 @@
+<?php
+
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Commands\CommandController;
+use App\Http\Controllers\Customers\CustomersController;
+use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Stores\StoreController;
+use App\Http\Controllers\Users\UserController;
+use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Route;
+
+// Login routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// ---------------------
+// Protected routes
+// ---------------------
+Route::middleware(['auth.token'])->group(function () {
+
+    // Dashboard
+    Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Dashboard
+    Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'index'])
+        ->name('profile');
+        
+    Route::post('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    // Store
+    Route::get('/store', StoreController::class)->name('store');
+    Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
+
+    // Reports
+    Route::get('/report', [ReportController::class, 'index'])->name('report');
+    Route::get('/order', [ReportController::class, 'order'])->name('order');
+    Route::get('/order-detail', [ReportController::class, 'details'])->name('order.detail');
+
+    // Customers
+    Route::get('/customers', CustomersController::class)->name('customers');
+
+    // Users
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', UserController::class)->name('index');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+    });
+
+    // Chat
+    Route::get('chat', [ChatController::class, 'index'])->name('chat');
+
+    // Commands
+    Route::get('/commands', [CommandController::class, 'index'])->name('commands.index');
+    Route::post('/commands/run', [CommandController::class, 'run'])->name('commands.run');
+});
+
+
+// Route::get('/redis-test', function () {
+//     Redis::set('mykey', 'Hello Redis!');
+//     return Redis::get('mykey');
+// });
