@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>@yield('title') | Finance Center </title>
+    <title>@yield('title') | Accounts Receivable </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Finance Center" name="description" />
+    <meta content="Accounts Receivable" name="description" />
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">

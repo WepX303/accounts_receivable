@@ -28,7 +28,7 @@
                                         height="30">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Finance Center</p>
+                            <p class="mt-3 fs-15 fw-medium">Accounts Receivable</p>
                         </div>
                     </div>
                 </div>

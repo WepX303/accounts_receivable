@@ -19,7 +19,7 @@
                     aria-expanded="false">
                     @switch(Session::get('lang'))
                         @case('ru')
-                            <img src="{{ URL::asset('build/images/flags/russia.svg') }}" class="rounded" height="28">
+                            <img src="{{ URL::asset('build/images/flags/ru.svg') }}" class="rounded" height="28">
                         @break
 
                         @case('en')
