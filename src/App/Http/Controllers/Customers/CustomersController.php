@@ -11,4 +11,8 @@ class CustomersController extends Controller
     {
         return view('pages.customers.index');
     }
+
+    public function cusinfo() {
+        return view('pages.customers.crm-contacts');
+    }
 }

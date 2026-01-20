@@ -34,13 +34,23 @@ return [
             'driver' => 'sync',
         ],
 
+        // 'database' => [
+        //     'driver' => 'database',
+        //     'table' => 'jobs',
+        //     'queue' => 'default',
+        //     'retry_after' => 90,
+        //     'after_commit' => false,
+        // ],
+
         'database' => [
             'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION', env('DB_CONNECTION', 'pgsql')),
             'table' => 'jobs',
             'queue' => 'default',
             'retry_after' => 90,
             'after_commit' => false,
         ],
+
 
         'beanstalkd' => [
             'driver' => 'beanstalkd',

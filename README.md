@@ -64,3 +64,29 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+
+## Jobs
+
+For run jobs first open tinker and set commands 
+> App\Jobs\SyncAvshocrecatReportJob::dispatch();
+= Illuminate\Foundation\Bus\PendingDispatch {#5274}
+
+> \App\Jobs\SyncCreditsJob::dispatch();
+= Illuminate\Foundation\Bus\PendingDispatch {#5325}
+
+after open new terminal and run this command -> php artisan queue:work database --queue=default --tries=1 --stop-when-empty -v
+
+resault ->
+
+   INFO  Processing jobs from the [default] queue.  
+
+  2026-01-19 20:15:50 App\Jobs\SyncAvshocrecatReportJob 1 ................................................................................................................................................. RUNNING
+  2026-01-19 20:15:55 App\Jobs\SyncAvshocrecatReportJob 1 ................................................................................................................................................. 5s DONE
+
+  2026-01-19 20:15:55 App\Jobs\SyncCreditsJob 2 ........................................................................................................................................................... RUNNING
+  2026-01-19 20:16:01 App\Jobs\SyncCreditsJob 2 ........................................................................................................................................................... 5s DONE
+
+
+

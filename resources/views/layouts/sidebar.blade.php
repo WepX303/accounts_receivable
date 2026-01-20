@@ -23,27 +23,38 @@
                 <!-- store  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('store') }}" role="button">
-                    <i class="ri-store-line"></i> <span>Store</span>
+                        <i class="ri-store-line"></i> <span>Store</span>
                     </a>
                 </li>
                 <!-- report  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('report') }}" role="button">
-                    <i class="ri-folder-chart-line"></i> <span>Report</span>
+                        <i class="ri-folder-chart-line"></i> <span>Report</span>
                     </a>
                 </li>
                 <!-- customers  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('customers') }}" role="button">
-                    <i class="ri-user-line"></i> <span>Customers</span>
+                        <i class="ri-user-line"></i> <span>Customers</span>
                     </a>
                 </li>
-                <!-- chat  -->
-                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('chat') }}" role="button">
-                        <i class="ri-message-2-line"></i> <span>Chat</span>
+
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('apps.ecommerce.checkout') }}" role="button">
+                        <i class="ri-shopping-cart-line"></i>
+                        <span>Checkout</span>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('cusinfo') }}" role="button">
+                        <i class="ri-contacts-line"></i>
+                        <span>Customer info</span>
+                    </a>
+                </li>
+
+
                 <!-- settings -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
@@ -65,7 +76,7 @@
                                 </a>
                             </li>
                         </ul>
-                        
+
                     </div>
                 </li> <!-- end settings -->
             </ul>

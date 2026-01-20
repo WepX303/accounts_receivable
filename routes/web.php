@@ -31,7 +31,7 @@ Route::middleware(['auth.token'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])
         ->name('profile');
-        
+
     Route::post('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
 
@@ -46,6 +46,7 @@ Route::middleware(['auth.token'])->group(function () {
 
     // Customers
     Route::get('/customers', CustomersController::class)->name('customers');
+    Route::get('/cusinfo', [CustomersController::class, 'cusinfo'])->name('cusinfo');
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {
@@ -55,12 +56,28 @@ Route::middleware(['auth.token'])->group(function () {
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 
-    // Chat
-    Route::get('chat', [ChatController::class, 'index'])->name('chat');
-
     // Commands
     Route::get('/commands', [CommandController::class, 'index'])->name('commands.index');
     Route::post('/commands/run', [CommandController::class, 'run'])->name('commands.run');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Apps Pages
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('apps')->name('apps.')->group(function () {
+
+        // Ecommerce
+        Route::get('/checkout', function () {
+            return view('apps-ecommerce-checkout');
+        })->name('ecommerce.checkout');
+
+        // // CRM
+        // Route::get('/crm-contacts', function () {
+        //     return view('apps-crm-contacts');
+        // })->name('crm.contacts');
+    });
 });
 
 
