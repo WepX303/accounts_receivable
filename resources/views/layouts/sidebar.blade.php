@@ -41,14 +41,14 @@
 
 
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('apps.ecommerce.checkout') }}" role="button">
+                    <a class="nav-link menu-link" href="{{ route('payments') }}" role="button">
                         <i class="ri-shopping-cart-line"></i>
-                        <span>Checkout</span>
+                        <span>Payments</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('cusinfo') }}" role="button">
+                    <a class="nav-link menu-link" href="{{ route('customers.info') }}" role="button">
                         <i class="ri-contacts-line"></i>
                         <span>Customer info</span>
                     </a>

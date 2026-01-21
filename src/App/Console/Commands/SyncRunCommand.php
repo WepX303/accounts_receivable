@@ -24,4 +24,14 @@ class SyncRunCommand extends Command
         $this->info('Dispatched: SyncCreditsJob + SyncAvshocrecatReportJob (passport=' . ($passport === '' ? 'ALL' : $passport) . ')');
         return self::SUCCESS;
     }
+
 }
+
+// For get data from command line, run:
+
+//  php artisan sync:run --passport=   (all passports) 
+//  or
+//  php artisan sync:run --passport=123456
+
+// To process the jobs in the queue, run:
+// php artisan queue:work --stop-when-empty

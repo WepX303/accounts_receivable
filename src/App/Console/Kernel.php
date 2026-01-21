@@ -33,5 +33,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\ClearAllCaches::class,
         \App\Console\Commands\LaravelClearLogs::class,
+        \App\Console\Commands\CreditsInitLocalFields::class,
+        \App\Console\Commands\SyncRunCommand::class,
     ];
 }

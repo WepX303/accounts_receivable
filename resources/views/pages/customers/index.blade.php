@@ -133,7 +133,7 @@
                 <div class="card-header border-0">
                     <div class="row align-items-center gy-3">
                         <div class="col-sm">
-                            <h5 class="card-title mb-0">Customers</h5>
+                            <h5 class="card-title mb-0">Accounts Receivable Customers</h5>
                         </div>
                         <div class="col-sm-auto">
                             <div class="d-flex gap-1 flex-wrap">
@@ -145,18 +145,16 @@
                     </div>
                 </div>
                 <div class="card-body border border-dashed border-end-0 border-start-0">
-                    <form>
+                    <form method="GET" action="{{ route('customers') }}">
                         <div class="row g-3">
                             <div class="col-xxl-6 col-sm-6">
                                 <div class="search-box">
-                                    <input type="text" class="form-control search"
-                                        placeholder="Search for order ID, customer, order status or something...">
+                                    <input type="text" class="form-control" name="q" value="{{ request('q') }}"
+                                        placeholder="Search name, phone, passport, contract...">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
-                            <!--end col-->
                         </div>
-                        <!--end row-->
                     </form>
                 </div>
                 <div class="card-body pt-4">
@@ -165,55 +163,108 @@
                             <table class="table table-nowrap align-middle" id="orderTable">
                                 <thead class="text-muted table-light">
                                     <tr class="text-uppercase">
-
-                                        <th class="sort" data-sort="id">ID</th>
-                                        <th data-sort="customer_name">Customer</th>
-                                        <th data-sort="type">Type</th>
-                                        <th data-sort="phone_number">Phone number</th>
-                                        <th data-sort="brands">Brands</th>
-                                        <th data-sort="gender">Gender</th>
-                                        <th data-sort="status">Status</th>
-                                        <th data-sort="office_purchase">Office Purchase</th>
-                                        <th data-sort="store_urchase">Store Purchase</th>
+                                        <th>ID</th>
+                                        <th>Customer</th>
+                                        <th>Customer Status</th>
+                                        <th>Phone</th>
+                                        <th>Branch</th>
+                                        <th>Status</th>
+                                        <th>Amount</th>
+                                        <th>Paid</th>
+                                        <th>Note</th>
                                     </tr>
                                 </thead>
                                 <tbody class="list form-check-all">
-                                    <tr>
-                                        <td class="id"><a href="apps-ecommerce-order-details"
-                                                class="fw-medium link-primary">#VZ2101</a></td>
-                                        <td class="customer_name">Frank Hook</td>
-                                        <td class="type">Mango Tshirt</td>
-                                        <td class="phone_number">+1234567890</td>
-                                        <td class="brands">Mango</td>
-                                        <td class="gender">Male</td>
-                                        <td class="status"><span
-                                                class="badge bg-success-subtle text-success text-uppercase">Active</span>
-                                        </td>
-                                        <td class="office_purchase">
-                                            $1969.00
-                                        </td>
-                                        <td class="store_urchase">
-                                            $1,245.00
-                                        </td>
-                                    </tr>
+                                    @foreach ($credit_users as $c)
+                                        <tr>
+                                            {{-- ID --}}
+                                            <td class="id">
+                                                <span class="fw-medium text-primary">
+                                                    #{{ $c->logicalref }}
+                                                </span>
+                                            </td>
+                                            {{-- Customer --}}
+                                            <td class="customer_name">
+                                                <div class="fw-medium">{{ $c->name }}</div>
+                                                <div class="text-muted small">
+                                                    Passport: {{ $c->passport ?? '-' }}
+                                                </div>
+                                            </td>
+                                            {{-- Customer Status --}}
+                                            <td class="customer_status">
+                                                <div class="fw-medium">{{ $c->custstatus ?: 'UNKNOWN' }}</div>
+                                                <div class="text-muted small">
+                                                    {{ $c->clientref ?? '-' }}
+                                                </div>
+                                            </td>
+                                            {{-- Phone --}}
+                                            <td class="phone_number">
+                                                {{ $c->phone ?? '-' }}
+                                            </td>
+                                            {{-- Branch --}}
+                                            <td>
+                                                {{ $c->branch ?? '-' }}
+                                            </td>
+                                            {{-- Status --}}
+                                            <td class="status">
+                                                @if ($c->active)
+                                                    <span class="badge bg-success-subtle text-success text-uppercase">
+                                                        Active
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger-subtle text-danger text-uppercase">
+                                                        Blok
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            {{-- Amount --}}
+                                            <td>
+                                                <div
+                                                    class="fw-medium {{ $c->amount_local !== null ? 'text-primary' : '' }}">
+                                                    {{ number_format($c->amount_local ?? ($c->amount ?? 0), 2) }}
+                                                </div>
+
+                                                @if ($c->amount_local !== null)
+                                                    <div class="small text-muted">
+                                                        Remote: {{ number_format($c->amount ?? 0, 2) }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            {{-- Paid --}}
+                                            <td>
+                                                <div
+                                                    class="fw-medium {{ $c->paid_local !== null ? 'text-primary' : '' }}">
+                                                    {{ number_format($c->paid_local ?? ($c->paid ?? 0), 2) }}
+                                                </div>
+
+                                                @if ($c->paid_local !== null)
+                                                    <div class="small text-muted">
+                                                        Remote: {{ number_format($c->paid ?? 0, 2) }}
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            {{-- Note --}}
+                                            <td>
+                                                {{ $c->note ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <div class="pagination-wrap hstack gap-2">
-                                <a class="page-item pagination-prev disabled" href="#">
-                                    Previous
-                                </a>
-                                <ul class="pagination listjs-pagination mb-0"></ul>
-                                <a class="page-item pagination-next" href="#">
-                                    Next
-                                </a>
+                        {{-- Pagination --}}
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted small">
+                                Toplam: {{ $credit_users->total() }} |
+                                Sayfa: {{ $credit_users->currentPage() }} / {{ $credit_users->lastPage() }}
+                            </div>
+                            <div>
+                                {{ $credit_users->onEachSide(1)->links('vendor.pagination.custom') }}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
         <!--end col-->
     </div>
@@ -221,11 +272,6 @@
 @endsection
 @section('script')
     <script src="{{ URL::asset('build/libs/list.js/list.min.js') }}"></script>
-    <script src="{{ URL::asset('build/libs/list.pagination.js/list.pagination.min.js') }}"></script>
-
-    <!--ecommerce-customer init js -->
-    <script src="{{ URL::asset('build/js/pages/ecommerce-order.init.js') }}"></script>
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
-
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endsection

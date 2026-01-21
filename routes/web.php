@@ -10,6 +10,8 @@ use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Redis;
+use App\Http\Controllers\Customers\CustomersInfoController;
+use App\Http\Controllers\Payments\CustomersPaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Login routes
@@ -46,7 +48,8 @@ Route::middleware(['auth.token'])->group(function () {
 
     // Customers
     Route::get('/customers', CustomersController::class)->name('customers');
-    Route::get('/cusinfo', [CustomersController::class, 'cusinfo'])->name('cusinfo');
+    Route::get('/customers-info', CustomersInfoController::class)->name('customers.info');
+
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {
@@ -55,6 +58,11 @@ Route::middleware(['auth.token'])->group(function () {
         Route::put('/{user}', [UserController::class, 'update'])->name('update');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
+
+    // Payments
+    Route::get('/payments', CustomersPaymentController::class)->name('payments');
+
+    
 
     // Commands
     Route::get('/commands', [CommandController::class, 'index'])->name('commands.index');
@@ -68,15 +76,6 @@ Route::middleware(['auth.token'])->group(function () {
 
     Route::prefix('apps')->name('apps.')->group(function () {
 
-        // Ecommerce
-        Route::get('/checkout', function () {
-            return view('apps-ecommerce-checkout');
-        })->name('ecommerce.checkout');
-
-        // // CRM
-        // Route::get('/crm-contacts', function () {
-        //     return view('apps-crm-contacts');
-        // })->name('crm.contacts');
     });
 });
 

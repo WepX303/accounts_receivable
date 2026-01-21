@@ -69,24 +69,24 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 ## Jobs
 
-For run jobs first open tinker and set commands 
-> App\Jobs\SyncAvshocrecatReportJob::dispatch();
+## For run jobs first open tinker and set commands 
+
+App\Jobs\SyncAvshocrecatReportJob::dispatch();
 = Illuminate\Foundation\Bus\PendingDispatch {#5274}
 
-> \App\Jobs\SyncCreditsJob::dispatch();
+App\Jobs\SyncCreditsJob::dispatch();
 = Illuminate\Foundation\Bus\PendingDispatch {#5325}
 
-after open new terminal and run this command -> php artisan queue:work database --queue=default --tries=1 --stop-when-empty -v
-
-resault ->
-
-   INFO  Processing jobs from the [default] queue.  
-
-  2026-01-19 20:15:50 App\Jobs\SyncAvshocrecatReportJob 1 ................................................................................................................................................. RUNNING
-  2026-01-19 20:15:55 App\Jobs\SyncAvshocrecatReportJob 1 ................................................................................................................................................. 5s DONE
-
-  2026-01-19 20:15:55 App\Jobs\SyncCreditsJob 2 ........................................................................................................................................................... RUNNING
-  2026-01-19 20:16:01 App\Jobs\SyncCreditsJob 2 ........................................................................................................................................................... 5s DONE
+## After open new terminal and run this command -> php artisan queue:work database --queue=default --tries=1 --stop-when-empty -v
 
 
 
+
+## For get data from command line, run:
+
+//  php artisan sync:run --passport=   (all passports) 
+##  or
+//  php artisan sync:run --passport=123456
+
+## To process the jobs in the queue, run:
+// php artisan queue:work --stop-when-empty
