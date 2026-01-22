@@ -168,6 +168,7 @@
                                         <th>Customer Status</th>
                                         <th>Phone</th>
                                         <th>Branch</th>
+                                        <th>Contract</th>
                                         <th>Status</th>
                                         <th>Amount</th>
                                         <th>Paid</th>
@@ -205,6 +206,10 @@
                                             <td>
                                                 {{ $c->branch ?? '-' }}
                                             </td>
+                                            {{-- Contract --}}
+                                            <td>
+                                                {{ $c->contract ?? '-' }}
+                                            </td>  
                                             {{-- Status --}}
                                             <td class="status">
                                                 @if ($c->active)
