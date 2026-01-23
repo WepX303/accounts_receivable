@@ -38,23 +38,20 @@
                         <i class="ri-user-line"></i> <span>Customers</span>
                     </a>
                 </li>
-
-
+                <!-- payments  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('payments') }}" role="button">
-                        <i class="ri-shopping-cart-line"></i>
+                        <i class="ri-money-dollar-box-line"></i>
                         <span>Payments</span>
                     </a>
-                </li>
-
+                </li>   
+                <!-- customer info  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('customers.info') }}" role="button">
                         <i class="ri-contacts-line"></i>
                         <span>Customer info</span>
                     </a>
                 </li>
-
-
                 <!-- settings -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"

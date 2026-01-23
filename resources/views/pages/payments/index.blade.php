@@ -1,644 +1,607 @@
 @extends('layouts.layouts-horizontal')
 
-@section('title') @lang('translation.checkout') @endsection
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1') Ecommerce @endslot
-        @slot('title') Checkout @endslot
-    @endcomponent
-    <div class="row">
-        <div class="col-xl-8">
-            <div class="card">
-                <div class="card-body checkout-tab">
 
-                    <form action="#">
-                        <div class="step-arrow-nav mt-n3 mx-n3 mb-3">
-
-                            <ul class="nav nav-pills nav-justified custom-nav" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link fs-15 p-3 active" id="pills-bill-info-tab"
-                                        data-bs-toggle="pill" data-bs-target="#pills-bill-info"
-                                        type="button" role="tab" aria-controls="pills-bill-info"
-                                        aria-selected="true"><i
-                                            class="ri-user-2-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i>
-                                        Personal Info</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link fs-15 p-3" id="pills-bill-address-tab"
-                                        data-bs-toggle="pill" data-bs-target="#pills-bill-address"
-                                        type="button" role="tab" aria-controls="pills-bill-address"
-                                        aria-selected="false"><i
-                                            class="ri-truck-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i>
-                                        Shipping Info</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link fs-15 p-3" id="pills-payment-tab"
-                                        data-bs-toggle="pill" data-bs-target="#pills-payment"
-                                        type="button" role="tab" aria-controls="pills-payment"
-                                        aria-selected="false"><i
-                                            class="ri-bank-card-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i>
-                                        Payment Info</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link fs-15 p-3" id="pills-finish-tab"
-                                        data-bs-toggle="pill" data-bs-target="#pills-finish"
-                                        type="button" role="tab" aria-controls="pills-finish"
-                                        aria-selected="false"><i
-                                            class="ri-checkbox-circle-line fs-16 p-2 bg-primary-subtle text-primary rounded-circle align-middle me-2"></i>Finish</button>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="pills-bill-info" role="tabpanel"
-                                aria-labelledby="pills-bill-info-tab">
-                                <div>
-                                    <h5 class="mb-1">Billing Information</h5>
-                                    <p class="text-muted mb-4">Please fill all information below</p>
-                                </div>
-
-                                <div>
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="mb-3">
-                                                <label for="billinginfo-firstName"
-                                                    class="form-label">First
-                                                    Name</label>
-                                                <input type="text" class="form-control"
-                                                    id="billinginfo-firstName"
-                                                    placeholder="Enter first name" value="">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-6">
-                                            <div class="mb-3">
-                                                <label for="billinginfo-lastName"
-                                                    class="form-label">Last
-                                                    Name</label>
-                                                <input type="text" class="form-control"
-                                                    id="billinginfo-lastName"
-                                                    placeholder="Enter last name" value="">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <div class="mb-3">
-                                                <label for="billinginfo-email" class="form-label">Email
-                                                    <span class="text-muted">(Optional)</span></label>
-                                                <input type="email" class="form-control"
-                                                    id="billinginfo-email" placeholder="Enter email">
-                                            </div>
-                                        </div>
-
-                                        <div class="col-sm-6">
-                                            <div class="mb-3">
-                                                <label for="billinginfo-phone"
-                                                    class="form-label">Phone</label>
-                                                <input type="text" class="form-control"
-                                                    id="billinginfo-phone"
-                                                    placeholder="Enter phone no.">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="billinginfo-address"
-                                            class="form-label">Address</label>
-                                        <textarea class="form-control" id="billinginfo-address"
-                                            placeholder="Enter address" rows="3"></textarea>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="country" class="form-label">Country</label>
-                                                <select class="form-select" id="country"
-                                                    data-plugin="choices">
-                                                    <option value="">Select Country...</option>
-                                                    <option selected>United States</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="state" class="form-label">State</label>
-                                                <select class="form-select" id="state"
-                                                    data-plugin="choices">
-                                                    <option value="">Select State...</option>
-                                                    <option value="Alabama">Alabama</option>
-                                                    <option value="Alaska">Alaska</option>
-                                                    <option value="American Samoa">American Samoa
-                                                    </option>
-                                                    <option value="California" selected>California
-                                                    </option>
-                                                    <option value="Colorado">Colorado</option>
-                                                    <option value="District Of Columbia">District Of
-                                                        Columbia</option>
-                                                    <option value="Florida">Florida</option>
-                                                    <option value="Georgia">Georgia</option>
-                                                    <option value="Guam">Guam</option>
-                                                    <option value="Hawaii">Hawaii</option>
-                                                    <option value="Idaho">Idaho</option>
-                                                    <option value="Kansas">Kansas</option>
-                                                    <option value="Louisiana">Louisiana</option>
-                                                    <option value="Montana">Montana</option>
-                                                    <option value="Nevada">Nevada</option>
-                                                    <option value="New Jersey">New Jersey</option>
-                                                    <option value="New Mexico">New Mexico</option>
-                                                    <option value="New York">New York</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="zip" class="form-label">Zip Code</label>
-                                                <input type="text" class="form-control" id="zip"
-                                                    placeholder="Enter zip code">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex align-items-start gap-3 mt-3">
-                                        <button type="button"
-                                            class="btn btn-primary btn-label right ms-auto nexttab"
-                                            data-nexttab="pills-bill-address-tab"><i
-                                                class="ri-truck-line label-icon align-middle fs-16 ms-2"></i>Proceed
-                                            to Shipping</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end tab pane -->
-
-                            <div class="tab-pane fade" id="pills-bill-address" role="tabpanel"
-                                aria-labelledby="pills-bill-address-tab">
-                                <div>
-                                    <h5 class="mb-1">Shipping Information</h5>
-                                    <p class="text-muted mb-4">Please fill all information below</p>
-                                </div>
-
-                                <div class="mt-4">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <div class="flex-grow-1">
-                                            <h5 class="fs-14 mb-0">Saved Address</h5>
-                                        </div>
-                                        <div class="flex-shrink-0">
-                                            <!-- Button trigger modal -->
-                                            <button type="button" class="btn btn-sm btn-success mb-3"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#addAddressModal">
-                                                Add Address
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="row gy-3">
-                                        <div class="col-lg-4 col-sm-6">
-                                            <div class="form-check card-radio">
-                                                <input id="shippingAddress01" name="shippingAddress"
-                                                    type="radio" class="form-check-input" checked>
-                                                <label class="form-check-label" for="shippingAddress01">
-                                                    <span
-                                                        class="mb-4 fw-semibold d-block text-muted text-uppercase">Home
-                                                        Address</span>
-
-                                                    <span class="fs-14 mb-2 d-block">Marcus
-                                                        Alfaro</span>
-                                                    <span
-                                                        class="text-muted fw-normal text-wrap mb-1 d-block">4739
-                                                        Bubby Drive Austin, TX 78729</span>
-                                                    <span class="text-muted fw-normal d-block">Mo.
-                                                        012-345-6789</span>
-                                                </label>
-                                            </div>
-                                            <div
-                                                class="d-flex flex-wrap p-2 py-1 bg-light rounded-bottom border mt-n1">
-                                                <div>
-                                                    <a href="#" class="d-block text-body p-1 px-2"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#addAddressModal"><i
-                                                            class="ri-pencil-fill text-muted align-bottom me-1"></i>
-                                                        Edit</a>
-                                                </div>
-                                                <div>
-                                                    <a href="#" class="d-block text-body p-1 px-2"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#removeItemModal"><i
-                                                            class="ri-delete-bin-fill text-muted align-bottom me-1"></i>
-                                                        Remove</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4 col-sm-6">
-                                            <div class="form-check card-radio">
-                                                <input id="shippingAddress02" name="shippingAddress"
-                                                    type="radio" class="form-check-input">
-                                                <label class="form-check-label" for="shippingAddress02">
-                                                    <span
-                                                        class="mb-4 fw-semibold d-block text-muted text-uppercase">Office
-                                                        Address</span>
-
-                                                    <span class="fs-14 mb-2 d-block">James Honda</span>
-                                                    <span
-                                                        class="text-muted fw-normal text-wrap mb-1 d-block">1246
-                                                        Virgil Street Pensacola, FL 32501
-                                                    </span>
-                                                    <span class="text-muted fw-normal d-block">Mo.
-                                                        012-345-6789</span>
-                                                </label>
-                                            </div>
-                                            <div
-                                                class="d-flex flex-wrap p-2 py-1 bg-light rounded-bottom border mt-n1">
-                                                <div>
-                                                    <a href="#" class="d-block text-body p-1 px-2"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#addAddressModal"><i
-                                                            class="ri-pencil-fill text-muted align-bottom me-1"></i>
-                                                        Edit</a>
-                                                </div>
-                                                <div>
-                                                    <a href="#" class="d-block text-body p-1 px-2"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#removeItemModal"><i
-                                                            class="ri-delete-bin-fill text-muted align-bottom me-1"></i>
-                                                        Remove</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <h5 class="fs-14 mb-3">Shipping Method</h5>
-
-                                        <div class="row g-4">
-                                            <div class="col-lg-6">
-                                                <div class="form-check card-radio">
-                                                    <input id="shippingMethod01" name="shippingMethod"
-                                                        type="radio" class="form-check-input" checked>
-                                                    <label class="form-check-label"
-                                                        for="shippingMethod01">
-                                                        <span
-                                                            class="fs-20 float-end mt-2 text-wrap d-block fw-semibold">Free</span>
-                                                        <span class="fs-14 mb-1 text-wrap d-block">Free
-                                                            Delivery</span>
-                                                        <span
-                                                            class="text-muted fw-normal text-wrap d-block">Expected
-                                                            Delivery 3 to 5 Days</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="form-check card-radio">
-                                                    <input id="shippingMethod02" name="shippingMethod"
-                                                        type="radio" class="form-check-input" checked>
-                                                    <label class="form-check-label"
-                                                        for="shippingMethod02">
-                                                        <span
-                                                            class="fs-20 float-end mt-2 text-wrap d-block fw-semibold">$24.99</span>
-                                                        <span
-                                                            class="fs-14 mb-1 text-wrap d-block">Express
-                                                            Delivery</span>
-                                                        <span
-                                                            class="text-muted fw-normal text-wrap d-block">Delivery
-                                                            within 24hrs.</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex align-items-start gap-3 mt-4">
-                                    <button type="button" class="btn btn-light btn-label previestab"
-                                        data-previous="pills-bill-info-tab"><i
-                                            class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back
-                                        to Personal Info</button>
-                                    <button type="button"
-                                        class="btn btn-primary btn-label right ms-auto nexttab"
-                                        data-nexttab="pills-payment-tab"><i
-                                            class="ri-bank-card-line label-icon align-middle fs-16 ms-2"></i>Continue
-                                        to Payment</button>
-                                </div>
-                            </div>
-                            <!-- end tab pane -->
-
-                            <div class="tab-pane fade" id="pills-payment" role="tabpanel"
-                                aria-labelledby="pills-payment-tab">
-                                <div>
-                                    <h5 class="mb-1">Payment Selection</h5>
-                                    <p class="text-muted mb-4">Please select and enter your billing
-                                        information</p>
-                                </div>
-
-                                <div class="row g-4">
-                                    <div class="col-lg-4 col-sm-6">
-                                        <div data-bs-toggle="collapse"
-                                            data-bs-target="#paymentmethodCollapse.show"
-                                            aria-expanded="false" aria-controls="paymentmethodCollapse">
-                                            <div class="form-check card-radio">
-                                                <input id="paymentMethod01" name="paymentMethod"
-                                                    type="radio" class="form-check-input">
-                                                <label class="form-check-label" for="paymentMethod01">
-                                                    <span class="fs-16 text-muted me-2"><i
-                                                            class="ri-paypal-fill align-bottom"></i></span>
-                                                    <span class="fs-14 text-wrap">Paypal</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-sm-6">
-                                        <div data-bs-toggle="collapse"
-                                            data-bs-target="#paymentmethodCollapse" aria-expanded="true"
-                                            aria-controls="paymentmethodCollapse">
-                                            <div class="form-check card-radio">
-                                                <input id="paymentMethod02" name="paymentMethod"
-                                                    type="radio" class="form-check-input" checked>
-                                                <label class="form-check-label" for="paymentMethod02">
-                                                    <span class="fs-16 text-muted me-2"><i
-                                                            class="ri-bank-card-fill align-bottom"></i></span>
-                                                    <span class="fs-14 text-wrap">Credit / Debit
-                                                        Card</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-4 col-sm-6">
-                                        <div data-bs-toggle="collapse"
-                                            data-bs-target="#paymentmethodCollapse.show"
-                                            aria-expanded="false" aria-controls="paymentmethodCollapse">
-                                            <div class="form-check card-radio">
-                                                <input id="paymentMethod03" name="paymentMethod"
-                                                    type="radio" class="form-check-input">
-                                                <label class="form-check-label" for="paymentMethod03">
-                                                    <span class="fs-16 text-muted me-2"><i
-                                                            class="ri-money-dollar-box-fill align-bottom"></i></span>
-                                                    <span class="fs-14 text-wrap">Cash on
-                                                        Delivery</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="collapse show" id="paymentmethodCollapse">
-                                    <div class="card p-4 border shadow-none mb-0 mt-4">
-                                        <div class="row gy-3">
-                                            <div class="col-md-12">
-                                                <label for="cc-name" class="form-label">Name on
-                                                    card</label>
-                                                <input type="text" class="form-control" id="cc-name"
-                                                    placeholder="Enter name">
-                                                <small class="text-muted">Full name as displayed on
-                                                    card</small>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label for="cc-number" class="form-label">Credit card
-                                                    number</label>
-                                                <input type="text" class="form-control" id="cc-number"
-                                                    placeholder="xxxx xxxx xxxx xxxx">
-                                            </div>
-
-                                            <div class="col-md-3">
-                                                <label for="cc-expiration"
-                                                    class="form-label">Expiration</label>
-                                                <input type="text" class="form-control"
-                                                    id="cc-expiration" placeholder="MM/YY">
-                                            </div>
-
-                                            <div class="col-md-3">
-                                                <label for="cc-cvv" class="form-label">CVV</label>
-                                                <input type="text" class="form-control" id="cc-cvv"
-                                                    placeholder="xxx">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-muted mt-2 fst-italic">
-                                        <i data-feather="lock" class="text-muted icon-xs"></i> Your
-                                        transaction is secured with SSL encryption
-                                    </div>
-                                </div>
-
-                                <div class="d-flex align-items-start gap-3 mt-4">
-                                    <button type="button" class="btn btn-light btn-label previestab"
-                                        data-previous="pills-bill-address-tab"><i
-                                            class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>Back
-                                        to Shipping</button>
-                                    <button type="button"
-                                        class="btn btn-primary btn-label right ms-auto nexttab"
-                                        data-nexttab="pills-finish-tab"><i
-                                            class="ri-shopping-basket-line label-icon align-middle fs-16 ms-2"></i>Complete
-                                        Order</button>
-                                </div>
-                            </div>
-                            <!-- end tab pane -->
-
-                            <div class="tab-pane fade" id="pills-finish" role="tabpanel"
-                                aria-labelledby="pills-finish-tab">
-                                <div class="text-center py-5">
-
-                                    <div class="mb-4">
-                                        <lord-icon src="https://cdn.lordicon.com/lupuorrc.json"
-                                            trigger="loop" colors="primary:#0ab39c,secondary:#405189"
-                                            style="width:120px;height:120px"></lord-icon>
-                                    </div>
-                                    <h5>Thank you ! Your Order is Completed !</h5>
-                                    <p class="text-muted">You will receive an order confirmation email
-                                        with
-                                        details of your order.</p>
-
-                                    <h3 class="fw-semibold">Order ID: <a
-                                            href="apps-ecommerce-order-details"
-                                            class="text-decoration-underline">VZ2451</a></h3>
-                                </div>
-                            </div>
-                            <!-- end tab pane -->
-                        </div>
-                        <!-- end tab content -->
-                    </form>
-                </div>
-                <!-- end card body -->
-            </div>
-            <!-- end card -->
+    {{-- ✅ Laravel validation errors --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <div class="fw-semibold mb-2">Please fix the following:</div>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
         </div>
-        <!-- end col -->
+    @endif
 
-        <div class="col-xl-4">
+
+    {{-- ✅ Controller warnings/success --}}
+    @if (session('warning'))
+        <div class="alert alert-warning">{{ session('warning') }}</div>
+    @endif
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <div class="row">
+
+        {{-- LEFT: LIST --}}
+        <div class="col-xxl-8">
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex">
-                        <div class="flex-grow-1">
-                            <h5 class="card-title mb-0">Order Summary</h5>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-8">
+                            <form method="GET" action="{{ route('payments') }}">
+                                <div class="search-box">
+                                    <input type="text" name="q" class="form-control"
+                                        placeholder="Search name / phone / passport / contract / clientref..."
+                                        value="{{ $q ?? request('q') }}">
+                                    <i class="ri-search-line search-icon"></i>
+
+                                    {{-- selected id korunsun --}}
+                                    {{-- @if ($selected)
+                                        <input type="hidden" name="id" value="{{ (string) $selected->logicalref }}">
+                                    @endif --}}
+
+                                    {{-- customers.info’dan ids[] ile gelindiyse koru --}}
+                                    {{-- @if (is_array(request('ids')))
+                                        @foreach (request('ids') as $hid)
+                                            @if (is_numeric($hid))
+                                                <input type="hidden" name="ids[]" value="{{ $hid }}">
+                                            @endif
+                                        @endforeach
+                                    @endif --}}
+
+                                    {{-- customers.info’dan ids[] ile gelindiyse koru (AMA sadece q boşken) --}}
+                                    @if (is_array(request('ids')) && trim((string) request('q', '')) === '')
+                                        @foreach (request('ids') as $hid)
+                                            @if (is_numeric($hid))
+                                                <input type="hidden" name="ids[]" value="{{ $hid }}">
+                                            @endif
+                                        @endforeach
+                                    @endif
+
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
+
                 <div class="card-body">
-                    <div class="table-responsive table-card">
-                        <table class="table table-borderless align-middle mb-0">
-                            <thead class="table-light text-muted">
-                                <tr>
-                                    <th style="width: 90px;" scope="col">Product</th>
-                                    <th scope="col">Product Info</th>
-                                    <th scope="col" class="text-end">Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="avatar-md bg-light rounded p-1">
-                                            <img src="{{ URL::asset('build/images/products/img-8.png') }}" alt=""
-                                                class="img-fluid d-block">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h5 class="fs-14"><a href="apps-ecommerce-product-details"
-                                                class="text-body">Sweatshirt for Men (Pink)</a>
-                                        </h5>
-                                        <p class="text-muted mb-0">$ 119.99 x 2</p>
-                                    </td>
-                                    <td class="text-end">$ 239.98</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="avatar-md bg-light rounded p-1">
-                                            <img src="{{ URL::asset('build/images/products/img-7.png') }}" alt=""
-                                                class="img-fluid d-block">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h5 class="fs-14"><a href="apps-ecommerce-product-details"
-                                                class="text-body">Noise Evolve Smartwatch</a></h5>
-                                        <p class="text-muted mb-0">$ 94.99 x 1</p>
-                                    </td>
-                                    <td class="text-end">$ 94.99</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="avatar-md bg-light rounded p-1">
-                                            <img src="{{ URL::asset('build/images/products/img-3.png') }}" alt=""
-                                                class="img-fluid d-block">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h5 class="fs-14"><a href="apps-ecommerce-product-details"
-                                                class="text-body">350 ml Glass Grocery Container</a>
-                                        </h5>
-                                        <p class="text-muted mb-0">$ 24.99 x 1</p>
-                                    </td>
-                                    <td class="text-end">$ 24.99</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-semibold" colspan="2">Sub Total :</td>
-                                    <td class="fw-semibold text-end">$ 359.96</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">Discount <span class="text-muted">(VELZON15)</span>
-                                        : </td>
-                                    <td class="text-end">- $ 50.00</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">Shipping Charge :</td>
-                                    <td class="text-end">$ 24.99</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">Estimated Tax (12%): </td>
-                                    <td class="text-end">$ 18.20</td>
-                                </tr>
-                                <tr class="table-active">
-                                    <th colspan="2">Total (USD) :</th>
-                                    <td class="text-end">
-                                        <span class="fw-semibold">
-                                            $353.15
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
 
-                    </div>
+                    {{-- Empty mode --}}
+                    @if (($emptyMode ?? false) === true)
+                        <div class="text-center text-muted py-5">
+                            <div class="mb-2">
+                                <i class="ri-search-line fs-1"></i>
+                            </div>
+                            <div class="fw-semibold">Search to find customers</div>
+                            <div class="small mt-1">
+                                Or select customers in <span class="fw-semibold">Customers Info</span> and click
+                                <span class="fw-semibold">Payment</span>.
+                            </div>
+                        </div>
+                    @else
+                        @php
+                            $isPaginator = is_object($customers) && method_exists($customers, 'links');
+                            $list = $isPaginator ? $customers : collect($customers);
+                        @endphp
+
+                        <div class="table-responsive table-card mb-3">
+                            <table class="table align-middle table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contract</th>
+                                        <th class="text-end">Remaining</th>
+                                        <th class="text-end">Paid Local</th>
+                                        <th>Last Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($list as $c)
+                                        @php
+                                            $isActive =
+                                                $selected && (string) $selected->logicalref === (string) $c->logicalref;
+
+                                            $hasLocal = $c->amount_local !== null && $c->paid_local !== null;
+
+                                            $totalLocal = $hasLocal ? (float) $c->amount_local : null;
+                                            $paidLocal = $hasLocal ? (float) $c->paid_local : null;
+
+                                            $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
+
+                                            $rowUrl = route('payments', ['id' => (string) $c->logicalref]);
+
+                                            // $query = request()->query();
+                                            // $query['id'] = (string) $c->logicalref;
+                                            // $rowUrl = route('payments', $query);
+
+                                        @endphp
+
+                                        <tr class="{{ $isActive ? 'table-active' : '' }}" style="cursor:pointer;"
+                                            onclick="window.location='{{ $rowUrl }}'">
+                                            <td>
+                                                <div class="fw-medium">{{ $c->name ?? '-' }}</div>
+                                                <div class="text-muted small">
+                                                    {{ $c->branch ?? '-' }} | {{ $c->clientref ?? '-' }}
+                                                </div>
+                                            </td>
+
+                                            <td>{{ $c->contract ?? '-' }}</td>
+
+                                            <td class="text-end">
+                                                @if (!$hasLocal)
+                                                    <span class="badge bg-warning-subtle text-warning">LOCAL MISSING</span>
+                                                @else
+                                                    <span
+                                                        class="{{ $remain <= 0.00001 ? 'text-success' : 'text-danger' }}">
+                                                        {{ number_format($remain, 2) }}
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-end">
+                                                @if (!$hasLocal)
+                                                    —
+                                                @else
+                                                    {{ number_format($paidLocal, 2) }}
+                                                @endif
+                                            </td>
+
+                                            <td class="text-muted small">
+                                                {{ $c->paid_updated_at ? $c->paid_updated_at->format('Y-m-d H:i') : '-' }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                No records found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if ($isPaginator)
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted small">
+                                    Total: {{ $customers->total() }} |
+                                    Page: {{ $customers->currentPage() }} / {{ $customers->lastPage() }}
+                                </div>
+                                <div>
+                                    {{ $customers->onEachSide(1)->links('vendor.pagination.custom') }}
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
                 </div>
-                <!-- end card body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
+
+        {{-- RIGHT: DETAIL + PAYMENT --}}
+        <div class="col-xxl-4">
+            <div class="card">
+                <div class="card-body">
+
+                    @if (!$selected)
+                        <div class="text-center text-muted py-5">
+                            Select a customer to see details and save payment.
+                        </div>
+                    @else
+                        @php
+                            $hasLocal = $selected->amount_local !== null && $selected->paid_local !== null;
+
+                            $totalLocal = $hasLocal ? (float) $selected->amount_local : null;
+                            $paidLocal = $hasLocal ? (float) $selected->paid_local : null;
+
+                            $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
+
+                            // kapanma kuralı: paid_local >= amount_local
+                            $isClosed = $hasLocal ? $paidLocal >= $totalLocal - 0.01 || $remain <= 0.00001 : true;
+
+                            $lastUser = $selected->paidUpdatedByUser
+                                ? $selected->paidUpdatedByUser->firstname . ' ' . $selected->paidUpdatedByUser->lastname
+                                : '-';
+
+                            $lastAt = $selected->paid_updated_at
+                                ? $selected->paid_updated_at->format('Y-m-d H:i:s')
+                                : '-';
+                            $remainingJs =
+                                $hasLocal && $remain !== null ? number_format((float) $remain, 2, '.', '') : '0.00';
+
+                            // old inputlar (form korunması)
+                            $oldReceived = old('pay_amount', '');
+                            $oldMethod = old('payment_method', 'cash');
+                            $oldCash = old('cash_total', '0.00');
+                            $oldCard = old('card_total', '0.00');
+
+                        @endphp
+
+                        <div class="text-center mb-3">
+                            <img src="{{ URL::asset('build/images/users/user.jpg') }}"
+                                class="avatar-lg rounded-circle img-thumbnail" alt="">
+                            <h5 class="mt-3 mb-0">{{ $selected->name ?? '-' }}</h5>
+                            <div class="text-muted">{{ $selected->branch ?? '-' }} | {{ $selected->contract ?? '-' }}
+                            </div>
+                            <div class="small text-muted">ClientRef: {{ $selected->clientref ?? '-' }}</div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-medium">Total Local (amount_local)</td>
+                                        <td class="text-end">{{ $hasLocal ? number_format($totalLocal, 2) : '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Paid Local</td>
+                                        <td class="text-end">{{ $hasLocal ? number_format($paidLocal, 2) : '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Remaining</td>
+                                        <td class="text-end">
+                                            @if (!$hasLocal)
+                                                <span class="badge bg-warning-subtle text-warning">LOCAL MISSING</span>
+                                            @else
+                                                <span class="{{ $remain <= 0.00001 ? 'text-success' : 'text-danger' }}">
+                                                    {{ number_format($remain, 2) }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Last Paid By</td>
+                                        <td class="text-end">{{ $lastUser }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Last Paid At</td>
+                                        <td class="text-end">{{ $lastAt }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if (!$hasLocal)
+                            <div class="alert alert-warning mt-3 mb-0">
+                                Local fields are missing (amount_local / paid_local is NULL). Payment is disabled.
+                            </div>
+                        @elseif ($isClosed)
+                            <div class="alert alert-success mt-3 mb-0">
+                                This customer has no remaining debt (paid_local >= amount_local). Payment is disabled.
+                            </div>
+                        @endif
+
+                        <hr>
+
+                        {{-- Last Payment Detail (paid_note) --}}
+                        @php
+                            $details = [];
+                            if (!empty($selected->paid_note)) {
+                                foreach (explode('|', $selected->paid_note) as $item) {
+                                    $item = trim($item);
+                                    if ($item === '' || !str_contains($item, '=')) {
+                                        continue;
+                                    }
+                                    [$key, $value] = array_map('trim', explode('=', $item, 2));
+                                    if ($key !== '') {
+                                        $details[$key] = $value;
+                                    }
+                                }
+                            }
+                        @endphp
+
+                        <div class="mb-2 fw-semibold">Last Payment Detail</div>
+                        <div class="bg-light rounded p-2 small">
+                            @forelse($details as $key => $value)
+                                <div class="d-flex justify-content-between border-bottom py-1">
+                                    <span class="text-muted">{{ ucfirst(str_replace('_', ' ', $key)) }}</span>
+                                    <span class="fw-semibold">{{ $value }}</span>
+                                </div>
+                            @empty
+                                —
+                            @endforelse
+                        </div>
+
+                        <hr>
+
+                        {{-- Payment History --}}
+                        <div class="mb-2 fw-semibold">Payment History (Last 10)</div>
+                        @if (($history ?? collect())->isEmpty())
+                            <div class="text-muted small">No payment history.</div>
+                        @else
+                            <div class="list-group">
+                                @foreach ($history as $h)
+                                    @php
+                                        $u = $h->createdByUser
+                                            ? $h->createdByUser->firstname . ' ' . $h->createdByUser->lastname
+                                            : '-';
+
+                                        $received = (float) $h->pay_amount;
+                                        $change = (float) ($h->change_amount ?? 0);
+                                        $applied = $received - $change;
+                                        if ($applied < 0) {
+                                            $applied = 0;
+                                        }
+                                    @endphp
+
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="fw-semibold">
+                                                Received: {{ number_format($received, 2) }}
+                                                <span class="badge bg-primary-subtle text-primary ms-1">
+                                                    {{ strtoupper((string) $h->method) }}
+                                                </span>
+                                            </div>
+                                            <div class="text-muted small">
+                                                {{ $h->created_at ? $h->created_at->format('Y-m-d H:i') : '-' }}
+                                            </div>
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            Applied: {{ number_format($applied, 2) }} |
+                                            Change: {{ number_format($change, 2) }}
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            Cash: {{ number_format((float) $h->cash_amount, 2) }} |
+                                            Card: {{ number_format((float) $h->card_amount, 2) }}
+                                        </div>
+
+                                        <div class="text-muted small">By: {{ $u }}</div>
+
+                                        <div class="text-muted small">
+                                            Remaining: {{ number_format((float) $h->old_amount_local, 2) }}
+                                            → {{ number_format((float) $h->new_amount_local, 2) }}
+                                        </div>
+
+                                        @if (!empty($h->note))
+                                            <div class="small mt-1" style="white-space: pre-wrap;">{{ $h->note }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <hr>
+
+                        {{-- PAYMENT FORM --}}
+                        <form method="POST" action="{{ route('payments.store', request()->query()) }}" id="payForm">
+                            @csrf
+                            <input type="hidden" name="customer_id" value="{{ (string) $selected->logicalref }}">
+
+                            <div class="mb-3">
+                                <label class="form-label">Received Amount (Customer gives)</label>
+                                <input type="number" min="0" step="0.01" class="form-control text-end"
+                                    name="pay_amount" id="payAmount" placeholder="0.00" value="{{ $oldReceived }}"
+                                    required {{ $isClosed ? 'disabled' : '' }}>
+
+                                <div class="small text-muted mt-1">
+                                    Remaining: <span class="fw-semibold" id="remainLabel">
+                                        {{ $hasLocal ? number_format($remain, 2) : '—' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Live preview (Applied/Change) --}}
+                            <div class="border rounded p-2 mb-3 bg-light">
+                                <div class="d-flex justify-content-between small py-1">
+                                    <span class="text-muted">Applied to debt</span>
+                                    <span class="fw-semibold" id="appliedPreview">0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between small py-1 border-top">
+                                    <span class="text-muted">Change (to customer)</span>
+                                    <span class="fw-semibold" id="changePreview">0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method</label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input js-method" type="radio" name="payment_method"
+                                            id="mCash" value="cash" {{ $oldMethod === 'cash' ? 'checked' : '' }}
+                                            {{ $isClosed ? 'disabled' : '' }}>
+                                        <label class="form-check-label" for="mCash">Cash</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input js-method" type="radio" name="payment_method"
+                                            id="mCard" value="card" {{ $oldMethod === 'card' ? 'checked' : '' }}
+                                            {{ $isClosed ? 'disabled' : '' }}>
+                                        <label class="form-check-label" for="mCard">Card</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input js-method" type="radio" name="payment_method"
+                                            id="mMixed" value="mixed" {{ $oldMethod === 'mixed' ? 'checked' : '' }}
+                                            {{ $isClosed ? 'disabled' : '' }}>
+                                        <label class="form-check-label" for="mMixed">Mixed</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Mixed box --}}
+                            <div class="border rounded p-2 mb-3 d-none" id="mixedBox">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label mb-1">Cash</label>
+                                        <input type="number" min="0" step="0.01"
+                                            class="form-control text-end" name="cash_total" id="cashTotal"
+                                            value="{{ $oldCash }}" {{ $isClosed ? 'disabled' : '' }}>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-1">Card</label>
+                                        <input type="number" min="0" step="0.01"
+                                            class="form-control text-end" name="card_total" id="cardTotal"
+                                            value="{{ $oldCard }}" {{ $isClosed ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-2 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-light" id="btnAllCash"
+                                        {{ $isClosed ? 'disabled' : '' }}>
+                                        All Cash
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light" id="btnAllCard"
+                                        {{ $isClosed ? 'disabled' : '' }}>
+                                        All Card
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light" id="btnHalf"
+                                        {{ $isClosed ? 'disabled' : '' }}>
+                                        50/50
+                                    </button>
+                                </div>
+
+                                <div class="small text-muted mt-2">
+                                    Cash + Card must equal Received Amount.
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Note</label>
+                                <input type="text" class="form-control" name="note" placeholder="Optional..."
+                                    value="{{ old('note') }}" {{ $isClosed ? 'disabled' : '' }}>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" {{ $isClosed ? 'disabled' : '' }}>
+                                Save Payment
+                            </button>
+                        </form>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+
     </div>
-    <!-- end row -->
-
-     <!-- removeItemModal -->
-     <div id="removeItemModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mt-2 text-center">
-                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
-                            colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
-                        <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                            <h4>Are you sure ?</h4>
-                            <p class="text-muted mx-4 mb-0">Are you sure you want to remove this address ?</p>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn w-sm btn-danger ">Yes, Delete It!</button>
-                    </div>
-                </div>
-
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-
-    <!-- editItemModal -->
-    <div id="addAddressModal" class="modal fade zoomIn" tabindex="-1" aria-labelledby="addAddressModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addAddressModalLabel">Address</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div>
-                        <div class="mb-3">
-                            <label for="addaddress-Name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter name">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="addaddress-textarea" class="form-label">Address</label>
-                            <textarea class="form-control" id="addaddress-textarea" placeholder="Enter address"
-                                rows="2"></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="addaddress-Name" class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="addaddress-Name" placeholder="Enter phone no.">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="state" class="form-label">Address Type</label>
-                            <select class="form-select" id="state" data-choices data-choices-search-false>
-                                <option value="homeAddress">Home (7am to 10pm)</option>
-                                <option value="officeAddress">Office (11am to 7pm)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success">Save</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
 @endsection
+
 @section('script')
-    <script src="{{ URL::asset('build/js/pages/ecommerce-product-checkout.init.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+
+    <script>
+        (function() {
+            const payAmount = document.getElementById('payAmount');
+            const mixedBox = document.getElementById('mixedBox');
+            const cashTotal = document.getElementById('cashTotal');
+            const cardTotal = document.getElementById('cardTotal');
+
+            const btnAllCash = document.getElementById('btnAllCash');
+            const btnAllCard = document.getElementById('btnAllCard');
+            const btnHalf = document.getElementById('btnHalf');
+
+            const appliedPreview = document.getElementById('appliedPreview');
+            const changePreview = document.getElementById('changePreview');
+
+            const methods = Array.from(document.querySelectorAll('.js-method'));
+            if (!payAmount || methods.length === 0) return;
+
+            if (payAmount.disabled) return;
+
+            // remaining server'dan sabit gelir
+            const remainingServer = parseFloat("{{ $remainingJs ?? '0.00' }}") || 0;
+
+            const toNum = (v) => {
+                const n = parseFloat((v ?? '').toString().replace(',', '.'));
+                return Number.isFinite(n) ? n : 0;
+            };
+
+            const getMethod = () => (methods.find(x => x.checked)?.value || 'cash');
+            const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+            const refreshPreview = () => {
+                const received = toNum(payAmount.value);
+                const applied = Math.min(received, remainingServer);
+                const change = received - applied;
+
+                if (appliedPreview) appliedPreview.textContent = applied.toFixed(2);
+                if (changePreview) changePreview.textContent = (change > 0 ? change : 0).toFixed(2);
+            };
+
+            const normalizeMixed = (changed) => {
+                if (!cashTotal || !cardTotal) return;
+
+                const total = toNum(payAmount.value);
+                let c = toNum(cashTotal.value);
+                let k = toNum(cardTotal.value);
+
+                if (total <= 0) {
+                    cashTotal.value = '0.00';
+                    cardTotal.value = '0.00';
+                    return;
+                }
+
+                if (changed === 'cash') {
+                    c = clamp(c, 0, total);
+                    k = total - c;
+                } else if (changed === 'card') {
+                    k = clamp(k, 0, total);
+                    c = total - k;
+                } else {
+                    if (Math.abs((c + k) - total) > 0.009) {
+                        c = clamp(c, 0, total);
+                        k = total - c;
+                    }
+                }
+
+                cashTotal.value = c.toFixed(2);
+                cardTotal.value = k.toFixed(2);
+            };
+
+            const refresh = () => {
+                refreshPreview();
+
+                const m = getMethod();
+                if (m === 'mixed') {
+                    if (mixedBox) mixedBox.classList.remove('d-none');
+
+                    const total = toNum(payAmount.value);
+                    if (cashTotal && cardTotal) {
+                        if ((toNum(cashTotal.value) + toNum(cardTotal.value)) === 0 && total > 0) {
+                            cashTotal.value = total.toFixed(2);
+                            cardTotal.value = '0.00';
+                        }
+                        normalizeMixed();
+                    }
+                } else {
+                    if (mixedBox) mixedBox.classList.add('d-none');
+                }
+            };
+
+            methods.forEach(r => r.addEventListener('change', refresh));
+            payAmount.addEventListener('input', refresh);
+
+            if (cashTotal) cashTotal.addEventListener('input', () => normalizeMixed('cash'));
+            if (cardTotal) cardTotal.addEventListener('input', () => normalizeMixed('card'));
+
+            if (btnAllCash) btnAllCash.addEventListener('click', () => {
+                const total = toNum(payAmount.value);
+                if (!cashTotal || !cardTotal) return;
+                cashTotal.value = total.toFixed(2);
+                cardTotal.value = '0.00';
+                normalizeMixed();
+            });
+
+            if (btnAllCard) btnAllCard.addEventListener('click', () => {
+                const total = toNum(payAmount.value);
+                if (!cashTotal || !cardTotal) return;
+                cashTotal.value = '0.00';
+                cardTotal.value = total.toFixed(2);
+                normalizeMixed();
+            });
+
+            if (btnHalf) btnHalf.addEventListener('click', () => {
+                const total = toNum(payAmount.value);
+                if (!cashTotal || !cardTotal) return;
+                const half = total / 2;
+                cashTotal.value = half.toFixed(2);
+                cardTotal.value = (total - half).toFixed(2);
+                normalizeMixed();
+            });
+
+            refresh();
+        })();
+    </script>
 @endsection

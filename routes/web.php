@@ -48,7 +48,7 @@ Route::middleware(['auth.token'])->group(function () {
 
     // Customers
     Route::get('/customers', CustomersController::class)->name('customers');
-    Route::get('/customers-info', CustomersInfoController::class)->name('customers.info');
+    Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
 
 
     // Users
@@ -61,8 +61,8 @@ Route::middleware(['auth.token'])->group(function () {
 
     // Payments
     Route::get('/payments', CustomersPaymentController::class)->name('payments');
+    Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
 
-    
 
     // Commands
     Route::get('/commands', [CommandController::class, 'index'])->name('commands.index');
@@ -74,9 +74,7 @@ Route::middleware(['auth.token'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::prefix('apps')->name('apps.')->group(function () {
-
-    });
+    Route::prefix('apps')->name('apps.')->group(function () {});
 });
 
 

@@ -1,0 +1,206 @@
+===== src/App/Models/Credit.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Credit extends Model
+{
+    protected $table = 'credits_test';
+    protected $primaryKey = 'logicalref';
+
+    public $incrementing = false;
+    protected $keyType = 'int';
+
+    protected $fillable = [
+        'paid_local',
+        'paid_note',
+        'paid_updated_by',
+        'paid_updated_at',
+
+        'amount_local',
+        'amount_note',
+        'amount_updated_by',
+        'amount_updated_at',
+    ];
+
+    protected $casts = [
+        'amount'       => 'decimal:2',
+        'paid'         => 'decimal:2',
+        'amount_local' => 'decimal:2',
+        'paid_local'   => 'decimal:2',
+
+        'paid_updated_at'   => 'datetime',
+        'amount_updated_at' => 'datetime',
+
+        'date_' => 'datetime',
+        'willpaiddate' => 'datetime',
+        'lastnoteddate' => 'datetime',
+        'active' => 'boolean',
+    ];
+
+    public function paidUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'paid_updated_by');
+    }
+
+    public function amountUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'amount_updated_by');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(CreditPayment::class, 'credit_logicalref', 'logicalref')
+            ->orderByDesc('id');
+    }
+
+    // ✅ Local remaining accessor (SADECE LOCAL)
+    public function getLocalRemainingAttribute(): ?float
+    {
+        if ($this->amount_local === null || $this->paid_local === null) return null;
+
+        $total = (float) $this->amount_local;
+        $paid  = (float) $this->paid_local;
+
+        $rem = $total - $paid;
+        if ($rem < 0) $rem = 0;
+
+        return round($rem, 2);
+    }
+
+    public function getLocalClosedAttribute(): bool
+    {
+        if ($this->amount_local === null || $this->paid_local === null) return true;
+
+        $total = (float) $this->amount_local;
+        $paid  = (float) $this->paid_local;
+
+        return $paid >= $total - 0.01;
+    }
+}
+
+===== src/App/Models/CreditPayment.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class CreditPayment extends Model
+{
+    protected $table = 'credit_payments';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'credit_logicalref',
+
+        // pay_amount: müşterinin verdiği para (RECEIVED)
+        'pay_amount',
+
+        // change_amount: para üstü
+        'change_amount',
+
+        'method',
+        'cash_amount',
+        'card_amount',
+
+        // old_amount_local/new_amount_local: biz burada REMAINING logluyoruz
+        'old_amount_local',
+        'new_amount_local',
+
+        'old_paid_local',
+        'new_paid_local',
+
+        'note',
+        'created_by',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'credit_logicalref' => 'integer',
+        'created_by'        => 'integer',
+        'created_at'        => 'datetime',
+
+        'pay_amount'        => 'decimal:2',
+        'change_amount'     => 'decimal:2',
+
+        'cash_amount'       => 'decimal:2',
+        'card_amount'       => 'decimal:2',
+
+        'old_amount_local'  => 'decimal:2',
+        'new_amount_local'  => 'decimal:2',
+
+        'old_paid_local'    => 'decimal:2',
+        'new_paid_local'    => 'decimal:2',
+    ];
+
+    public function credit()
+    {
+        return $this->belongsTo(Credit::class, 'credit_logicalref', 'logicalref');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // ✅ computed: borca uygulanan miktar
+    public function getAppliedAmountAttribute(): float
+    {
+        $received = (float) $this->pay_amount;
+        $change   = (float) ($this->change_amount ?? 0);
+        $applied  = $received - $change;
+        if ($applied < 0) $applied = 0;
+        return round($applied, 2);
+    }
+}
+
+===== src/App/Models/User.php =====
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\UserRoleEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $fillable = [
+        'firstname',
+        'lastname',
+        'email',
+        'phonenumber',
+        'position',
+        'role',
+        'status',
+        'password',
+        'token',
+        'token_expires_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'role' => UserRoleEnum::class,
+        'token_expires_at' => 'datetime',
+    ];
+
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->firstname} {$this->lastname}");
+    }
+}
+

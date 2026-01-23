@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class CreditPayment extends Model
+{
+    protected $table = 'credit_payments';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'credit_logicalref',
+
+        // pay_amount: müşterinin verdiği para (RECEIVED)
+        'pay_amount',
+
+        // change_amount: para üstü
+        'change_amount',
+
+        'method',
+        'cash_amount',
+        'card_amount',
+
+        // old_amount_local/new_amount_local: biz burada REMAINING logluyoruz
+        'old_amount_local',
+        'new_amount_local',
+
+        'old_paid_local',
+        'new_paid_local',
+
+        'note',
+        'created_by',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'credit_logicalref' => 'integer',
+        'created_by'        => 'integer',
+        'created_at'        => 'datetime',
+
+        'pay_amount'        => 'decimal:2',
+        'change_amount'     => 'decimal:2',
+
+        'cash_amount'       => 'decimal:2',
+        'card_amount'       => 'decimal:2',
+
+        'old_amount_local'  => 'decimal:2',
+        'new_amount_local'  => 'decimal:2',
+
+        'old_paid_local'    => 'decimal:2',
+        'new_paid_local'    => 'decimal:2',
+    ];
+
+    public function credit()
+    {
+        return $this->belongsTo(Credit::class, 'credit_logicalref', 'logicalref');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // ✅ computed: borca uygulanan miktar
+    public function getAppliedAmountAttribute(): float
+    {
+        $received = (float) $this->pay_amount;
+        $change   = (float) ($this->change_amount ?? 0);
+        $applied  = $received - $change;
+        if ($applied < 0) $applied = 0;
+        return round($applied, 2);
+    }
+}

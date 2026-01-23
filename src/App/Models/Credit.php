@@ -25,8 +25,10 @@ class Credit extends Model
     ];
 
     protected $casts = [
-        'paid_local'   => 'decimal:2',
+        'amount'       => 'decimal:2',
+        'paid'         => 'decimal:2',
         'amount_local' => 'decimal:2',
+        'paid_local'   => 'decimal:2',
 
         'paid_updated_at'   => 'datetime',
         'amount_updated_at' => 'datetime',
@@ -36,4 +38,46 @@ class Credit extends Model
         'lastnoteddate' => 'datetime',
         'active' => 'boolean',
     ];
+
+    public function paidUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'paid_updated_by');
+    }
+
+    public function amountUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'amount_updated_by');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(CreditPayment::class, 'credit_logicalref', 'logicalref')
+            ->orderByDesc('id');
+    }
+
+    // ✅ Local remaining accessor (SADECE LOCAL)
+    public function getLocalRemainingAttribute(): ?float
+    {
+        if ($this->amount_local === null || $this->paid_local === null) return null;
+
+        $total = (float) $this->amount_local;
+        $paid  = (float) $this->paid_local;
+
+        $rem = $total - $paid;
+        if ($rem < 0) $rem = 0;
+
+        return round($rem, 2);
+    }
+
+    public function getLocalClosedAttribute(): bool
+    {
+        if ($this->amount_local === null || $this->paid_local === null) return true;
+
+        $total = (float) $this->amount_local;
+        $paid  = (float) $this->paid_local;
+
+        return $paid >= $total - 0.01;
+    }
+
+    
 }

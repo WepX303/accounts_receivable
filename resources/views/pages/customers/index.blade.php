@@ -172,6 +172,7 @@
                                         <th>Status</th>
                                         <th>Amount</th>
                                         <th>Paid</th>
+                                        <th>Local Remaining</th>
                                         <th>Note</th>
                                     </tr>
                                 </thead>
@@ -179,11 +180,23 @@
                                     @foreach ($credit_users as $c)
                                         <tr>
                                             {{-- ID --}}
+                                            {{-- <td class="id">
+                                                <span class="fw-medium text-primary">
+                                                    #{{ $c->logicalref }}
+                                                    <div class="text-muted small">
+                                                        {{ $c->date_ ?? '-' }}
+                                                    </div>
+                                                </span>
+                                            </td> --}}
                                             <td class="id">
                                                 <span class="fw-medium text-primary">
                                                     #{{ $c->logicalref }}
+                                                    <div class="text-muted small">
+                                                        {{ $c->date_ ? \Carbon\Carbon::parse($c->date_)->format('Y-m-d') : '-' }}
+                                                    </div>
                                                 </span>
                                             </td>
+
                                             {{-- Customer --}}
                                             <td class="customer_name">
                                                 <div class="fw-medium">{{ $c->name }}</div>
@@ -209,7 +222,8 @@
                                             {{-- Contract --}}
                                             <td>
                                                 {{ $c->contract ?? '-' }}
-                                            </td>  
+                                            </td>
+
                                             {{-- Status --}}
                                             <td class="status">
                                                 @if ($c->active)
@@ -248,6 +262,20 @@
                                                     </div>
                                                 @endif
                                             </td>
+
+                                            Local Remaining
+                                            <td class="text-end">
+                                                @if ($c->local_remaining === null)
+                                                    <span class="badge bg-warning-subtle text-warning">
+                                                        LOCAL MISSING
+                                                    </span>
+                                                @else
+                                                    <div class="fw-medium text-primary">
+                                                        {{ number_format($c->local_remaining, 2) }}
+                                                    </div>
+                                                @endif
+                                            </td>
+
                                             {{-- Note --}}
                                             <td>
                                                 {{ $c->note ?? '-' }}
