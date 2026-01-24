@@ -12,6 +12,20 @@ class CreditPayment extends Model
     protected $fillable = [
         'credit_logicalref',
 
+
+
+        'customer_name',
+        'customer_phone',
+        'customer_passport',
+        'customer_contract',
+        'branch',
+
+        'created_by_name',
+        'created_by_email',
+        'created_by_phone',
+
+
+
         // pay_amount: müşterinin verdiği para (RECEIVED)
         'pay_amount',
 
@@ -72,3 +86,8 @@ class CreditPayment extends Model
         return round($applied, 2);
     }
 }
+
+
+
+
+

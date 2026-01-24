@@ -116,10 +116,19 @@ class CustomersPaymentController extends Controller
 
     public function store(Request $request)
     {
-        $userId = Auth::id();
-        if (!$userId) {
+
+
+        // $userId = Auth::id();
+        // if (!$userId) {
+        //     return back()->with('warning', 'Ödeme kaydetmek için giriş yapmalısınız.');
+        // }
+
+        $user = Auth::user();
+        if (!$user) {
             return back()->with('warning', 'Ödeme kaydetmek için giriş yapmalısınız.');
         }
+        $userId = (int) $user->id;
+
 
         $customerId = $this->sanitizeId($request->input('customer_id'));
         if ($customerId === null) {
@@ -162,7 +171,8 @@ class CustomersPaymentController extends Controller
         $now = now();
 
         try {
-            DB::transaction(function () use ($customerId, $received, $userId, $now, $method, $cashTotal, $cardTotal, $note) {
+
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $method, $cashTotal, $cardTotal, $note) {
 
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
@@ -253,6 +263,25 @@ class CustomersPaymentController extends Controller
                 // old_amount_local/new_amount_local = remaining (log)
                 CreditPayment::create([
                     'credit_logicalref' => (int) $c->logicalref,
+
+                    // ✅ SNAPSHOT (kime ait olduğu ödeme kaydından anlaşılsın)
+                    'customer_name'     => mb_substr((string) $c->name, 0, 255),
+                    'customer_phone'    => mb_substr((string) $c->phone, 0, 50),
+                    'customer_passport' => mb_substr((string) $c->passport, 0, 50),
+                    'customer_contract' => mb_substr((string) $c->contract, 0, 50),
+                    'branch'            => mb_substr((string) $c->branch, 0, 50),
+
+
+                    // ✅ user snapshot
+                    'created_by'        => $userId,
+                    'created_by_name'   => mb_substr((string) $user->full_name, 0, 255),
+                    'created_by_email'  => mb_substr((string) $user->email, 0, 255),
+                    'created_by_phone'  => mb_substr((string) $user->phonenumber, 0, 50),
+
+
+
+
+
 
                     'pay_amount'        => $this->fmtMoney($received),
                     'change_amount'     => $this->fmtMoney($change),
