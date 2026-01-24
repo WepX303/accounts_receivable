@@ -279,10 +279,6 @@ class CustomersPaymentController extends Controller
                     'created_by_phone'  => mb_substr((string) $user->phonenumber, 0, 50),
 
 
-
-
-
-
                     'pay_amount'        => $this->fmtMoney($received),
                     'change_amount'     => $this->fmtMoney($change),
 
@@ -297,7 +293,6 @@ class CustomersPaymentController extends Controller
                     'new_paid_local'    => $this->fmtMoney($newPaidLocal),
 
                     'note'              => $note !== '' ? $note : null,
-                    'created_by'        => $userId,
                     'created_at'        => $now,
                 ]);
             });
