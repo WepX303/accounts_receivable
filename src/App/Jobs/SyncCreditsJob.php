@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -22,50 +23,112 @@ class SyncCreditsJob implements ShouldQueue
         $pgTable    = (string) config('sync.pgsql.credits_table'); // credits_test
         $chunkSize  = (int) config('sync.chunk_size', 1000);
 
+        /** @var ConnectionInterface $sqlsrv */
+        $sqlsrv = DB::connection('sqlsrv');
+        /** @var ConnectionInterface $pgsql */
+        $pgsql  = DB::connection('pgsql');
+
         // MSSQL DB context'i garantiye al
-        $dbName = (string) config('database.connections.sqlsrv.database'); // BPA
-        DB::connection('sqlsrv')->statement("USE [$dbName]");
+        $dbName = (string) config('database.connections.sqlsrv.database');
+        $sqlsrv->statement("USE [$dbName]");
 
         // ortam bazlı state key (prod/test karışmasın)
         $stateKey = app()->environment() . '_credits_last_rv';
 
-        $stateRow = DB::connection('pgsql')->table('sync_state')->where('key', $stateKey)->first();
-        $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;
+        $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
+        $lastRv   = $stateRow?->value ? (int) $stateRow->value : 0;
 
-        $query = DB::connection('sqlsrv')
-            ->table($mssqlTable) // burada DB::raw kullanma!
+        $query = $sqlsrv
+            ->table($mssqlTable)
             ->selectRaw('*, CONVERT(bigint, RV) as rv_bigint')
             ->whereRaw('CONVERT(bigint, RV) > ?', [$lastRv])
             ->orderByRaw('RV');
 
         $maxRvSeen = $lastRv;
 
-        $query->chunk($chunkSize, function ($rows) use (&$maxRvSeen, $pgTable) {
-            if ($rows->isEmpty()) {
-                return;
+        $query->chunk($chunkSize, function ($rows) use (&$maxRvSeen, $pgTable, $pgsql) {
+            if ($rows->isEmpty()) return;
+
+            $now = now();
+
+            // 1) logicalref list
+            $logicalRefs = [];
+            foreach ($rows as $row) {
+                $r = (array) $row;
+                $lr = (int) ($r['LOGICALREF'] ?? 0);
+                if ($lr > 0) $logicalRefs[] = $lr;
+            }
+            $logicalRefs = array_values(array_unique($logicalRefs));
+            if (empty($logicalRefs)) return;
+
+            // 2) existing kayıtları local alanlar + timestamps ile çek
+            $existingRows = $pgsql->table($pgTable)
+                ->select([
+                    'logicalref',
+                    'amount_local',
+                    'paid_local',
+                    'amount_updated_at',
+                    'paid_updated_at',
+                    'created_at',
+                ])
+                ->whereIn('logicalref', $logicalRefs)
+                ->get();
+
+            $existingMap = [];
+            foreach ($existingRows as $er) {
+                $existingMap[(int) $er->logicalref] = $er;
             }
 
             $payload = [];
-            $now = now();
 
             foreach ($rows as $row) {
                 $r = (array) $row;
 
+                $logicalref = (int) ($r['LOGICALREF'] ?? 0);
+                if ($logicalref <= 0) continue;
+
                 $rv = (int) ($r['rv_bigint'] ?? 0);
-                if ($rv > $maxRvSeen) {
-                    $maxRvSeen = $rv;
+                if ($rv > $maxRvSeen) $maxRvSeen = $rv;
+
+                $amount = $r['AMOUNT'] ?? null;
+                $paid   = $r['PAID'] ?? null;
+
+                $existing   = $existingMap[$logicalref] ?? null;
+                $isExisting = (bool) $existing;
+
+                // ✅ HER SATIRDA AYNI KEY'LER: local alanları default olarak mevcut değere set ediyoruz
+                $amountLocal = $isExisting ? $existing->amount_local : null;
+                $paidLocal   = $isExisting ? $existing->paid_local : null;
+
+                // ✅ KURAL-1: yeni kayıt -> local init
+                if (!$isExisting) {
+                    $amountLocal = $amount;
+                    $paidLocal   = $paid;
+                } else {
+                    // ✅ KURAL-2: eski kayıt ama local "bakir" ise ve remote artık doluysa -> local doldur
+                    $amountNeverTouched = is_null($existing->amount_updated_at);
+                    $paidNeverTouched   = is_null($existing->paid_updated_at);
+
+                    if (is_null($amountLocal) && $amountNeverTouched && !is_null($amount)) {
+                        $amountLocal = $amount;
+                    }
+                    if (is_null($paidLocal) && $paidNeverTouched && !is_null($paid)) {
+                        $paidLocal = $paid;
+                    }
                 }
 
                 $payload[] = [
-                    'logicalref'     => (int) ($r['LOGICALREF'] ?? 0),
+                    'logicalref'     => $logicalref,
                     'branch'         => $r['BRANCH'] ?? null,
                     'name'           => $r['NAME_'] ?? null,
                     'passport'       => $r['PASSPORT_'] ?? null,
                     'phone'          => $r['PHONE'] ?? null,
                     'contract'       => $r['CONTRACT_'] ?? null,
                     'date_'          => $r['DATE_'] ?? null,
-                    'amount'         => $r['AMOUNT'] ?? null,
-                    'paid'           => $r['PAID'] ?? null,
+
+                    'amount'         => $amount,
+                    'paid'           => $paid,
+
                     'willpaiddate'   => $r['WILLPAIDDATE'] ?? null,
                     'willpaidamount' => $r['WILLPAIDAMOUNT'] ?? null,
                     'note'           => $r['NOTE'] ?? null,
@@ -82,27 +145,74 @@ class SyncCreditsJob implements ShouldQueue
                     'manager'        => $r['MANAGER'] ?? null,
                     'confirmedby'    => $r['CONFIRMEDBY'] ?? null,
                     'gstatus'        => $r['GSTATUS'] ?? null,
+
                     'rv_bigint'      => $rv,
-                    'created_at'     => $now,
+
+                    // ✅ local alanlar HER SATIRDA var
+                    'amount_local'   => $amountLocal,
+                    'paid_local'     => $paidLocal,
+
+                    // ✅ created_at her satırda var (existing için DB’deki değeri koruyoruz)
+                    'created_at'     => $isExisting ? $existing->created_at : $now,
                     'updated_at'     => $now,
                 ];
             }
 
-            DB::connection('pgsql')->table($pgTable)->upsert(
+            if (empty($payload)) return;
+
+            // created_at update edilmeyecek!
+            $pgsql->table($pgTable)->upsert(
                 $payload,
                 ['logicalref'],
                 [
-                    'branch','name','passport','phone','contract','date_','amount','paid',
-                    'willpaiddate','willpaidamount','note','lastnoteddate','status','active',
-                    'initiator_i','clientref','custstatus','assurance','ctype','cardno','fishno',
-                    'manager','confirmedby','gstatus','rv_bigint','updated_at'
+                    'branch',
+                    'name',
+                    'passport',
+                    'phone',
+                    'contract',
+                    'date_',
+                    'amount',
+                    'paid',
+                    'willpaiddate',
+                    'willpaidamount',
+                    'note',
+                    'lastnoteddate',
+                    'status',
+                    'active',
+                    'initiator_i',
+                    'clientref',
+                    'custstatus',
+                    'assurance',
+                    'ctype',
+                    'cardno',
+                    'fishno',
+                    'manager',
+                    'confirmedby',
+                    'gstatus',
+                    'rv_bigint',
+                    'amount_local',
+                    'paid_local',
+                    'updated_at',
                 ]
             );
-        });
+        });;
 
-        DB::connection('pgsql')->table('sync_state')->updateOrInsert(
-            ['key' => $stateKey],
-            ['value' => (string) $maxRvSeen, 'updated_at' => now(), 'created_at' => now()]
-        );
+        // sync_state: created_at'i her seferinde ezmeyelim
+        $now = now();
+        $existingState = $pgsql->table('sync_state')->where('key', $stateKey)->first();
+
+        if ($existingState) {
+            $pgsql->table('sync_state')
+                ->where('key', $stateKey)
+                ->update(['value' => (string) $maxRvSeen, 'updated_at' => $now]);
+        } else {
+            $pgsql->table('sync_state')
+                ->insert([
+                    'key' => $stateKey,
+                    'value' => (string) $maxRvSeen,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+        }
     }
 }

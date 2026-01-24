@@ -167,9 +167,10 @@
                                         <th>Customer</th>
                                         <th>Customer Status</th>
                                         <th>Phone</th>
-                                        <th>Branch</th>
-                                        <th>Contract</th>
-                                        <th>Status</th>
+                                        {{-- <th>Branch</th>
+                                        <th>Contract</th> --}}
+                                        <th>Branch | Contract</th>
+                                        {{-- <th>Status</th> --}}
                                         <th>Amount</th>
                                         <th>Paid</th>
                                         <th>Local Remaining</th>
@@ -206,7 +207,16 @@
                                             </td>
                                             {{-- Customer Status --}}
                                             <td class="customer_status">
-                                                <div class="fw-medium">{{ $c->custstatus ?: 'UNKNOWN' }}</div>
+                                                <div class="fw-medium">{{ $c->custstatus ?: 'UNKNOWN' }} / @if ($c->active)
+                                                        <span class="badge bg-success-subtle text-success text-uppercase">
+                                                            Active
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">
+                                                            Blok
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <div class="text-muted small">
                                                     {{ $c->clientref ?? '-' }}
                                                 </div>
@@ -215,17 +225,22 @@
                                             <td class="phone_number">
                                                 {{ $c->phone ?? '-' }}
                                             </td>
+
                                             {{-- Branch --}}
-                                            <td>
+                                            {{-- <td>
                                                 {{ $c->branch ?? '-' }}
-                                            </td>
+                                            </td> --}}
                                             {{-- Contract --}}
-                                            <td>
+                                            {{-- <td>
                                                 {{ $c->contract ?? '-' }}
+                                            </td> --}}
+
+                                            <td class="branch_contract">
+                                                <div class="fw-medium">{{ $c->branch }} / {{ $c->contract }}</div>
                                             </td>
 
                                             {{-- Status --}}
-                                            <td class="status">
+                                            {{-- <td class="status">
                                                 @if ($c->active)
                                                     <span class="badge bg-success-subtle text-success text-uppercase">
                                                         Active
@@ -235,7 +250,8 @@
                                                         Blok
                                                     </span>
                                                 @endif
-                                            </td>
+                                            </td> --}}
+
                                             {{-- Amount --}}
                                             <td>
                                                 <div
@@ -263,7 +279,7 @@
                                                 @endif
                                             </td>
 
-                                            Local Remaining
+                                            {{-- Local Remaining --}}
                                             <td class="text-end">
                                                 @if ($c->local_remaining === null)
                                                     <span class="badge bg-warning-subtle text-warning">

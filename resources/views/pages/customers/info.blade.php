@@ -123,7 +123,14 @@
                                                 </div>
                                             </td>
 
-                                            <td>{{ $credit->contract }}</td>
+                                            {{-- <td>{{ $credit->contract }}</td> --}}
+
+                                            <td class="contract">
+                                                <div class="fw-medium">{{ $credit->contract }}</div>
+                                                <div class="text-muted small">
+                                                    {{ $credit->date_ ? \Carbon\Carbon::parse($credit->date_)->format('Y-m-d') : '-' }}
+                                                </div>
+                                            </td>
 
                                             {{-- Amount --}}
                                             <td class="text-end">
