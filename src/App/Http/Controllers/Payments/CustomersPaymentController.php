@@ -24,15 +24,38 @@ class CustomersPaymentController extends Controller
          * - id doluysa: DETAIL MODU => q yok say (isteğe bağlı ama stabil)
          */
 
+        // if ($q !== '') {
+        //     $id = null;
+        //     $ids = [];
+        //     } elseif (count($ids) > 0) {
+        //         $q = '';
+        //         $id = null; 
+        //     } elseif ($id !== null) {
+        //         $q = ''; 
+        //     }
+
         if ($q !== '') {
-            $id = null;
+            // ✅ SEARCH modu: liste q ile filtrelenir
+            // ✅ ids karışmasın diye temizlenir
+            // ✅ AMA id KALIR: arama sonuçlarında satıra tıklayınca seçili değişebilsin
             $ids = [];
         } elseif (count($ids) > 0) {
+            // ✅ IDS modu: arama kapansın, çoklu liste sabit kalsın
             $q = '';
-            $id = null; // ids ile geldiyse tekil id'yi de temiz tut
+            // id burada kalsın (ids içinde seçim için)
         } elseif ($id !== null) {
-            $q = ''; // id ile detay modunda arama filtresi karışmasın
+            // ✅ DETAIL modu: arama kapansın
+            $q = '';
         }
+
+
+
+        // ✅ ids modunda, gelen id ids içinde değilse ilk elemana düş
+        if (count($ids) > 0 && $id !== null && !in_array($id, $ids, true)) {
+            $id = $ids[0] ?? null;
+        }
+
+
 
 
 
@@ -64,10 +87,20 @@ class CustomersPaymentController extends Controller
                 });
             }
 
-            $customers = $listQuery
-                ->orderByDesc('rv_bigint')
-                ->paginate(12)
-                ->appends($request->query());
+            // $customers = $listQuery
+            //     ->orderByDesc('rv_bigint')
+            //     ->paginate(12)
+            //     ->appends($request->query());
+
+            // $appends = [];
+            // if ($q !== '') $appends['q'] = $q;
+            // if (count($ids) > 0) $appends['ids'] = $ids; // ids[] olarak gider
+            // if ($id !== null) $appends['id'] = $id;
+
+            // $customers = $listQuery
+            //     ->orderByDesc('rv_bigint')
+            //     ->paginate(12)
+            //     ->appends($appends);
 
             $appends = [];
             if ($q !== '') $appends['q'] = $q;
@@ -78,6 +111,7 @@ class CustomersPaymentController extends Controller
                 ->orderByDesc('rv_bigint')
                 ->paginate(12)
                 ->appends($appends);
+
 
 
             $pageItems = collect($customers->items());
