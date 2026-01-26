@@ -38,11 +38,13 @@
                                         value="{{ $q ?? request('q') }}">
                                     <i class="ri-search-line search-icon"></i>
 
+
                                     {{-- selected id korunsun --}}
                                     {{-- @if ($selected)
                                         <input type="hidden" name="id" value="{{ (string) $selected->logicalref }}">
                                     @endif --}}
 
+                                    
                                     {{-- customers.info’dan ids[] ile gelindiyse koru --}}
                                     {{-- @if (is_array(request('ids')))
                                         @foreach (request('ids') as $hid)
@@ -111,8 +113,10 @@
 
                                             $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
 
+                                            // Row URL new style: sadece id parametresi
                                             $rowUrl = route('payments', ['id' => (string) $c->logicalref]);
 
+                                            // Row URL old style: mevcut query korunsun
                                             // $query = request()->query();
                                             // $query['id'] = (string) $c->logicalref;
                                             // $rowUrl = route('payments', $query);
@@ -600,6 +604,8 @@
                 cardTotal.value = (total - half).toFixed(2);
                 normalizeMixed();
             });
+
+
 
             refresh();
         })();

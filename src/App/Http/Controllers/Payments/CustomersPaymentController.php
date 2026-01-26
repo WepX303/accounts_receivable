@@ -23,6 +23,7 @@ class CustomersPaymentController extends Controller
          * - ids doluysa: IDS MODU => q yok say
          * - id doluysa: DETAIL MODU => q yok say (isteğe bağlı ama stabil)
          */
+
         if ($q !== '') {
             $id = null;
             $ids = [];
@@ -32,6 +33,7 @@ class CustomersPaymentController extends Controller
         } elseif ($id !== null) {
             $q = ''; // id ile detay modunda arama filtresi karışmasın
         }
+
 
 
         if (count($ids) === 0 && $id !== null) {
