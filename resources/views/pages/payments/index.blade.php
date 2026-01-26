@@ -428,6 +428,13 @@
                                             {{ $isClosed ? 'disabled' : '' }}>
                                         <label class="form-check-label" for="mMixed">Mixed</label>
                                     </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input js-method" type="radio" name="payment_method"
+                                            id="mPhone" value="phone"
+                                            {{ old('payment_method', 'cash') === 'phone' ? 'checked' : '' }}
+                                            {{ $isClosed ? 'disabled' : '' }}>
+                                        <label class="form-check-label" for="mPhone">Phone</label>
+                                    </div>
                                 </div>
                             </div>
 

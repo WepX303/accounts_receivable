@@ -172,7 +172,7 @@ class CustomersPaymentController extends Controller
         }
 
         $method = (string) $request->input('payment_method', 'cash');
-        if (!in_array($method, ['cash', 'card', 'mixed'], true)) {
+        if (!in_array($method, ['cash', 'card', 'mixed', 'phone'], true)) {
             return back()->with('warning', 'Payment method geçersiz.');
         }
 
@@ -193,6 +193,9 @@ class CustomersPaymentController extends Controller
             $cashTotal = $received;
             $cardTotal = 0.0;
         } elseif ($method === 'card') {
+            $cashTotal = 0.0;
+            $cardTotal = $received;
+        } elseif ($method === 'phone') {
             $cashTotal = 0.0;
             $cardTotal = $received;
         } else {
