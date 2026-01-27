@@ -106,8 +106,12 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
-        ],
-
+	    'options' => extension_loaded('pdo_sqlsrv') ? [
+        // ODBC 18 + self-signed için en garanti:
+        	'TrustServerCertificate' => true,
+        // Encrypt'i kapatmak istersen:
+       		'Encrypt' => false, // veya 'no'
+   	 ] : [],
     ],
 
     /*
