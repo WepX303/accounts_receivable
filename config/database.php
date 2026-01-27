@@ -131,10 +131,8 @@ return [
 =======
 
             'options' => extension_loaded('pdo_sqlsrv') ? [
-                // ODBC 18 + self-signed için en garanti:
                 'TrustServerCertificate' => true,
-                // Encrypt'i kapatmak istersen:
-                'Encrypt' => false, // veya 'no'
+                'Encrypt' => false,
             ] : [],
         ],
 
