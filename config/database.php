@@ -93,6 +93,21 @@ return [
         //     // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         // ],
 
+        // 'sqlsrv' => [
+        //     'driver' => 'sqlsrv',
+        //     'url' => env('DATABASE_URL'),
+        //     'host' => env('MSSQL_HOST', 'localhost'),
+        //     'port' => env('MSSQL_PORT', '1433'),
+        //     'database' => env('MSSQL_DATABASE', 'master'),
+        //     'username' => env('MSSQL_USERNAME', 'sa'),
+        //     'password' => env('MSSQL_PASSWORD', ''),
+        //     'charset' => 'utf8',
+        //     'prefix' => '',
+        //     'prefix_indexes' => true,
+        //     // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+        //     // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        // ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -104,9 +119,15 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+
+            'options' => extension_loaded('pdo_sqlsrv') ? [
+                // ODBC 18 + self-signed için en garanti:
+                'TrustServerCertificate' => true,
+                // Encrypt'i kapatmak istersen:
+                'Encrypt' => false, // veya 'no'
+            ] : [],
         ],
+
 
     ],
 
