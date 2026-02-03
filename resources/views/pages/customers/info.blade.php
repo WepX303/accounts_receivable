@@ -2,7 +2,6 @@
 
 @section('content')
 
-
     <div class="row">
 
         {{-- LEFT: TABLE --}}
