@@ -16,16 +16,6 @@
     @include('layouts.head-css')
 
     <style>
-        /* #page-loader {
-            position: fixed;
-            inset: 0;
-            background: #fff;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity .3s ease, visibility .3s ease;
-        } */
         #page-loader {
             position: fixed;
             inset: 0;

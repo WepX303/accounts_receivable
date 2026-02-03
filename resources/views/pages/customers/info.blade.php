@@ -11,20 +11,20 @@
 
                 <div class="card-header">
                     <div class="row g-3 align-items-center">
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <form method="GET" action="{{ route('customers.info') }}">
                                 <div class="search-box">
                                     <input type="text" name="q" class="form-control"
-                                        placeholder="Search name / phone / passport / contract / clientref..."
+                                        placeholder="{{ __('pages/customers_info.search_placeholder') }}"
                                         value="{{ $q ?? request('q') }}">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </form>
                         </div>
 
-                        <div class="col-md-6 text-md-end">
+                        <div class="col-md-4 text-md-end">
                             <button type="submit" class="btn btn-primary" form="goPaymentForm" id="goPaymentBtn" disabled>
-                                Payment (<span id="selectedCount">0</span>)
+                                {{ __('pages/customers_info.payment') }} (<span id="selectedCount">0</span>)
                             </button>
 
                         </div>
@@ -39,14 +39,25 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col" style="width: 50px;"></th>
-                                        <th scope="col">Name</th>
+                                        {{-- <th scope="col">Name</th>
                                         <th scope="col">Phone</th>
                                         <th scope="col">Branch</th>
                                         <th scope="col">Contract</th>
                                         <th scope="col" class="text-end">Amount</th>
                                         <th scope="col" class="text-end">Paid</th>
                                         <th scope="col" class="text-end">Local Remaining</th>
-                                        <th scope="col">Active</th>
+                                        <th scope="col">Active</th> --}}
+
+                                        <th scope="col">{{ __('pages/customers_info.name') }}</th>
+                                        <th scope="col">{{ __('pages/customers_info.phone') }}</th>
+                                        <th scope="col">{{ __('pages/customers_info.branch') }}</th>
+                                        <th scope="col">{{ __('pages/customers_info.contract') }}</th>
+                                        <th scope="col" class="text-end">{{ __('pages/customers_info.amount') }}</th>
+                                        <th scope="col" class="text-end">{{ __('pages/customers_info.paid') }}</th>
+                                        <th scope="col" class="text-end">
+                                            {{ __('pages/customers_info.local_remaining') }}</th>
+                                        <th scope="col">{{ __('pages/customers_info.active') }}</th>
+
                                     </tr>
                                 </thead>
 
@@ -92,7 +103,7 @@
                                             data-contract="{{ e($credit->contract ?? '') }}"
                                             data-clientref="{{ e($credit->clientref ?? '') }}"
                                             data-status="{{ e($credit->status ?? 'EMPTY') }}"
-                                            data-active="{{ !empty($credit->active) ? 'Active' : 'Blok' }}"
+                                            data-active="{{ !empty($credit->active) ? __('pages/customers_info.state_active') : __('pages/customers_info.state_blocked') }}"
                                             data-note="{{ e($credit->note ?? '') }}"
                                             data-willpaiddate="{{ e($willPayText) }}"
                                             data-lastnoteddate="{{ e($lastNoteText) }}"
@@ -110,7 +121,8 @@
                                             <td class="customer_name">
                                                 <div class="fw-medium">{{ $credit->name }}</div>
                                                 <div class="text-muted small">
-                                                    Passport: {{ $credit->passport ?? '-' }}
+                                                    {{ __('pages/customers_info.passport_prefix') }}
+                                                    {{ $credit->passport ?? '-' }}
                                                 </div>
                                             </td>
 
@@ -141,7 +153,8 @@
 
                                                 @if ($credit->amount_local !== null)
                                                     <div class="small text-muted">
-                                                        Merkez: {{ number_format((float) ($credit->amount ?? 0), 2) }}
+                                                        {{ __('pages/customers_info.center_prefix') }}
+                                                        {{ number_format((float) ($credit->amount ?? 0), 2) }}
                                                     </div>
                                                 @endif
                                             </td>
@@ -155,7 +168,8 @@
 
                                                 @if ($credit->paid_local !== null)
                                                     <div class="small text-muted">
-                                                        Merkez: {{ number_format((float) ($credit->paid ?? 0), 2) }}
+                                                        {{ __('pages/customers_info.center_prefix') }}
+                                                        {{ number_format((float) ($credit->paid ?? 0), 2) }}
                                                     </div>
                                                 @endif
                                             </td>
@@ -164,7 +178,7 @@
                                             <td class="text-end">
                                                 @if ($credit->local_remaining === null)
                                                     <span class="badge bg-warning-subtle text-warning">
-                                                        LOCAL MISSING
+                                                        {{ __('pages/customers_info.local_missing') }}
                                                     </span>
                                                 @else
                                                     <div class="fw-medium text-primary">
@@ -176,14 +190,14 @@
                                             <td>
                                                 <span
                                                     class="badge {{ !empty($credit->active) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
-                                                    {{ !empty($credit->active) ? 'Active' : 'Blok' }}
+                                                    {{ !empty($credit->active) ? __('pages/customers_info.state_active') : __('pages/customers_info.state_blocked') }}
                                                 </span>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="9" class="text-center text-muted py-4">
-                                                No records found.
+                                                {{ __('pages/customers_info.no_records') }}
                                             </td>
                                         </tr>
                                     @endforelse
@@ -194,8 +208,9 @@
 
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">
-                            Toplam: {{ $credit_users_info->total() }} |
-                            Sayfa: {{ $credit_users_info->currentPage() }} / {{ $credit_users_info->lastPage() }}
+                            {{ __('pages/customers_info.total') }}: {{ $credit_users_info->total() }} |
+                            {{ __('pages/customers_info.page') }}: {{ $credit_users_info->currentPage() }} /
+                            {{ $credit_users_info->lastPage() }}
                         </div>
                         <div>
                             {{ $credit_users_info->onEachSide(1)->links('vendor.pagination.custom') }}
@@ -224,7 +239,8 @@
                 </div>
 
                 <div class="card-body">
-                    <h6 class="text-muted text-uppercase fw-semibold mb-3">Credit Information</h6>
+                    <h6 class="text-muted text-uppercase fw-semibold mb-3">
+                        {{ __('pages/customers_info.credit_information') }}</h6>
 
                     <p class="text-muted mb-4" id="d_note">
                         {{ $selected->note ?? '—' }}
@@ -234,19 +250,19 @@
                         <table class="table table-borderless mb-0">
                             <tbody>
                                 <tr>
-                                    <td class="fw-medium">Client Ref</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.client_ref') }}</td>
                                     <td id="d_clientref">{{ $selected->clientref ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Passport</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.passport') }}</td>
                                     <td id="d_passport">{{ $selected->passport ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Phone</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.phone') }}</td>
                                     <td id="d_phone">{{ $selected->phone ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Contract</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.contract') }}</td>
                                     <td id="d_contract">{{ $selected->contract ?? '-' }}</td>
                                 </tr>
 
@@ -260,7 +276,7 @@
                                 @endphp
 
                                 <tr>
-                                    <td class="fw-medium">Amount</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.amount') }}</td>
                                     <td>
                                         <div id="d_amount_local">
                                             @if ($selected)
@@ -271,14 +287,15 @@
                                         </div>
                                         <div class="small text-muted" id="d_amount_center">
                                             @if ($selected && $selAmountLocal !== null && $selAmountCenter !== null)
-                                                Merkez: {{ number_format((float) $selAmountCenter, 2) }}
+                                                {{ __('pages/customers_info.center_prefix') }}
+                                                {{ number_format((float) $selAmountCenter, 2) }}
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td class="fw-medium">Paid</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.paid') }}</td>
                                     <td>
                                         <div id="d_paid_local">
                                             @if ($selected)
@@ -289,29 +306,30 @@
                                         </div>
                                         <div class="small text-muted" id="d_paid_center">
                                             @if ($selected && $selPaidLocal !== null && $selPaidCenter !== null)
-                                                Merkez: {{ number_format((float) $selPaidCenter, 2) }}
+                                                {{ __('pages/customers_info.center_prefix') }}
+                                                {{ number_format((float) $selPaidCenter, 2) }}
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td class="fw-medium">Will Pay Date</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.will_pay_date') }}</td>
                                     <td id="d_willpaiddate">
                                         {{ $selected ? optional($selected->willpaiddate)->format('Y-m-d') ?? '-' : '-' }}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Status</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.status') }}</td>
                                     <td id="d_status">{{ $selected->status ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Active</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.active') }}</td>
                                     <td id="d_active">
-                                        {{ $selected ? (!empty($selected->active) ? 'Active' : 'Blok') : '-' }}</td>
+                                        {{ $selected ? (!empty($selected->active) ? __('pages/customers_info.state_active') : __('pages/customers_info.state_blocked')) : '-' }}
                                 </tr>
                                 <tr>
-                                    <td class="fw-medium">Last Note Date</td>
+                                    <td class="fw-medium">{{ __('pages/customers_info.last_note_date') }}</td>
                                     <td id="d_lastnoteddate">
                                         {{ $selected ? optional($selected->lastnoteddate)->format('Y-m-d H:i:s') ?? '-' : '-' }}
                                     </td>
@@ -329,6 +347,11 @@
 @endsection
 
 @section('script')
+    <script>
+        window.i18n = {
+            centerPrefix: @json(__('pages/customers_info.center_prefix')),
+        };
+    </script>
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
 
@@ -371,16 +394,30 @@
                 setText('d_contract', d.contract);
 
                 // Amount Local + Center
+                // const amountLocal = d.amountLocal || '';
+                // const amountCenter = d.amountCenter || '';
+                // setText('d_amount_local', amountLocal !== '' ? amountLocal : amountCenter);
+                // setCenterLine('d_amount_center', 'Merkez: ', (amountLocal !== '' ? amountCenter : ''));
+
+                // // Paid Local + Center
+                // const paidLocal = d.paidLocal || '';
+                // const paidCenter = d.paidCenter || '';
+                // setText('d_paid_local', paidLocal !== '' ? paidLocal : paidCenter);
+                // setCenterLine('d_paid_center', 'Merkez: ', (paidLocal !== '' ? paidCenter : ''));
+
+                // Amount Local + Center
                 const amountLocal = d.amountLocal || '';
                 const amountCenter = d.amountCenter || '';
                 setText('d_amount_local', amountLocal !== '' ? amountLocal : amountCenter);
-                setCenterLine('d_amount_center', 'Merkez: ', (amountLocal !== '' ? amountCenter : ''));
+                setCenterLine('d_amount_center', window.i18n.centerPrefix, (amountLocal !== '' ? amountCenter :
+                    ''));
 
                 // Paid Local + Center
                 const paidLocal = d.paidLocal || '';
                 const paidCenter = d.paidCenter || '';
                 setText('d_paid_local', paidLocal !== '' ? paidLocal : paidCenter);
-                setCenterLine('d_paid_center', 'Merkez: ', (paidLocal !== '' ? paidCenter : ''));
+                setCenterLine('d_paid_center', window.i18n.centerPrefix, (paidLocal !== '' ? paidCenter : ''));
+
 
                 setText('d_willpaiddate', d.willpaiddate);
                 setText('d_status', d.status);

@@ -90,3 +90,6 @@ App\Jobs\SyncCreditsJob::dispatch();
 
 ## To process the jobs in the queue, run:
 // php artisan queue:work --stop-when-empty
+
+## 
+php artisan sync:run --passport= && php artisan queue:work database --queue=default -vvv --stop-when-empty

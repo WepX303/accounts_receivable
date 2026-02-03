@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Commands\CommandController;
 use App\Http\Controllers\Customers\CustomersController;
 use App\Http\Controllers\Dashboard\DashboardController;
@@ -9,7 +8,6 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
-use Illuminate\Support\Facades\Redis;
 use App\Http\Controllers\Customers\CustomersInfoController;
 use App\Http\Controllers\Payments\CustomersPaymentController;
 use Illuminate\Support\Facades\Route;
@@ -19,13 +17,21 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
+// Language switch
+Route::get('/lang/{locale}', function (string $locale) {
+    if (! in_array($locale, ['tk', 'en', 'ru', 'tr'], true)) {
+        abort(404);
+    }
+    session(['locale' => $locale]);
+    return redirect()->back();
+})->name('lang.switch');
+
+
 // ---------------------
 // Protected routes
 // ---------------------
 Route::middleware(['auth.token'])->group(function () {
-
-    // Dashboard
-    Route::get('/', DashboardController::class)->name('dashboard');
 
     // Dashboard
     Route::get('/', DashboardController::class)->name('dashboard');

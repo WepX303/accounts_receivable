@@ -35,25 +35,63 @@
                         <i class='bx bx-moon fs-22'></i>
                     </button>
                 </div>
-                <div class="dropdown ms-sm-3 header-item topbar-user">
-                    {{-- <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
-                        
-                            <span class="d-flex align-items-center">
-                                <img class="rounded-circle header-profile-user"
-                                    src="{{ asset('build/images/users/user.jpg') }}" alt="User Avatar">
-                                <span class="text-start ms-xl-2">
-                                    <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
-                                        {{ $user->fullname }}
-                                    </span>
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">
-                                        {{ $user->position }}
-                                        </span>
-                                </span>
-                            </span>
-                    
-                    </button> --}}
 
+                {{-- 🌍 Language Switcher --}}
+                <div class="dropdown ms-1 header-item">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+                        style="width: 40px; height: 40px; padding: 6px;" data-bs-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+
+                        @php($loc = session('locale', 'tk'))
+
+                        @switch($loc)
+                            @case('ru')
+                                <img src="{{ URL::asset('build/images/flags/ru.svg') }}" class="rounded" height="22">
+                            @break
+
+                            @case('en')
+                                <img src="{{ URL::asset('build/images/flags/us.svg') }}" class="rounded" height="22">
+                            @break
+
+                            @case('tr')
+                                <img src="{{ URL::asset('build/images/flags/tr.svg') }}" class="rounded" height="22">
+                            @break
+
+                            @default
+                                <img src="{{ URL::asset('build/images/flags/tm.svg') }}" class="rounded" height="22">
+                        @endswitch
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a href="{{ route('lang.switch', 'tk') }}" class="dropdown-item">
+                            <img src="{{ URL::asset('build/images/flags/tm.svg') }}" height="18"
+                                class="me-2 rounded">
+                            Turkmen
+                        </a>
+
+                        <a href="{{ route('lang.switch', 'ru') }}" class="dropdown-item">
+                            <img src="{{ URL::asset('build/images/flags/ru.svg') }}" height="18"
+                                class="me-2 rounded">
+                            Русский
+                        </a>
+
+                        <a href="{{ route('lang.switch', 'en') }}" class="dropdown-item">
+                            <img src="{{ URL::asset('build/images/flags/us.svg') }}" height="18"
+                                class="me-2 rounded">
+                            English
+                        </a>
+
+                        <a href="{{ route('lang.switch', 'tr') }}" class="dropdown-item">
+                            <img src="{{ URL::asset('build/images/flags/tr.svg') }}" height="18"
+                                class="me-2 rounded">
+                            Türkçe
+                        </a>
+                    </div>
+                </div>
+                {{-- 🌍 Language Switcher --}}
+
+
+                <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
@@ -61,7 +99,7 @@
                                 src="{{ asset('build/images/users/user.jpg') }}" alt="User Avatar">
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
-                                    {{ $user->fullname ?? 'Guest' }}
+                                    {{ $user->fullname ?? __('menu.guest') }}
                                 </span>
                                 <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">
                                     {{ $user->position ?? '-' }}
@@ -70,25 +108,21 @@
                         </span>
                     </button>
 
-
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <a class="dropdown-item" href="{{ route('profile') }}"><i
                                 class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
-                                class="align-middle">Profile</span></a>
+                                class="align-middle">{{ __('menu.profile') }}</span></a>
                         <a class="dropdown-item" href="apps-chat"><i
                                 class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span
-                                class="align-middle">Messages</span></a>
+                                class="align-middle">{{ __('menu.messages') }}</span></a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="pages-profile-settings"><i
-                                class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
-                                class="align-middle">Settings</span></a>
-
                         <a class="dropdown-item " href="javascript:void();"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
                                 class="bx bx-power-off font-size-16 align-middle me-1"></i> <span
-                                key="t-logout">@lang('translation.logout')</span></a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                key="t-logout">{{ __('menu.logout') }}</span></a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                            style="display: none;">
                             @csrf
                         </form>
                     </div>

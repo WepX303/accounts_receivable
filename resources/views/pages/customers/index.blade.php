@@ -280,7 +280,7 @@
                                             </td>
 
                                             {{-- Local Remaining --}}
-                                            <td class="text-end">
+                                            {{-- <td class="text-end">
                                                 @if ($c->local_remaining === null)
                                                     <span class="badge bg-warning-subtle text-warning">
                                                         LOCAL MISSING
@@ -290,7 +290,31 @@
                                                         {{ number_format($c->local_remaining, 2) }}
                                                     </div>
                                                 @endif
+                                            </td> --}}
+
+                                            {{-- Local Remaining + Remote Remaining --}}
+                                            <td class="text-end">
+                                                @if ($c->local_remaining === null)
+                                                    <span class="badge bg-warning-subtle text-warning">
+                                                        LOCAL MISSING
+                                                    </span>
+
+                                                    {{-- LOCAL yoksa yine de remote remaining göster --}}
+                                                    <div class="small text-muted mt-1">
+                                                        Remote: {{ number_format($c->remote_remaining ?? 0, 2) }}
+                                                    </div>
+                                                @else
+                                                    <div class="fw-medium text-primary">
+                                                        {{ number_format($c->local_remaining, 2) }}
+                                                    </div>
+
+                                                    {{-- LOCAL varsa remote remaining’i altına yaz --}}
+                                                    <div class="small text-muted">
+                                                        Remote: {{ number_format($c->remote_remaining ?? 0, 2) }}
+                                                    </div>
+                                                @endif
                                             </td>
+
 
                                             {{-- Note --}}
                                             <td>
