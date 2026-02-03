@@ -28,7 +28,7 @@
                                         height="30">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Accounts Receivable</p>
+                            <p class="mt-3 fs-15 fw-medium">{{ __('pages/auth_login.app_name') }}</p>
                         </div>
                     </div>
                 </div>
@@ -40,18 +40,18 @@
 
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue.</p>
+                                    <h5 class="text-primary">{{ __('pages/auth_login.welcome_back') }}</h5>
+                                    <p class="text-muted">{{ __('pages/auth_login.signin_to_continue') }}</p>
                                 </div>
                                 <div class="p-2 mt-4">
                                     <form action="{{ route('login.post') }}" method="POST">
                                         @csrf
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">Username <span
+                                            <label for="username" class="form-label">{{ __('pages/auth_login.username') }}<span
                                                     class="text-danger">*</span></label>
 
                                             <input type="text" class="form-control @error('login') is-invalid @enderror"
-                                                id="login" name="login" placeholder="Email veya Telefon"
+                                                id="login" name="login" placeholder="{{ __('pages/auth_login.login_placeholder') }}"
                                                 value="{{ old('login') }}">
                                             @error('login')
                                                 <span class="invalid-feedback" role="alert">
@@ -63,12 +63,12 @@
                                         <div class="mb-3">
                                             <div class="float-end">
                                             </div>
-                                            <label class="form-label" for="password-input">Password <span
+                                            <label class="form-label" for="password-input">{{ __('pages/auth_login.password') }}<span
                                                     class="text-danger">*</span></label>
                                             <div class="position-relative auth-pass-inputgroup mb-3">
                                                 <input type="password"
                                                     class="form-control password-input pe-5 @error('password') is-invalid @enderror"
-                                                    name="password" placeholder="Enter password" id="password-input">
+                                                    name="password" placeholder="{{ __('pages/auth_login.enter_password') }}" id="password-input">
 
                                                 <button
                                                     class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
@@ -84,7 +84,7 @@
                                         </div>
 
                                         <div class="mt-4">
-                                            <button class="btn btn-success w-100" type="submit">Sign In</button>
+                                            <button class="btn btn-success w-100" type="submit">{{ __('pages/auth_login.sign_in') }}</button>
                                         </div>
 
                                     </form>
