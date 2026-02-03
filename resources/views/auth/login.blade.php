@@ -1,7 +1,5 @@
 @extends('layouts.master-without-nav')
-@section('title')
-    @lang('translation.signin')
-@endsection
+
 @section('content')
     <div class="auth-page-wrapper pt-5">
         <!-- auth page bg -->
