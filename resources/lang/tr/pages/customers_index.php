@@ -55,4 +55,14 @@ return [
     'will_not_pay'         => 'Ödeme yapmayacak',
     'status_missing'       => 'STATUS YOK',
 
+    'card_paid_today'              => 'Bugün Ödendi',
+    'card_paid_yesterday'          => 'Dün Ödendi',
+    'card_has_debt'                => 'Borcu Var',
+    'card_paid_mismatch'           => 'Ödeme Uyumsuz',
+
+    'payments'                     => 'Ödeme',
+    'customers'                    => 'Müşteri',
+    'rows_local_remote_mismatch'   => 'Satır (yerel ≠ merkez)',
+
+
 ];

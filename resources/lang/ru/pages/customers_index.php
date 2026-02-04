@@ -54,4 +54,14 @@ return [
     'will_not_pay'         => 'Платить не будет',
     'status_missing'       => 'СТАТУС ОТСУТСТВУЕТ',
 
+    'card_paid_today'              => 'Оплачено сегодня',
+    'card_paid_yesterday'          => 'Оплачено вчера',
+    'card_has_debt'                => 'Есть долг',
+    'card_paid_mismatch'           => 'Несоответствие оплат',
+
+    'payments'                     => 'Платежей',
+    'customers'                    => 'Клиентов',
+    'rows_local_remote_mismatch'   => 'Строк (локально ≠ центр)',
+
+
 ];

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Customers;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Credit;
-use App\Models\CreditPayment;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 
-class CustomersController extends Controller
+class CustomersControllerCopy extends Controller
 {
     public function __invoke(Request $request)
     {
@@ -33,45 +33,6 @@ class CustomersController extends Controller
             default          => [null, null],
         };
 
-        /**
-         * =========================
-         *  DASHBOARD CARDS (STATS)
-         * =========================
-         */
-        $todayFrom = Carbon::today()->startOfDay();
-        $todayTo   = Carbon::today()->endOfDay();
-
-        $yFrom = Carbon::yesterday()->startOfDay();
-        $yTo   = Carbon::yesterday()->endOfDay();
-
-        $stats = [
-            // bugün tahsilat
-            'paid_today_sum' => (float) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
-                ->sum('pay_amount'),
-            'paid_today_cnt' => (int) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
-                ->count(),
-
-            // dün tahsilat
-            'paid_y_sum'     => (float) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
-                ->sum('pay_amount'),
-            'paid_y_cnt'     => (int) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
-                ->count(),
-
-            // borçlu müşteri sayısı (MERKEZ amount/paid)
-            'has_debt_cnt'   => (int) Credit::whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
-                ->count(),
-
-            // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
-            'paid_mismatch_cnt' => (int) Credit::whereNotNull('paid_local')
-                ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
-                ->count(),
-        ];
-
-        /**
-         * =========================
-         *  MAIN LIST QUERY
-         * =========================
-         */
         $credit_users = Credit::query()
 
             /* SEARCH */
@@ -87,7 +48,7 @@ class CustomersController extends Controller
                 });
             })
 
-            /* ÖDEME TARİHİNE GÖRE (credit_payments üzerinden) */
+            /* ÖDEME TARİHİNE GÖRE */
             ->when($from && $to, function ($query) use ($from, $to) {
                 $table = $query->getModel()->getTable();
 
@@ -99,6 +60,17 @@ class CustomersController extends Controller
                 });
             })
 
+            // /* BORCU KALANLAR */
+            // ->when($quick === 'has_debt', function ($query) {
+            //     $query->whereRaw('COALESCE(amount_local, amount) > COALESCE(paid_local, paid)');
+            // })
+
+            // /* BORCU OLMAYANLAR */
+            // ->when($quick === 'no_debt', function ($query) {
+            //     $query->whereRaw('COALESCE(amount_local, amount) <= COALESCE(paid_local, paid)');
+            // })
+
+
             /* BORCU KALANLAR (MERKEZ: amount/paid) */
             ->when($quick === 'has_debt', function ($query) {
                 $query->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)');
@@ -108,6 +80,9 @@ class CustomersController extends Controller
             ->when($quick === 'no_debt', function ($query) {
                 $query->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)');
             })
+
+
+
 
             /* HİÇ ÖDEME YAPMAYANLAR */
             ->when($quick === 'no_payment', function ($query) {
@@ -121,28 +96,26 @@ class CustomersController extends Controller
             })
 
             /* BLOK OLANLAR */
-            ->when($quick === 'blocked', fn ($q) => $q->where('active', false))
+            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
 
-            /* AKTİF OLANLAR */
-            ->when($quick === 'active', fn ($q) => $q->where('active', true))
+            /* AKTIW KALANLAR */
+            ->when($quick === 'active', fn($q) => $q->where('active', true))
+
 
             /* STATUS = BERMEJEK */
+            // ->when($quick === 'bermejek', fn($q) => $q->where('status', 'BERMEJEK'))
             ->when($quick === 'bermejek', function ($q) {
                 $q->whereNotNull('status')
                     ->where('status', '!=', '')
                     ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
             })
 
-            /* PAID MISMATCH (LOCAL != REMOTE) */
-            ->when($quick === 'paid_mismatch', function ($query) {
-                $query->whereNotNull('paid_local')
-                    ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
-            })
+
 
             ->orderByDesc('rv_bigint')
             ->paginate(25)
             ->appends($request->query());
 
-        return view('pages.customers.index', compact('credit_users', 'quick', 'stats'));
+        return view('pages.customers.index', compact('credit_users', 'quick'));
     }
 }

@@ -1,7 +1,7 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-xl-3 col-md-6">
             <!-- card -->
             <div class="card card-animate">
@@ -123,54 +123,121 @@
                 </div><!-- end card body -->
             </div><!-- end card -->
         </div><!-- end col -->
-    </div> <!-- end row-->
+    </div> <!-- end row--> --}}
+
+    <div class="row">
+        {{-- Paid Today --}}
+        <div class="col-xl-3 col-md-6">
+            <a class="text-decoration-none"
+                href="{{ route('customers', array_merge(request()->except('quick_filter'), ['quick_filter' => 'paid_today'])) }}">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/customers_index.card_paid_today') }}
+                        </p>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-1">
+                                    {{ number_format($stats['paid_today_sum'] ?? 0, 2) }}
+                                </h4>
+                                <span class="badge bg-warning me-1">{{ $stats['paid_today_cnt'] ?? 0 }}</span>
+                                <span class="text-muted">{{ __('pages/customers_index.payments') }}</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-light rounded fs-3">
+                                    <i data-feather="dollar-sign" class="text-success icon-dual-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Paid Yesterday --}}
+        <div class="col-xl-3 col-md-6">
+            <a class="text-decoration-none"
+                href="{{ route('customers', array_merge(request()->except('quick_filter'), ['quick_filter' => 'paid_yesterday'])) }}">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <p class="text-uppercase fw-medium text-muted mb-0">
+                            {{ __('pages/customers_index.card_paid_yesterday') }}</p>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-1">
+                                    {{ number_format($stats['paid_y_sum'] ?? 0, 2) }}
+                                </h4>
+                                <span class="badge bg-warning me-1">{{ $stats['paid_y_cnt'] ?? 0 }}</span>
+                                <span class="text-muted">{{ __('pages/customers_index.payments') }}</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-light rounded fs-3">
+                                    <i data-feather="calendar" class="text-success icon-dual-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Has Debt --}}
+        <div class="col-xl-3 col-md-6">
+            <a class="text-decoration-none"
+                href="{{ route('customers', array_merge(request()->except('quick_filter'), ['quick_filter' => 'has_debt'])) }}">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/customers_index.card_has_debt') }}
+                        </p>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-1">
+                                    {{ (int) ($stats['has_debt_cnt'] ?? 0) }}
+                                </h4>
+                                <span class="text-muted">{{ __('pages/customers_index.customers') }}</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-light rounded fs-3">
+                                    <i data-feather="alert-circle" class="text-warning icon-dual-warning"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Paid Mismatch --}}
+        <div class="col-xl-3 col-md-6">
+            <a class="text-decoration-none"
+                href="{{ route('customers', array_merge(request()->except('quick_filter'), ['quick_filter' => 'paid_mismatch'])) }}">
+                <div class="card card-animate">
+                    <div class="card-body">
+                        <p class="text-uppercase fw-medium text-muted mb-0">
+                            {{ __('pages/customers_index.card_paid_mismatch') }}</p>
+                        <div class="d-flex align-items-end justify-content-between mt-4">
+                            <div>
+                                <h4 class="fs-22 fw-semibold ff-secondary mb-1">
+                                    {{ (int) ($stats['paid_mismatch_cnt'] ?? 0) }}
+                                </h4>
+                                <span
+                                    class="text-muted">{{ __('pages/customers_index.rows_local_remote_mismatch') }}</span>
+                            </div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-light rounded fs-3">
+                                    <i data-feather="shuffle" class="text-danger icon-dual-danger"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+
     <div class="row">
         <div class="col-lg-12">
             <div class="card" id="orderList">
-                {{-- <div class="card-body border border-dashed border-end-0 border-start-0">
-                    <form method="GET" action="{{ route('customers') }}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-xxl-6 col-sm-6">
-                                <div class="search-box">
-                                    <input type="text" class="form-control" name="q" value="{{ request('q') }}"
-                                        placeholder="{{ __('pages/customers_index.search_placeholder') }}">
-                                    <i class="ri-search-line search-icon"></i>
-                                </div>
-                            </div>
-
-                            <div class="col-xxl-3 col-sm-4">
-                                <select name="pay_range" class="form-select" onchange="this.form.submit()">
-                                    <option value="all" @selected(request('pay_range', 'all') === 'all')>
-                                        {{ __('pages/customers_index.pay_filter_all') }}</option>
-                                    <option value="today" @selected(request('pay_range') === 'today')>
-                                        {{ __('pages/customers_index.paid_today') }}</option>
-                                    <option value="yesterday" @selected(request('pay_range') === 'yesterday')>
-                                        {{ __('pages/customers_index.paid_yesterday') }}</option>
-                                    <option value="7d" @selected(request('pay_range') === '7d')>
-                                        {{ __('pages/customers_index.paid_last_7_days') }}
-                                    </option>
-                                    <option value="14d" @selected(request('pay_range') === '14d')>
-                                        {{ __('pages/customers_index.paid_last_14_days') }}
-                                    </option>
-                                    <option value="1m" @selected(request('pay_range') === '1m')>
-                                        {{ __('pages/customers_index.paid_last_1_month') }}</option>
-                                    <option value="3m" @selected(request('pay_range') === '3m')>
-                                        {{ __('pages/customers_index.paid_last_3_months') }}</option>
-                                    <option value="6m" @selected(request('pay_range') === '6m')>
-                                        {{ __('pages/customers_index.paid_last_6_months') }}</option>
-                                </select>
-                            </div>
-
-                            <div class="col-xxl-3 col-sm-2 d-flex gap-2">
-                                <button class="btn btn-primary w-100"
-                                    type="submit">{{ __('pages/customers_index.filter') }}</button>
-                                <a class="btn btn-outline-secondary w-100"
-                                    href="{{ route('customers') }}">{{ __('pages/customers_index.reset') }}</a>
-                            </div>
-                        </div>
-                    </form>
-                </div> --}}
-
                 <div class="card-body border border-dashed border-end-0 border-start-0">
                     <form method="GET" action="{{ route('customers') }}">
                         <div class="row g-3 align-items-end">
@@ -284,8 +351,17 @@
                                 </thead>
                                 <tbody class="list form-check-all">
                                     @foreach ($credit_users as $c)
-                                    
-                                        <tr>
+                                        @php
+                                            $hasLocalPaid = $c->paid_local !== null;
+
+                                            $localPaid = round((float) ($c->paid_local ?? 0), 2);
+                                            $remotePaid = round((float) ($c->paid ?? 0), 2);
+
+                                            // LOCAL ve CENTER paid farklı mı?
+                                            $paidDiff = $hasLocalPaid && $localPaid !== $remotePaid;
+                                        @endphp
+
+                                        <tr class="{{ $paidDiff ? 'bg-danger-subtle' : '' }}">
                                             {{-- ID --}}
                                             <td class="id">
                                                 <span class="fw-medium text-primary">

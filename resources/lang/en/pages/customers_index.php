@@ -52,4 +52,13 @@ return [
     'will_not_pay'         => 'Will not pay',
     'status_missing'       => 'NO STATUS',
 
+    'card_paid_today'              => 'Paid Today',
+    'card_paid_yesterday'          => 'Paid Yesterday',
+    'card_has_debt'                => 'Has Debt',
+    'card_paid_mismatch'           => 'Paid Mismatch',
+
+    'payments'                     => 'Payments',
+    'customers'                    => 'Customers',
+    'rows_local_remote_mismatch'   => 'Rows (local ≠ remote)',
+
 ];

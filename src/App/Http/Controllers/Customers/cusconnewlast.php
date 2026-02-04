@@ -8,18 +8,28 @@ use App\Models\CreditPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class CustomersController extends Controller
+class cusconnewlast extends Controller
 {
     public function __invoke(Request $request)
     {
-        // Search
+        /**
+         * =========================
+         *  1) INPUTS
+         * =========================
+         */
         $q = trim((string) ($request->get('q') ?? ''));
-        if ($q === 'null') $q = '';
+        if ($q === 'null') {
+            $q = '';
+        }
 
-        // Tek Quick Filter
+        // tek quick filter (dropdown)
         $quick = (string) $request->get('quick_filter', 'all');
 
-        // Tarih aralıkları (ödeme bazlı)
+        /**
+         * =========================
+         *  2) DATE RANGES (PAYMENTS)
+         * =========================
+         */
         [$from, $to] = match ($quick) {
             'paid_today'     => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
             'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
@@ -35,7 +45,32 @@ class CustomersController extends Controller
 
         /**
          * =========================
-         *  DASHBOARD CARDS (STATS)
+         *  3) STATUS LIST (for dropdown)
+         *  - exclude NULL/empty
+         *  - normalize to UPPER+TRIM
+         * =========================
+         */
+        $statusList = Credit::query()
+            ->selectRaw("UPPER(TRIM(status)) as status_norm")
+            ->whereNotNull('status')
+            ->whereRaw("TRIM(status) <> ''")
+            ->distinct()
+            ->orderBy('status_norm')
+            ->pluck('status_norm')
+            ->values();
+
+        // Parse "status:XXXX" (optional)
+        $statusSelected = null;
+        if (str_starts_with($quick, 'status:')) {
+            $statusSelected = strtoupper(trim(substr($quick, 7)));
+            if ($statusSelected === '') {
+                $statusSelected = null;
+            }
+        }
+
+        /**
+         * =========================
+         *  4) DASHBOARD CARDS (STATS)
          * =========================
          */
         $todayFrom = Carbon::today()->startOfDay();
@@ -45,31 +80,37 @@ class CustomersController extends Controller
         $yTo   = Carbon::yesterday()->endOfDay();
 
         $stats = [
-            // bugün tahsilat
-            'paid_today_sum' => (float) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
+            // today payments
+            'paid_today_sum' => (float) CreditPayment::query()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
                 ->sum('pay_amount'),
-            'paid_today_cnt' => (int) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
+            'paid_today_cnt' => (int) CreditPayment::query()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
                 ->count(),
 
-            // dün tahsilat
-            'paid_y_sum'     => (float) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
+            // yesterday payments
+            'paid_y_sum' => (float) CreditPayment::query()
+                ->whereBetween('created_at', [$yFrom, $yTo])
                 ->sum('pay_amount'),
-            'paid_y_cnt'     => (int) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
+            'paid_y_cnt' => (int) CreditPayment::query()
+                ->whereBetween('created_at', [$yFrom, $yTo])
                 ->count(),
 
-            // borçlu müşteri sayısı (MERKEZ amount/paid)
-            'has_debt_cnt'   => (int) Credit::whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
+            // customers with debt (LOCAL first, fallback to REMOTE)
+            'has_debt_cnt' => (int) Credit::query()
+                ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
                 ->count(),
 
-            // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
-            'paid_mismatch_cnt' => (int) Credit::whereNotNull('paid_local')
+            // paid mismatch (LOCAL != REMOTE), numeric rounding to 2 decimals
+            'paid_mismatch_cnt' => (int) Credit::query()
+                ->whereNotNull('paid_local')
                 ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
                 ->count(),
         ];
 
         /**
          * =========================
-         *  MAIN LIST QUERY
+         *  5) MAIN LIST QUERY
          * =========================
          */
         $credit_users = Credit::query()
@@ -87,7 +128,7 @@ class CustomersController extends Controller
                 });
             })
 
-            /* ÖDEME TARİHİNE GÖRE (credit_payments üzerinden) */
+            /* PAYMENTS DATE RANGE (credit_payments) */
             ->when($from && $to, function ($query) use ($from, $to) {
                 $table = $query->getModel()->getTable();
 
@@ -99,17 +140,17 @@ class CustomersController extends Controller
                 });
             })
 
-            /* BORCU KALANLAR (MERKEZ: amount/paid) */
+            /* HAS DEBT (LOCAL first, fallback to REMOTE) */
             ->when($quick === 'has_debt', function ($query) {
-                $query->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)');
+                $query->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)');
             })
 
-            /* BORCU OLMAYANLAR (MERKEZ: amount/paid) */
+            /* NO DEBT (LOCAL first, fallback to REMOTE) */
             ->when($quick === 'no_debt', function ($query) {
-                $query->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)');
+                $query->whereRaw('COALESCE(amount_local, amount, 0) <= COALESCE(paid_local, paid, 0)');
             })
 
-            /* HİÇ ÖDEME YAPMAYANLAR */
+            /* NO PAYMENT EVER */
             ->when($quick === 'no_payment', function ($query) {
                 $table = $query->getModel()->getTable();
 
@@ -120,18 +161,18 @@ class CustomersController extends Controller
                 });
             })
 
-            /* BLOK OLANLAR */
-            ->when($quick === 'blocked', fn ($q) => $q->where('active', false))
+            /* BLOCKED */
+            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
 
-            /* AKTİF OLANLAR */
-            ->when($quick === 'active', fn ($q) => $q->where('active', true))
+            /* ACTIVE */
+            ->when($quick === 'active', fn($q) => $q->where('active', true))
 
-            /* STATUS = BERMEJEK */
-            ->when($quick === 'bermejek', function ($q) {
-                $q->whereNotNull('status')
-                    ->where('status', '!=', '')
-                    ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
-            })
+            /* BERMEJEK (normalize: UPPER+TRIM) */
+            ->when(
+                $quick === 'bermejek',
+                fn($q) =>
+                $q->whereRaw("UPPER(TRIM(COALESCE(status,''))) = ?", ['BERMEJEK'])
+            )
 
             /* PAID MISMATCH (LOCAL != REMOTE) */
             ->when($quick === 'paid_mismatch', function ($query) {
@@ -139,10 +180,21 @@ class CustomersController extends Controller
                     ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
             })
 
+            /* ✅ DYNAMIC STATUS FILTER (status:XXXX or status:EMPTY) */
+            ->when($statusSelected === 'EMPTY', function ($query) {
+                $query->where(function ($qq) {
+                    $qq->whereNull('status')
+                        ->orWhereRaw("TRIM(COALESCE(status,'')) = ''");
+                });
+            })
+            ->when($statusSelected && $statusSelected !== 'EMPTY', function ($query) use ($statusSelected) {
+                $query->whereRaw("UPPER(TRIM(COALESCE(status,''))) = ?", [$statusSelected]);
+            })
+
             ->orderByDesc('rv_bigint')
             ->paginate(25)
             ->appends($request->query());
 
-        return view('pages.customers.index', compact('credit_users', 'quick', 'stats'));
+        return view('pages.customers.index', compact('credit_users', 'quick', 'stats', 'statusList'));
     }
 }

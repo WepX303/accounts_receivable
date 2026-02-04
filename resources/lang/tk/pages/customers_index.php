@@ -52,4 +52,14 @@ return [
     'will_not_pay'         => 'Töleg etmejek (Bermejek)',
     'status_missing'       => 'STATUS ÝOK',
 
+    'card_paid_today'              => 'Şu gün tölenen',
+    'card_paid_yesterday'          => 'Düýn tölenen',
+    'card_has_debt'                => 'Karzy bar',
+    'card_paid_mismatch'           => 'Töleg gabat gelmeýär',
+
+    'payments'                     => 'Töleg',
+    'customers'                    => 'Müşderi',
+    'rows_local_remote_mismatch'   => 'Setir (ýerli ≠ merkez)',
+
+
 ];
