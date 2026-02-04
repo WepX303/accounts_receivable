@@ -14,6 +14,8 @@ return [
     'paid_last_1_month'    => 'Ödeme yapanlar: Son 1 ay',
     'paid_last_3_months'   => 'Ödeme yapanlar: Son 3 ay',
     'paid_last_6_months'   => 'Ödeme yapanlar: Son 6 ay',
+    'paid_last_9_months'   => 'Ödeme yapanlar: Son 9 ay',
+    'paid_last_12_months'  => 'Ödeme yapanlar: Son 12 ay',
 
     'id'                   => 'ID',
     'customer'             => 'Müşteri',
@@ -23,6 +25,8 @@ return [
     'amount'               => 'Tutar',
     'paid'                 => 'Ödenen',
     'local_remaining'      => 'Yerel Kalan',
+    'payment_status'       => 'Ödeme Durumu',
+
     'note'                 => 'Not',
 
     'passport_prefix'      => 'Pasaport: ',
@@ -49,4 +53,6 @@ return [
 
     'blocked'              => 'Bloklananlar',
     'will_not_pay'         => 'Ödeme yapmayacak',
+    'status_missing'       => 'STATUS YOK',
+
 ];

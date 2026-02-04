@@ -213,6 +213,12 @@
                                         <option value="paid_6m" @selected(request('quick_filter') === 'paid_6m')>
                                             {{ __('pages/customers_index.paid_last_6_months') }}
                                         </option>
+                                        <option value="paid_9m" @selected(request('quick_filter') === 'paid_9m')>
+                                            {{ __('pages/customers_index.paid_last_9_months') }}
+                                        </option>
+                                        <option value="paid_12m" @selected(request('quick_filter') === 'paid_12m')>
+                                            {{ __('pages/customers_index.paid_last_12_months') }}
+                                        </option>
                                     </optgroup>
 
                                     <optgroup label="{{ __('pages/customers_index.qf_debt') }}">
@@ -231,10 +237,15 @@
                                         <option value="blocked" @selected(request('quick_filter') === 'blocked')>
                                             {{ __('pages/customers_index.blocked') }}
                                         </option>
-                                        <option value="will_not_pay" @selected(request('quick_filter') === 'will_not_pay')>
+                                        <option value="active" @selected(request('quick_filter') === 'active')>
+                                            {{ __('pages/customers_index.state_active') }}
+                                        </option>
+                                        <option value="bermejek" @selected(request('quick_filter') === 'bermejek')>
                                             {{ __('pages/customers_index.will_not_pay') }}
                                         </option>
+
                                     </optgroup>
+
                                 </select>
                             </div>
 
@@ -267,11 +278,13 @@
                                         <th>{{ __('pages/customers_index.amount') }}</th>
                                         <th>{{ __('pages/customers_index.paid') }}</th>
                                         <th>{{ __('pages/customers_index.local_remaining') }}</th>
+                                        <th>{{ __('pages/customers_index.payment_status') }}</th>
                                         <th>{{ __('pages/customers_index.note') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="list form-check-all">
                                     @foreach ($credit_users as $c)
+                                    
                                         <tr>
                                             {{-- ID --}}
                                             <td class="id">
@@ -368,6 +381,17 @@
                                                     </div>
                                                 @endif
                                             </td>
+                                            {{-- Status --}}
+                                            <td>
+                                                {{-- <div class="badge bg-secondary-subtle text-secondary">
+                                                    {{ $c->status ?? __('pages/customers_index.unknown') }}
+                                                </div> --}}
+                                                <div class="badge bg-secondary-subtle text-secondary">
+                                                    {{ isset($c->status) && trim($c->status) !== '' ? $c->status : __('pages/customers_index.status_missing') }}
+                                                </div>
+
+                                            </td>
+
                                             {{-- Note --}}
                                             <td>
                                                 {{ $c->note ?? '-' }}

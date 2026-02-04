@@ -8,93 +8,6 @@ use App\Models\Credit;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-
-
-// class CustomersController extends Controller
-// {
-//     public function __invoke(Request $request)
-//     {
-//         $q = trim((string) $request->get('q', ''));
-
-
-//         $credit_users = Credit::query()
-//             ->when($q !== '', function ($query) use ($q) {
-//                 $like = '%' . $q . '%';
-//                 $query->where(function ($qq) use ($like) {
-//                     $qq->where('name', 'ilike', $like)
-//                         ->orWhere('phone', 'ilike', $like)
-//                         ->orWhere('passport', 'ilike', $like)
-//                         ->orWhere('contract', 'ilike', $like)
-//                         ->orWhere('clientref', 'ilike', $like);
-//                 });
-//             })
-//             ->orderByDesc('rv_bigint')
-//             ->paginate(25)
-//             ->appends($request->query());
-
-
-//         return view('pages.customers.index', compact('credit_users'));
-//     }
-
-
-// }
-
-
-
-// class CustomersController extends Controller
-// {
-//     public function __invoke(Request $request)
-//     {
-
-//         $q = trim((string) ($request->get('q') ?? ''));
-//         if ($q === 'null') $q = '';
-
-//         $pay_range = (string) $request->get('pay_range', 'all');
-
-//         [$from, $to] = match ($pay_range) {
-//             'today'     => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
-//             'yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
-//             '7d'        => [Carbon::now()->subDays(7), Carbon::now()],
-//             '14d'       => [Carbon::now()->subDays(14), Carbon::now()],
-//             '1m'        => [Carbon::now()->subMonth(), Carbon::now()],
-//             '3m'        => [Carbon::now()->subMonths(3), Carbon::now()],
-//             '6m'        => [Carbon::now()->subMonths(6), Carbon::now()],
-//             default     => [null, null],
-//         };
-
-//         $credit_users = Credit::query()
-//             ->when($q !== '', function ($query) use ($q) {
-//                 $like = '%' . $q . '%';
-//                 $query->where(function ($qq) use ($like) {
-//                     $qq->where('name', 'ilike', $like)
-//                         ->orWhere('phone', 'ilike', $like)
-//                         ->orWhere('passport', 'ilike', $like)
-//                         ->orWhere('contract', 'ilike', $like)
-//                         ->orWhere('clientref', 'ilike', $like);
-//                 });
-//             })
-//             // Ödeme yapanlar filtresi (credit_payments.created_at'e göre)
-//             ->when($from && $to, function ($query) use ($from, $to) {
-//                 $table = $query->getModel()->getTable(); // credits_test gibi
-
-//                 $query->whereExists(function ($sub) use ($from, $to, $table) {
-//                     $sub->selectRaw('1')
-//                         ->from('credit_payments')
-//                         ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
-//                         ->whereBetween('credit_payments.created_at', [$from, $to]);
-//                 });
-//             })
-
-//             ->orderByDesc('rv_bigint')
-//             ->paginate(25)
-//             ->appends($request->query());
-
-//         return view('pages.customers.index', compact('credit_users', 'pay_range'));
-//     }
-// }
-
-
-
 class CustomersController extends Controller
 {
     public function __invoke(Request $request)
@@ -115,6 +28,8 @@ class CustomersController extends Controller
             'paid_1m'        => [Carbon::now()->subMonth(), Carbon::now()],
             'paid_3m'        => [Carbon::now()->subMonths(3), Carbon::now()],
             'paid_6m'        => [Carbon::now()->subMonths(6), Carbon::now()],
+            'paid_9m'        => [Carbon::now()->subMonths(9), Carbon::now()],
+            'paid_12m'       => [Carbon::now()->subMonths(12), Carbon::now()],
             default          => [null, null],
         };
 
@@ -128,7 +43,8 @@ class CustomersController extends Controller
                         ->orWhere('phone', 'ilike', $like)
                         ->orWhere('passport', 'ilike', $like)
                         ->orWhere('contract', 'ilike', $like)
-                        ->orWhere('clientref', 'ilike', $like);
+                        ->orWhere('clientref', 'ilike', $like)
+                        ->orWhere('assurance', 'ilike', $like);
                 });
             })
 
@@ -144,15 +60,29 @@ class CustomersController extends Controller
                 });
             })
 
-            /* BORCU KALANLAR */
+            // /* BORCU KALANLAR */
+            // ->when($quick === 'has_debt', function ($query) {
+            //     $query->whereRaw('COALESCE(amount_local, amount) > COALESCE(paid_local, paid)');
+            // })
+
+            // /* BORCU OLMAYANLAR */
+            // ->when($quick === 'no_debt', function ($query) {
+            //     $query->whereRaw('COALESCE(amount_local, amount) <= COALESCE(paid_local, paid)');
+            // })
+
+
+            /* BORCU KALANLAR (MERKEZ: amount/paid) */
             ->when($quick === 'has_debt', function ($query) {
-                $query->whereRaw('COALESCE(amount_local, amount) > COALESCE(paid_local, paid)');
+                $query->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)');
             })
 
-            /* BORCU OLMAYANLAR */
+            /* BORCU OLMAYANLAR (MERKEZ: amount/paid) */
             ->when($quick === 'no_debt', function ($query) {
-                $query->whereRaw('COALESCE(amount_local, amount) <= COALESCE(paid_local, paid)');
+                $query->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)');
             })
+
+
+
 
             /* HİÇ ÖDEME YAPMAYANLAR */
             ->when($quick === 'no_payment', function ($query) {
@@ -166,10 +96,21 @@ class CustomersController extends Controller
             })
 
             /* BLOK OLANLAR */
-            ->when($quick === 'blocked', fn ($q) => $q->where('active', false))
+            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
+
+            /* AKTIW KALANLAR */
+            ->when($quick === 'active', fn($q) => $q->where('active', true))
+
 
             /* STATUS = BERMEJEK */
-            ->when($quick === 'will_not_pay', fn ($q) => $q->where('status', 'Will Not Pay'))
+            // ->when($quick === 'bermejek', fn($q) => $q->where('status', 'BERMEJEK'))
+            ->when($quick === 'bermejek', function ($q) {
+                $q->whereNotNull('status')
+                    ->where('status', '!=', '')
+                    ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
+            })
+
+
 
             ->orderByDesc('rv_bigint')
             ->paginate(25)

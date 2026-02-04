@@ -23,7 +23,8 @@ class CustomersInfoController extends Controller
                         ->orWhere('phone', 'ilike', $like)
                         ->orWhere('passport', 'ilike', $like)
                         ->orWhere('contract', 'ilike', $like)
-                        ->orWhere('clientref', 'ilike', $like);
+                        ->orWhere('clientref', 'ilike', $like)
+                        ->orWhere('assurance', 'ilike', $like);
                 });
             })
             ->orderByDesc('rv_bigint')

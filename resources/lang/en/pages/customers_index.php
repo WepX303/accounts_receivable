@@ -14,6 +14,8 @@ return [
     'paid_last_1_month'    => 'Paid: Last 1 month',
     'paid_last_3_months'   => 'Paid: Last 3 months',
     'paid_last_6_months'   => 'Paid: Last 6 months',
+    'paid_last_9_months'   => 'Paid: Last 9 months',
+    'paid_last_12_months'  => 'Paid: Last 12 months',
 
     'id'                   => 'ID',
     'customer'             => 'Customer',
@@ -23,6 +25,7 @@ return [
     'amount'               => 'Amount',
     'paid'                 => 'Paid',
     'local_remaining'      => 'Local Remaining',
+    'payment_status'       => 'Payment Status',
     'note'                 => 'Note',
 
     'passport_prefix'      => 'Passport: ',
@@ -47,4 +50,6 @@ return [
 
     'blocked'              => 'Blocked',
     'will_not_pay'         => 'Will not pay',
+    'status_missing'       => 'NO STATUS',
+
 ];

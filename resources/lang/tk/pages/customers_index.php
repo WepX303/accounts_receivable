@@ -14,6 +14,8 @@ return [
     'paid_last_1_month'    => 'Töleg edenler: Soňky 1 aý',
     'paid_last_3_months'   => 'Töleg edenler: Soňky 3 aý',
     'paid_last_6_months'   => 'Töleg edenler: Soňky 6 aý',
+    'paid_last_9_months'   => 'Töleg edenler: Soňky 9 aý',
+    'paid_last_12_months'  => 'Töleg edenler: Soňky 12 aý',
 
     'id'                   => 'ID',
     'customer'             => 'Müşderi',
@@ -23,6 +25,7 @@ return [
     'amount'               => 'Jemi',
     'paid'                 => 'Tölenen',
     'local_remaining'      => 'Ýerli Galan',
+    'payment_status'       => 'Töleg ýagdaýy',
     'note'                 => 'Bellik',
 
     'passport_prefix'      => 'Pasport: ',
@@ -46,5 +49,7 @@ return [
     'no_payment'           => 'Asla töleg etmänler',
 
     'blocked'              => 'Bloklananlar',
-    'will_not_pay'         => 'Töleg etmejek (Bermejek)'
+    'will_not_pay'         => 'Töleg etmejek (Bermejek)',
+    'status_missing'       => 'STATUS ÝOK',
+
 ];
