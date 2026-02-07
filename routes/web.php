@@ -10,6 +10,7 @@ use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\Customers\CustomersInfoController;
 use App\Http\Controllers\Payments\CustomersPaymentController;
+use App\Http\Controllers\Reports\AvshocrecatReportController;
 use Illuminate\Support\Facades\Route;
 
 // Login routes
@@ -48,9 +49,11 @@ Route::middleware(['auth.token'])->group(function () {
     Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
 
     // Reports
-    Route::get('/report', [ReportController::class, 'index'])->name('report');
+    // Route::get('/report', [ReportController::class, 'index'])->name('report');
     Route::get('/order', [ReportController::class, 'order'])->name('order');
     Route::get('/order-detail', [ReportController::class, 'details'])->name('order.detail');
+
+    Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
 
     // Customers
     Route::get('/customers', CustomersController::class)->name('customers');

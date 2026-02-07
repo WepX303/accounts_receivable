@@ -53,7 +53,7 @@ return [
 
     'blocked'              => 'Bloklananlar',
     'will_not_pay'         => 'Ödeme yapmayacak',
-    'status_missing'       => 'STATUS YOK',
+    'status_missing'       => 'DURUM YOK',
 
     'card_paid_today'              => 'Bugün Ödendi',
     'card_paid_yesterday'          => 'Dün Ödendi',
