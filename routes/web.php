@@ -81,3 +81,7 @@ Route::middleware(['auth.token'])->group(function () {
 //     return Redis::get('mykey');
 // });
 
+
+Route::get('/hata', function () {
+    abort(500);
+});

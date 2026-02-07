@@ -20,11 +20,11 @@
                     </a>
                 </li>
                 <!-- store  -->
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('store') }}" role="button">
                         <i class="ri-store-line"></i> <span>{{ __('menu.store') }}</span>
                     </a>
-                </li>
+                </li> --}}
                 <!-- customers  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('customers') }}" role="button">

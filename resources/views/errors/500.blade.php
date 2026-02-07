@@ -1,8 +1,5 @@
 @extends('layouts.master-without-nav')
 
-@section('body')
-<body>
-@endsection
 @section('content')
 
         <!-- auth-page wrapper -->
@@ -18,9 +15,9 @@
                                 <h1 class="title text-muted">500</h1>
                             </div>
                             <div>
-                                <h4>Internal Server Error!</h4>
-                                <p class="text-muted w-75 mx-auto">Server Error 500. We're not exactly sure what happened, but our servers say something is wrong.</p>
-                                <a href="{{ route('dashboard') }}" class="btn btn-success"><i class="mdi mdi-home me-1"></i>Back to home</a>
+                                <h4>{{ __('errors.500_title') }}</h4>
+                                <p class="text-muted w-75 mx-auto">{{ __('errors.500_desc') }}</p>
+                                <a href="{{ route('dashboard') }}" class="btn btn-success"><i class="mdi mdi-home me-1"></i>{{ __('errors.back_home') }}</a>
                             </div>
                         </div><!-- end col-->
                     </div>
