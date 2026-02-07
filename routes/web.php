@@ -66,11 +66,6 @@ Route::middleware(['auth.token'])->group(function () {
     Route::get('/payments', CustomersPaymentController::class)->name('payments');
     Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
 
-
-    // Commands
-    Route::get('/commands', [CommandController::class, 'index'])->name('commands.index');
-    Route::post('/commands/run', [CommandController::class, 'run'])->name('commands.run');
-
     /*
     |--------------------------------------------------------------------------
     | Apps Pages
@@ -85,3 +80,4 @@ Route::middleware(['auth.token'])->group(function () {
 //     Redis::set('mykey', 'Hello Redis!');
 //     return Redis::get('mykey');
 // });
+

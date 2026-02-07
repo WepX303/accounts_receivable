@@ -66,14 +66,6 @@
                                 </a>
                             </li>
                         </ul>
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link menu-link" href="{{ route('commands.index') }}" role="button">
-                                    <span>{{ __('menu.commands') }}</span>
-                                </a>
-                            </li>
-                        </ul>
-
                     </div>
                 </li> <!-- end settings -->
             </ul>
