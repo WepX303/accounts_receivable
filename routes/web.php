@@ -5,7 +5,6 @@ use App\Http\Controllers\Commands\CommandController;
 use App\Http\Controllers\Customers\CustomersController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Profile\ProfileController;
-use App\Http\Controllers\Reports\ReportController;
 use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
 use App\Http\Controllers\Customers\CustomersInfoController;
@@ -48,17 +47,12 @@ Route::middleware(['auth.token'])->group(function () {
     Route::get('/store', StoreController::class)->name('store');
     Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
 
-    // Reports
-    // Route::get('/report', [ReportController::class, 'index'])->name('report');
-    Route::get('/order', [ReportController::class, 'order'])->name('order');
-    Route::get('/order-detail', [ReportController::class, 'details'])->name('order.detail');
-
+    // Reports Monthly Payments
     Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
 
     // Customers
     Route::get('/customers', CustomersController::class)->name('customers');
     Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
-
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {

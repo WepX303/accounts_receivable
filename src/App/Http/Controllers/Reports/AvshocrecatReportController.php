@@ -24,6 +24,7 @@ class AvshocrecatReportController extends Controller
                     ->orWhere('telefon_belgisi', 'ILIKE', "%{$q}%")
                     ->orWhere('tiger_kody', 'ILIKE', "%{$q}%")
                     ->orWhere('magazyn', 'ILIKE', "%{$q}%")
+                    ->orWhere('maglumat', 'ILIKE', "%{$q}%")
                     ->orWhere('sertnama_nomeri', 'ILIKE', "%{$q}%");
             });
         }

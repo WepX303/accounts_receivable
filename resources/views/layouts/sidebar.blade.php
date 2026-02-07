@@ -25,12 +25,6 @@
                         <i class="ri-store-line"></i> <span>{{ __('menu.store') }}</span>
                     </a>
                 </li>
-                <!-- report  -->
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('report') }}" role="button">
-                        <i class="ri-folder-chart-line"></i> <span>{{ __('menu.report') }}</span>
-                    </a>
-                </li>
                 <!-- customers  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('customers') }}" role="button">
@@ -43,12 +37,19 @@
                         <i class="ri-money-dollar-box-line"></i>
                         <span>{{ __('menu.payments') }}</span>
                     </a>
-                </li>   
+                </li>
                 <!-- customer info  -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('customers.info') }}" role="button">
                         <i class="ri-contacts-line"></i>
                         <span>{{ __('menu.customer_info') }}</span>
+                    </a>
+                </li>
+                <!-- report manthly payments  -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('report') }}" role="button">
+                        <i class="ri-folder-chart-line"></i>
+                        <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
                     </a>
                 </li>
                 <!-- settings -->
