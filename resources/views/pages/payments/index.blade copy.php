@@ -77,12 +77,10 @@
                             <div class="mb-2">
                                 <i class="ri-search-line fs-1"></i>
                             </div>
-                            <div class="fw-semibold">{{ __('pages/payments.empty_title') }}</div>
+                            <div class="fw-semibold">Search to find customers</div>
                             <div class="small mt-1">
-                                {!! __('pages/payments.empty_desc', [
-                                    'customers_info' => '<span class="fw-semibold">' . __('pages/payments.customers_info') . '</span>',
-                                    'payment' => '<span class="fw-semibold">' . __('pages/payments.payment') . '</span>',
-                                ]) !!}
+                                Or select customers in <span class="fw-semibold">Customers Info</span> and click
+                                <span class="fw-semibold">Payment</span>.
                             </div>
                         </div>
                     @else
@@ -95,11 +93,11 @@
                             <table class="table align-middle table-nowrap mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>{{ __('pages/payments.th.name') }}</th>
-                                        <th>{{ __('pages/payments.th.contract') }}</th>
-                                        <th class="text-end">{{ __('pages/payments.th.remaining') }}</th>
-                                        <th class="text-end">{{ __('pages/payments.th.paid_local') }}</th>
-                                        <th>{{ __('pages/payments.th.last_paid') }}</th>
+                                        <th>Name</th>
+                                        <th>Contract</th>
+                                        <th class="text-end">Remaining</th>
+                                        <th class="text-end">Paid Local</th>
+                                        <th>Last Paid</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -143,8 +141,7 @@
 
                                             <td class="text-end">
                                                 @if (!$hasLocal)
-                                                    <span
-                                                        class="badge bg-warning-subtle text-warning">{{ __('pages/payments.local_missing') }}</span>
+                                                    <span class="badge bg-warning-subtle text-warning">LOCAL MISSING</span>
                                                 @else
                                                     <span
                                                         class="{{ $remain <= 0.00001 ? 'text-success' : 'text-danger' }}">
@@ -168,7 +165,7 @@
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center text-muted py-4">
-                                                {{ __('pages/payments.no_records') }}
+                                                No records found.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -179,9 +176,8 @@
                         @if ($isPaginator)
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <div class="text-muted small">
-                                    {{ __('pages/payments.total') }}: {{ $customers->total() }} |
-                                    {{ __('pages/payments.page') }}: {{ $customers->currentPage() }} /
-                                    {{ $customers->lastPage() }}
+                                    Total: {{ $customers->total() }} |
+                                    Page: {{ $customers->currentPage() }} / {{ $customers->lastPage() }}
                                 </div>
                                 <div>
                                     {{ $customers->onEachSide(1)->links('vendor.pagination.custom') }}
@@ -201,7 +197,7 @@
 
                     @if (!$selected)
                         <div class="text-center text-muted py-5">
-                            {{ __('pages/payments.select_customer') }}
+                            Select a customer to see details and save payment.
                         </div>
                     @else
                         @php
@@ -246,19 +242,18 @@
                             <table class="table table-borderless mb-0">
                                 <tbody>
                                     <tr>
-                                        <td class="fw-medium">{{ __('pages/payments.detail.total_local') }}</td>
+                                        <td class="fw-medium">Total Local (amount_local)</td>
                                         <td class="text-end">{{ $hasLocal ? number_format($totalLocal, 2) : '—' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-medium">{{ __('pages/payments.detail.paid_local') }}</td>
+                                        <td class="fw-medium">Paid Local</td>
                                         <td class="text-end">{{ $hasLocal ? number_format($paidLocal, 2) : '—' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-medium">{{ __('pages/payments.detail.remaining') }}</td>
+                                        <td class="fw-medium">Remaining</td>
                                         <td class="text-end">
                                             @if (!$hasLocal)
-                                                <span
-                                                    class="badge bg-warning-subtle text-warning">{{ __('pages/payments.local_missing') }}</span>
+                                                <span class="badge bg-warning-subtle text-warning">LOCAL MISSING</span>
                                             @else
                                                 <span class="{{ $remain <= 0.00001 ? 'text-success' : 'text-danger' }}">
                                                     {{ number_format($remain, 2) }}
@@ -267,11 +262,11 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-medium">{{ __('pages/payments.detail.last_paid_by') }}</td>
+                                        <td class="fw-medium">Last Paid By</td>
                                         <td class="text-end">{{ $lastUser }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-medium">{{ __('pages/payments.detail.last_paid_at') }}</td>
+                                        <td class="fw-medium">Last Paid At</td>
                                         <td class="text-end">{{ $lastAt }}</td>
                                     </tr>
                                 </tbody>
@@ -280,11 +275,11 @@
 
                         @if (!$hasLocal)
                             <div class="alert alert-warning mt-3 mb-0">
-                                {{ __('pages/payments.alert_local_missing') }}
+                                Local fields are missing (amount_local / paid_local is NULL). Payment is disabled.
                             </div>
                         @elseif ($isClosed)
                             <div class="alert alert-success mt-3 mb-0">
-                                {{ __('pages/payments.alert_closed') }}
+                                This customer has no remaining debt (paid_local >= amount_local). Payment is disabled.
                             </div>
                         @endif
 
@@ -307,7 +302,7 @@
                             }
                         @endphp
 
-                        {{-- <div class="mb-2 fw-semibold">{{ __('pages/payments.last_payment_detail') }}</div>
+                        <div class="mb-2 fw-semibold">Last Payment Detail</div>
                         <div class="bg-light rounded p-2 small">
                             @forelse($details as $key => $value)
                                 <div class="d-flex justify-content-between border-bottom py-1">
@@ -317,57 +312,14 @@
                             @empty
                                 —
                             @endforelse
-                        </div> --}}
-
-                        <div class="mb-2 fw-semibold">{{ __('pages/payments.last_payment_detail') }}</div>
-
-                        @php
-                            // paid_note içinden gelen key’leri çeviride aramak için normalize ediyoruz
-                            $labelKey = function ($rawKey) {
-                                $k = strtolower(trim((string) $rawKey)); // METHOD, method, Method => method
-                                $k = preg_replace('/\s+/', '_', $k);
-                                return $k;
-                            };
-                        @endphp
-
-                        <div class="bg-light rounded p-2 small">
-                            @forelse($details as $key => $value)
-                                @php
-                                    $k = $labelKey($key);
-                                    $transKey = "pages/payments.detail_keys.$k";
-                                    $label = __($transKey);
-
-                                    // Eğer çeviri bulunamazsa Laravel aynı key'i döndürür -> fallback
-if ($label === $transKey) {
-    $label = ucfirst(str_replace('_', ' ', $k));
-}
-if ($k === 'method') {
-    $mvKey = 'pages/payments.method_values.' . strtolower(trim((string) $value));
-                                        $mv = __($mvKey);
-
-                                        if ($mv !== $mvKey) {
-                                            $value = $mv;
-                                        }
-                                    }
-                                @endphp
-
-                                <div class="d-flex justify-content-between border-bottom py-1">
-                                    <span class="text-muted">{{ $label }}</span>
-                                    <span class="fw-semibold">{{ $value }}</span>
-                                </div>
-                            @empty
-                                —
-                            @endforelse
                         </div>
-
 
                         <hr>
 
                         {{-- Payment History --}}
-                        <div class="mb-2 fw-semibold">{{ __('pages/payments.payment_history_last_10') }}
-                        </div>
+                        <div class="mb-2 fw-semibold">Payment History (Last 10)</div>
                         @if (($history ?? collect())->isEmpty())
-                            <div class="text-muted small">{{ __('pages/payments.no_payment_history') }}</div>
+                            <div class="text-muted small">No payment history.</div>
                         @else
                             <div class="list-group">
                                 @foreach ($history as $h)
@@ -387,23 +339,10 @@ if ($k === 'method') {
                                     <div class="list-group-item">
                                         <div class="d-flex justify-content-between">
                                             <div class="fw-semibold">
-                                                {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
-                                                {{-- <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ strtoupper((string) $h->method) }}
-                                                </span> --}}
-                                                @php
-                                                    $mKey =
-                                                        'pages/payments.method_values.' .
-                                                        strtolower(trim((string) $h->method));
-                                                    $mTxt = __($mKey);
-                                                @endphp
-
+                                                Received: {{ number_format($received, 2) }}
                                                 <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
+                                                    {{ strtoupper((string) $h->method) }}
                                                 </span>
-                                                {{-- <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ __('pages/payments.method_values.' . strtolower((string) $h->method)) }}
-                                                </span> --}}
                                             </div>
                                             <div class="text-muted small">
                                                 {{ $h->created_at ? $h->created_at->format('Y-m-d H:i') : '-' }}
@@ -411,23 +350,19 @@ if ($k === 'method') {
                                         </div>
 
                                         <div class="text-muted small">
-                                            {{ __('pages/payments.applied') }}: {{ number_format($applied, 2) }} |
-                                            {{ __('pages/payments.change') }}: {{ number_format($change, 2) }}
+                                            Applied: {{ number_format($applied, 2) }} |
+                                            Change: {{ number_format($change, 2) }}
                                         </div>
 
                                         <div class="text-muted small">
-                                            {{ __('pages/payments.cash') }}:
-                                            {{ number_format((float) $h->cash_amount, 2) }} |
-                                            {{ __('pages/payments.card') }}:
-                                            {{ number_format((float) $h->card_amount, 2) }}
+                                            Cash: {{ number_format((float) $h->cash_amount, 2) }} |
+                                            Card: {{ number_format((float) $h->card_amount, 2) }}
                                         </div>
 
-                                        <div class="text-muted small">{{ __('pages/payments.by') }}: {{ $u }}
-                                        </div>
+                                        <div class="text-muted small">By: {{ $u }}</div>
 
                                         <div class="text-muted small">
-                                            {{ __('pages/payments.remaining') }}:
-                                            {{ number_format((float) $h->old_amount_local, 2) }}
+                                            Remaining: {{ number_format((float) $h->old_amount_local, 2) }}
                                             → {{ number_format((float) $h->new_amount_local, 2) }}
                                         </div>
 
@@ -448,14 +383,13 @@ if ($k === 'method') {
                             <input type="hidden" name="customer_id" value="{{ (string) $selected->logicalref }}">
 
                             <div class="mb-3">
-                                <label class="form-label">{{ __('pages/payments.form.received_amount') }}</label>
+                                <label class="form-label">Received Amount (Customer gives)</label>
                                 <input type="number" min="0" step="0.01" class="form-control text-end"
                                     name="pay_amount" id="payAmount" placeholder="0.00" value="{{ $oldReceived }}"
                                     required {{ $isClosed ? 'disabled' : '' }}>
 
                                 <div class="small text-muted mt-1">
-                                    {{ __('pages/payments.form.remaining') }}: <span class="fw-semibold"
-                                        id="remainLabel">
+                                    Remaining: <span class="fw-semibold" id="remainLabel">
                                         {{ $hasLocal ? number_format($remain, 2) : '—' }}
                                     </span>
                                 </div>
@@ -464,46 +398,42 @@ if ($k === 'method') {
                             {{-- Live preview (Applied/Change) --}}
                             <div class="border rounded p-2 mb-3 bg-light">
                                 <div class="d-flex justify-content-between small py-1">
-                                    <span class="text-muted">{{ __('pages/payments.form.applied_to_debt') }}</span>
+                                    <span class="text-muted">Applied to debt</span>
                                     <span class="fw-semibold" id="appliedPreview">0.00</span>
                                 </div>
                                 <div class="d-flex justify-content-between small py-1 border-top">
-                                    <span class="text-muted">{{ __('pages/payments.form.change_to_customer') }}</span>
+                                    <span class="text-muted">Change (to customer)</span>
                                     <span class="fw-semibold" id="changePreview">0.00</span>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">{{ __('pages/payments.form.payment_method') }}</label>
+                                <label class="form-label">Payment Method</label>
                                 <div class="d-flex gap-2 flex-wrap">
                                     <div class="form-check">
                                         <input class="form-check-input js-method" type="radio" name="payment_method"
                                             id="mCash" value="cash" {{ $oldMethod === 'cash' ? 'checked' : '' }}
                                             {{ $isClosed ? 'disabled' : '' }}>
-                                        <label class="form-check-label"
-                                            for="mCash">{{ __('pages/payments.form.method_cash') }}</label>
+                                        <label class="form-check-label" for="mCash">Cash</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input js-method" type="radio" name="payment_method"
                                             id="mCard" value="card" {{ $oldMethod === 'card' ? 'checked' : '' }}
                                             {{ $isClosed ? 'disabled' : '' }}>
-                                        <label class="form-check-label"
-                                            for="mCard">{{ __('pages/payments.form.method_card') }}</label>
+                                        <label class="form-check-label" for="mCard">Card</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input js-method" type="radio" name="payment_method"
                                             id="mMixed" value="mixed" {{ $oldMethod === 'mixed' ? 'checked' : '' }}
                                             {{ $isClosed ? 'disabled' : '' }}>
-                                        <label class="form-check-label"
-                                            for="mMixed">{{ __('pages/payments.form.method_mixed') }}</label>
+                                        <label class="form-check-label" for="mMixed">Mixed</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input js-method" type="radio" name="payment_method"
                                             id="mPhone" value="phone"
                                             {{ old('payment_method', 'cash') === 'phone' ? 'checked' : '' }}
                                             {{ $isClosed ? 'disabled' : '' }}>
-                                        <label class="form-check-label"
-                                            for="mPhone">{{ __('pages/payments.form.method_phone') }}</label>
+                                        <label class="form-check-label" for="mPhone">Phone</label>
                                     </div>
                                 </div>
                             </div>
@@ -512,14 +442,13 @@ if ($k === 'method') {
                             <div class="border rounded p-2 mb-3 d-none" id="mixedBox">
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="form-label mb-1">{{ __('pages/payments.form.method_cash') }}</label>
+                                        <label class="form-label mb-1">Cash</label>
                                         <input type="number" min="0" step="0.01"
                                             class="form-control text-end" name="cash_total" id="cashTotal"
                                             value="{{ $oldCash }}" {{ $isClosed ? 'disabled' : '' }}>
                                     </div>
                                     <div class="col-6">
-                                        <label
-                                            class="form-label mb-1">{{ __('pages/payments.form.method_card') }}</label>
+                                        <label class="form-label mb-1">Card</label>
                                         <input type="number" min="0" step="0.01"
                                             class="form-control text-end" name="card_total" id="cardTotal"
                                             value="{{ $oldCard }}" {{ $isClosed ? 'disabled' : '' }}>
@@ -529,32 +458,31 @@ if ($k === 'method') {
                                 <div class="d-flex gap-2 mt-2 flex-wrap">
                                     <button type="button" class="btn btn-sm btn-light" id="btnAllCash"
                                         {{ $isClosed ? 'disabled' : '' }}>
-                                        {{ __('pages/payments.form.all_cash') }}
+                                        All Cash
                                     </button>
                                     <button type="button" class="btn btn-sm btn-light" id="btnAllCard"
                                         {{ $isClosed ? 'disabled' : '' }}>
-                                        {{ __('pages/payments.form.all_card') }}
+                                        All Card
                                     </button>
                                     <button type="button" class="btn btn-sm btn-light" id="btnHalf"
                                         {{ $isClosed ? 'disabled' : '' }}>
-                                        {{ __('pages/payments.form.half') }}
+                                        50/50
                                     </button>
                                 </div>
 
                                 <div class="small text-muted mt-2">
-                                    {{ __('pages/payments.form.mixed_rule') }}
+                                    Cash + Card must equal Received Amount.
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">{{ __('pages/payments.form.note') }}</label>
-                                <input type="text" class="form-control" name="note"
-                                    placeholder="{{ __('pages/payments.form.note_placeholder') }}"
+                                <label class="form-label">Note</label>
+                                <input type="text" class="form-control" name="note" placeholder="Optional..."
                                     value="{{ old('note') }}" {{ $isClosed ? 'disabled' : '' }}>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100" {{ $isClosed ? 'disabled' : '' }}>
-                                {{ __('pages/payments.form.save_payment') }}
+                                Save Payment
                             </button>
                         </form>
                     @endif
@@ -688,6 +616,8 @@ if ($k === 'method') {
                 cardTotal.value = (total - half).toFixed(2);
                 normalizeMixed();
             });
+
+
 
             refresh();
         })();

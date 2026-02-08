@@ -48,15 +48,10 @@ class CustomersPaymentController extends Controller
             $q = '';
         }
 
-
-
         // ✅ ids modunda, gelen id ids içinde değilse ilk elemana düş
         if (count($ids) > 0 && $id !== null && !in_array($id, $ids, true)) {
             $id = $ids[0] ?? null;
         }
-
-
-
 
 
         if (count($ids) === 0 && $id !== null) {
