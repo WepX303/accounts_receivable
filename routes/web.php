@@ -12,13 +12,20 @@ use App\Http\Controllers\Payments\CustomersPaymentController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use Illuminate\Support\Facades\Route;
 
-// Login routes
+/*
+|--------------------------------------------------------------------------
+| Auth
+|--------------------------------------------------------------------------
+*/
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
-// Language switch
+/*
+|--------------------------------------------------------------------------
+| Language
+|--------------------------------------------------------------------------
+*/
 Route::get('/lang/{locale}', function (string $locale) {
     if (! in_array($locale, ['tk', 'en', 'ru', 'tr'], true)) {
         abort(404);
@@ -27,61 +34,82 @@ Route::get('/lang/{locale}', function (string $locale) {
     return redirect()->back();
 })->name('lang.switch');
 
-
-// ---------------------
-// Protected routes
-// ---------------------
+/*
+|--------------------------------------------------------------------------
+| Protected Routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth.token'])->group(function () {
 
-    // Dashboard
+    /*
+    |--------------------------------------------------------------------------
+    | Common (Admin + Cashier + others)
+    |--------------------------------------------------------------------------
+    */
     Route::get('/', DashboardController::class)->name('dashboard');
 
-    // Profile
-    Route::get('/profile', [ProfileController::class, 'index'])
-        ->name('profile');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    Route::post('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
+    /*
+    |--------------------------------------------------------------------------
+    | CASHIER + ADMIN
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['role:Cashier,Admin'])->group(function () {
 
-    // Store
-    Route::get('/store', StoreController::class)->name('store');
-    Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
+        // Customer info (kasiyer görebilir)
+        Route::get('/customers/info', CustomersInfoController::class)
+            ->name('customers.info');
 
-    // Reports Monthly Payments
-    Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
+        // Monthly payments report
+        Route::get('/report', [AvshocrecatReportController::class, 'index'])
+            ->name('report');
 
-    // Customers
-    Route::get('/customers', CustomersController::class)->name('customers');
-    Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
+        // Payments (ödeme al)
+        Route::get('/payments', CustomersPaymentController::class)
+            ->name('payments');
 
-    // Users
-    Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/', UserController::class)->name('index');
-        Route::post('/', [UserController::class, 'store'])->name('store');
-        Route::put('/{user}', [UserController::class, 'update'])->name('update');
-        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        Route::post('/payments', [CustomersPaymentController::class, 'store'])
+            ->name('payments.store');
     });
 
-    // Payments
-    Route::get('/payments', CustomersPaymentController::class)->name('payments');
-    Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ONLY
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['role:Admin'])->group(function () {
+
+        // Store
+        Route::get('/store', StoreController::class)->name('store');
+        Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
+
+        // Customers list
+        Route::get('/customers', CustomersController::class)->name('customers');
+
+        // Users
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', UserController::class)->name('index');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::put('/{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
+    });
 
     /*
     |--------------------------------------------------------------------------
     | Apps Pages
     |--------------------------------------------------------------------------
     */
-
     Route::prefix('apps')->name('apps.')->group(function () {});
 });
 
-
-// Route::get('/redis-test', function () {
-//     Redis::set('mykey', 'Hello Redis!');
-//     return Redis::get('mykey');
-// });
-
-
+/*
+|--------------------------------------------------------------------------
+| Error Test
+|--------------------------------------------------------------------------
+*/
 Route::get('/hata', function () {
-    abort(500);
+    abort(403);
 });
