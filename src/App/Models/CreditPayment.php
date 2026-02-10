@@ -73,6 +73,11 @@ class CreditPayment extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function scopeForCashier($query, $userId)
+    {
+        return $query->where('created_by', $userId);
+    }
+
     // ✅ computed: borca uygulanan miktar
     public function getAppliedAmountAttribute(): float
     {
