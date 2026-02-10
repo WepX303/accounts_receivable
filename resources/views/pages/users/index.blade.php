@@ -9,56 +9,66 @@
                     <div class="row g-4 align-items-center">
                         <div class="col-sm">
                             <div>
-                                <h5 class="card-title mb-0">Users</h5>
+                                <h5 class="card-title mb-0">{{ __('pages/users.title') }}</h5>
                             </div>
                         </div>
                         <div class="col-sm-auto">
                             <div class="d-flex flex-wrap align-items-start gap-2">
                                 <button type="button" class="btn btn-success add-btn" data-bs-toggle="modal" id="create-btn"
-                                    data-bs-target="#showModal"><i class="ri-add-line align-bottom me-1"></i> Add
-                                    User</button>
+                                    data-bs-target="#showModal">
+                                    <i class="ri-add-line align-bottom me-1"></i>
+                                    {{ __('pages/users.add_user') }}
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="card-body">
                     <div>
                         <div class="table-responsive table-card mb-1">
                             <table class="table align-middle" id="customerTable">
                                 <thead class="table-light text-muted">
                                     <tr>
-                                        <th data-sort="id">ID</th>
-                                        <th data-sort="firstname_lastname">User Name</th>
-                                        <th data-sort="email">Email</th>
-                                        <th data-sort="phonenumber">Phone Number</th>
-                                        <th data-sort="position">Position</th>
-                                        <th data-sort="role">Role</th>
-                                        <th data-sort="status">Status</th>
-                                        <th data-sort="action">Action</th>
+                                        <th data-sort="id">{{ __('pages/users.th_id') }}</th>
+                                        <th data-sort="firstname_lastname">{{ __('pages/users.th_user_name') }}</th>
+                                        <th data-sort="email">{{ __('pages/users.th_email') }}</th>
+                                        <th data-sort="phonenumber">{{ __('pages/users.th_phone') }}</th>
+                                        <th data-sort="position">{{ __('pages/users.th_position') }}</th>
+                                        <th data-sort="role">{{ __('pages/users.th_role') }}</th>
+                                        <th data-sort="status">{{ __('pages/users.th_status') }}</th>
+                                        <th data-sort="action">{{ __('pages/users.th_action') }}</th>
                                     </tr>
                                 </thead>
+
                                 <tbody class="list form-check-all">
                                     @forelse ($users as $user)
                                         <tr>
-                                            <td class="id"><a class="fw-medium link-primary"># {{ $user->id }}</a>
+                                            <td class="id">
+                                                <a class="fw-medium link-primary"># {{ $user->id }}</a>
                                             </td>
-                                            <td class="firstname_lastname">{{ $user->firstname }} {{ $user->lastname }}</td>
+                                            <td class="firstname_lastname">{{ $user->firstname }} {{ $user->lastname }}
+                                            </td>
                                             <td class="email">{{ $user->email }}</td>
                                             <td class="phonenumber">{{ $user->phonenumber }}</td>
                                             <td class="position">{{ $user->position }}</td>
                                             <td class="role">{{ $user->role }}</td>
                                             <td class="status">
                                                 @if ($user->status)
-                                                    <span
-                                                        class="badge bg-success-subtle text-success text-uppercase">Active</span>
+                                                    <span class="badge bg-success-subtle text-success text-uppercase">
+                                                        {{ __('pages/users.status_active') }}
+                                                    </span>
                                                 @else
-                                                    <span class="badge bg-danger text-white text-uppercase">Deactive</span>
+                                                    <span class="badge bg-danger text-white text-uppercase">
+                                                        {{ __('pages/users.status_inactive') }}
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td>
                                                 <ul class="list-inline hstack gap-2 mb-0">
                                                     <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                        data-bs-trigger="hover" data-bs-placement="top" title="Edit">
+                                                        data-bs-trigger="hover" data-bs-placement="top"
+                                                        title="{{ __('pages/users.edit') }}">
                                                         <a href="#showModal" data-bs-toggle="modal"
                                                             class="text-primary d-inline-block edit-item-btn"
                                                             data-id="{{ $user->id }}"
@@ -72,9 +82,10 @@
                                                             <i class="ri-pencil-fill fs-16"></i>
                                                         </a>
                                                     </li>
-                                                    {{-- Delete Button --}}
+
                                                     <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                        data-bs-trigger="hover" data-bs-placement="top" title="Remove">
+                                                        data-bs-trigger="hover" data-bs-placement="top"
+                                                        title="{{ __('pages/users.remove') }}">
                                                         <button type="button"
                                                             class="text-danger d-inline-block border-0 bg-transparent p-0 delete-btn"
                                                             data-id="{{ $user->id }}">
@@ -86,14 +97,19 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No users found</td>
+                                            <td colspan="8" class="text-center">
+                                                {{ __('pages/users.no_users_found') }}
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
-                    {{ $users->links('vendor.pagination.custom') }}
+
+                        {{ $users->links('vendor.pagination.custom') }}
                     </div>
+
+                    {{-- CREATE/EDIT MODAL --}}
                     <div class="modal fade" id="showModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -102,69 +118,67 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                                         id="close-modal"></button>
                                 </div>
+
                                 <form action="{{ route('users.store') }}" method="POST" autocomplete="off">
                                     @csrf
 
                                     <div class="modal-body">
-
-                                        {{-- Firstname --}}
                                         <div class="mb-3">
-                                            <label class="form-label">User Firstname</label>
+                                            <label class="form-label">{{ __('pages/users.firstname') }}</label>
                                             <input type="text" name="firstname"
                                                 class="form-control @error('firstname') is-invalid @enderror"
-                                                placeholder="Enter firstname" value="{{ old('firstname') }}" required>
+                                                placeholder="{{ __('pages/users.enter_firstname') }}"
+                                                value="{{ old('firstname') }}" required>
                                             @error('firstname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        {{-- Lastname --}}
                                         <div class="mb-3">
-                                            <label class="form-label">User Lastname</label>
+                                            <label class="form-label">{{ __('pages/users.lastname') }}</label>
                                             <input type="text" name="lastname"
                                                 class="form-control @error('lastname') is-invalid @enderror"
-                                                placeholder="Enter lastname" value="{{ old('lastname') }}" required>
+                                                placeholder="{{ __('pages/users.enter_lastname') }}"
+                                                value="{{ old('lastname') }}" required>
                                             @error('lastname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        {{-- Email --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Email</label>
+                                            <label class="form-label">{{ __('pages/users.email') }}</label>
                                             <input type="email" name="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                placeholder="Enter email" value="{{ old('email') }}" required>
+                                                placeholder="{{ __('pages/users.enter_email') }}" value="{{ old('email') }}"
+                                                required>
                                             @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        {{-- Phone --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Phone Number</label>
+                                            <label class="form-label">{{ __('pages/users.phone') }}</label>
                                             <input type="text" name="phonenumber"
                                                 class="form-control @error('phonenumber') is-invalid @enderror"
-                                                placeholder="Enter phone number" value="{{ old('phonenumber') }}"
-                                                required>
+                                                placeholder="{{ __('pages/users.enter_phone') }}"
+                                                value="{{ old('phonenumber') }}" required>
                                             @error('phonenumber')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        {{-- Position --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Position</label>
+                                            <label class="form-label">{{ __('pages/users.position') }}</label>
                                             <input type="text" name="position" class="form-control"
-                                                placeholder="Enter position" value="{{ old('position') }}">
+                                                placeholder="{{ __('pages/users.enter_position') }}"
+                                                value="{{ old('position') }}">
                                         </div>
 
-                                        {{-- Role --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Role</label>
+                                            <label class="form-label">{{ __('pages/users.role') }}</label>
                                             <select name="role"
                                                 class="form-control @error('role') is-invalid @enderror" required>
-                                                <option value="">Select role</option>
+                                                <option value="">{{ __('pages/users.select_role') }}</option>
                                                 @foreach ($roles as $role)
                                                     <option value="{{ $role }}"
                                                         {{ old('role') == $role ? 'selected' : '' }}>
@@ -177,40 +191,40 @@
                                             @enderror
                                         </div>
 
-
-                                        {{-- Status --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Status</label>
+                                            <label class="form-label">{{ __('pages/users.status') }}</label>
                                             <select name="status"
                                                 class="form-control @error('status') is-invalid @enderror" required>
                                                 <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>
-                                                    Active</option>
+                                                    {{ __('pages/users.status_active') }}
+                                                </option>
                                                 <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>
-                                                    Deactive</option>
+                                                    {{ __('pages/users.status_inactive') }}
+                                                </option>
                                             </select>
                                             @error('status')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
 
-                                        {{-- Password --}}
                                         <div class="mb-3">
-                                            <label class="form-label">Password</label>
+                                            <label class="form-label">{{ __('pages/users.password') }}</label>
                                             <input type="password" name="password"
                                                 class="form-control @error('password') is-invalid @enderror"
-                                                placeholder="Enter password">
+                                                placeholder="{{ __('pages/users.enter_password') }}">
                                             @error('password')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-
                                     </div>
 
                                     <div class="modal-footer">
                                         <div class="hstack gap-2 justify-content-end">
-                                            <a href="{{ route('users.index') }}" class="btn btn-light">Cancel</a>
-                                            <button type="submit" class="btn btn-success">
-                                                Create User
+                                            <a href="{{ route('users.index') }}" class="btn btn-light">
+                                                {{ __('pages/users.cancel') }}
+                                            </a>
+                                            <button type="submit" class="btn btn-success" id="modal-submit-btn">
+                                                {{ __('pages/users.create_user') }}
                                             </button>
                                         </div>
                                     </div>
@@ -220,7 +234,7 @@
                         </div>
                     </div>
 
-                    <!-- Modal -->
+                    {{-- DELETE MODAL --}}
                     <div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
@@ -234,16 +248,19 @@
                                             colors="primary:#f7b84b,secondary:#f06548"
                                             style="width:100px;height:100px"></lord-icon>
                                         <div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
-                                            <h4>Are you sure ?</h4>
-                                            <p class="text-muted mx-4 mb-0">Are you sure you want to
-                                                remove this record ?</p>
+                                            <h4>{{ __('pages/users.are_you_sure') }}</h4>
+                                            <p class="text-muted mx-4 mb-0">
+                                                {{ __('pages/users.remove_record_confirm') }}
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                                        <button type="button" class="btn w-sm btn-light"
-                                            data-bs-dismiss="modal">Close</button>
-                                        <button type="button" class="btn w-sm btn-danger " id="delete-record">Yes,
-                                            Delete It!</button>
+                                        <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">
+                                            {{ __('pages/users.close') }}
+                                        </button>
+                                        <button type="button" class="btn w-sm btn-danger" id="delete-record">
+                                            {{ __('pages/users.yes_delete') }}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -258,32 +275,36 @@
     </div>
     <!--end row-->
 @endsection
+
 @section('script')
     <script src="{{ URL::asset('build/libs/list.js/list.min.js') }}"></script>
     <script src="{{ URL::asset('build/libs/list.pagination.js/list.pagination.min.js') }}"></script>
-
-    <!--ecommerce-customer init js -->
     <script src="{{ URL::asset('build/js/pages/ecommerce-customer-list.init.js') }}"></script>
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
 
+            const t = {
+                create_user: @json(__('pages/users.create_user')),
+                add_user: @json(__('pages/users.add_user')),
+                update_user: @json(__('pages/users.update_user')),
+                edit_user: @json(__('pages/users.edit_user')),
+            };
+
             const modal = document.getElementById('showModal');
             const form = modal.querySelector('form');
             const modalTitle = modal.querySelector('.modal-title');
             const submitButton = modal.querySelector('button[type="submit"]');
 
-            // Add User butonuna tıklayınca modalı sıfırla (create)
             document.getElementById('create-btn').addEventListener('click', function() {
                 form.reset();
                 form.action = "{{ route('users.store') }}";
                 form.method = "POST";
-                submitButton.textContent = "Create User";
-                modalTitle.textContent = "Add User";
+                submitButton.textContent = t.create_user;
+                modalTitle.textContent = t.add_user;
             });
 
-            // Edit butonları
             const editButtons = document.querySelectorAll('.edit-item-btn');
             editButtons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -296,7 +317,6 @@
                     const role = this.dataset.role;
                     const status = this.dataset.status;
 
-                    // Form inputlarını doldur
                     form.firstname.value = firstname;
                     form.lastname.value = lastname;
                     form.email.value = email;
@@ -305,7 +325,6 @@
                     form.role.value = role;
                     form.status.value = status ? 1 : 0;
 
-                    // Form action ve method ayarla
                     form.action = "/users/" + id;
                     let methodInput = form.querySelector('input[name="_method"]');
                     if (!methodInput) {
@@ -316,9 +335,8 @@
                     }
                     methodInput.value = "PUT";
 
-                    // Buton ve başlık değiştir
-                    submitButton.textContent = "Update User";
-                    modalTitle.textContent = "Edit User";
+                    submitButton.textContent = t.update_user;
+                    modalTitle.textContent = t.edit_user;
                 });
             });
 
@@ -343,19 +361,16 @@
 
             deleteRecordBtn.addEventListener('click', function() {
                 if (currentUserId) {
-                    // Dinamik form oluşturup submit et
                     const form = document.createElement('form');
                     form.method = "POST";
                     form.action = "/users/" + currentUserId;
 
-                    // CSRF token
                     const csrfInput = document.createElement('input');
                     csrfInput.type = "hidden";
                     csrfInput.name = "_token";
                     csrfInput.value = "{{ csrf_token() }}";
                     form.appendChild(csrfInput);
 
-                    // DELETE method
                     const methodInput = document.createElement('input');
                     methodInput.type = "hidden";
                     methodInput.name = "_method";
