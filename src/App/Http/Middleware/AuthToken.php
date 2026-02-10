@@ -3,16 +3,13 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
-use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Middleware to authenticate users based on auth_token cookie.
  */
-
 class AuthToken
 {
     public function handle(Request $request, Closure $next)
@@ -41,7 +38,7 @@ class AuthToken
             return redirect()->route('login')
                 ->withCookie($cookie)
                 ->withErrors([
-                    'login' => 'Hesabınız pasif hale getirildi, lütfen yönetici ile iletişime geçin.'
+                    'login' => 'Hesabınız pasif hale getirildi, lütfen yönetici ile iletişime geçin.',
                 ]);
         }
 

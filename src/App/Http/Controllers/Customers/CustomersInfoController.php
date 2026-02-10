@@ -3,21 +3,19 @@
 namespace App\Http\Controllers\Customers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Credit;
-
+use Illuminate\Http\Request;
 
 class CustomersInfoController extends Controller
 {
-
     public function __invoke(Request $request)
     {
-        $q  = trim((string) $request->get('q', ''));
+        $q = trim((string) $request->get('q', ''));
         $id = $request->get('id'); // opsiyonel: satır tıklanınca url'e id yazmak istersen kullanırız
 
         $credit_users_info = Credit::query()
             ->when($q !== '', function ($query) use ($q) {
-                $like = '%' . $q . '%';
+                $like = '%'.$q.'%';
                 $query->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -37,18 +35,18 @@ class CustomersInfoController extends Controller
         // ✅ Sağ panel seçili kayıt
         $selected = null;
 
-        if (!empty($id)) {
+        if (! empty($id)) {
             // önce bu sayfanın içinden bul
             $selected = $pageItems->firstWhere('logicalref', (int) $id);
 
             // yoksa DB’den çek (id başka sayfadaysa)
-            if (!$selected) {
+            if (! $selected) {
                 $selected = Credit::query()->where('logicalref', (int) $id)->first();
             }
         }
 
         // id yoksa ilk kaydı seç
-        if (!$selected) {
+        if (! $selected) {
             $selected = $pageItems->first();
         }
 

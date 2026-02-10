@@ -5,7 +5,7 @@ return [
     'search_placeholder' => 'Search name / phone / passport / contract / clientref...',
 
     'empty_title' => 'Search to find customers',
-    'empty_desc'  => 'Or select customers in :customers_info and click :payment.',
+    'empty_desc' => 'Or select customers in :customers_info and click :payment.',
     'customers_info' => 'Customers Info',
     'payment' => 'Payment',
 
@@ -85,8 +85,8 @@ return [
     ],
 
     'method_values' => [
-        'cash'  => 'Cash',
-        'card'  => 'Card',
+        'cash' => 'Cash',
+        'card' => 'Card',
         'mixed' => 'Mixed',
         'phone' => 'Phone',
     ],

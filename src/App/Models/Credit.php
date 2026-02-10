@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Credit extends Model
 {
     protected $table = 'credits_test';
+
     protected $primaryKey = 'logicalref';
 
     public $incrementing = false;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -25,12 +27,12 @@ class Credit extends Model
     ];
 
     protected $casts = [
-        'amount'       => 'decimal:2',
-        'paid'         => 'decimal:2',
+        'amount' => 'decimal:2',
+        'paid' => 'decimal:2',
         'amount_local' => 'decimal:2',
-        'paid_local'   => 'decimal:2',
+        'paid_local' => 'decimal:2',
 
-        'paid_updated_at'   => 'datetime',
+        'paid_updated_at' => 'datetime',
         'amount_updated_at' => 'datetime',
 
         'date_' => 'datetime',
@@ -58,32 +60,39 @@ class Credit extends Model
     // ✅ Local remaining accessor (SADECE LOCAL)
     public function getLocalRemainingAttribute(): ?float
     {
-        if ($this->amount_local === null || $this->paid_local === null) return null;
+        if ($this->amount_local === null || $this->paid_local === null) {
+            return null;
+        }
 
         $total = (float) $this->amount_local;
-        $paid  = (float) $this->paid_local;
+        $paid = (float) $this->paid_local;
 
         $rem = $total - $paid;
-        if ($rem < 0) $rem = 0;
+        if ($rem < 0) {
+            $rem = 0;
+        }
 
         return round($rem, 2);
     }
 
     public function getLocalClosedAttribute(): bool
     {
-        if ($this->amount_local === null || $this->paid_local === null) return true;
+        if ($this->amount_local === null || $this->paid_local === null) {
+            return true;
+        }
 
         $total = (float) $this->amount_local;
-        $paid  = (float) $this->paid_local;
+        $paid = (float) $this->paid_local;
 
         return $paid >= $total - 0.01;
     }
 
-
     // ✅ REMOTE remaining (amount - paid) => negatif olabilir
     public function getRemoteRemainingAttribute(): ?float
     {
-        if ($this->amount === null || $this->paid === null) return null;
+        if ($this->amount === null || $this->paid === null) {
+            return null;
+        }
 
         return round(((float) $this->amount - (float) $this->paid), 2);
     }
@@ -91,7 +100,9 @@ class Credit extends Model
     // ✅ REMOTE closed
     public function getRemoteClosedAttribute(): bool
     {
-        if ($this->amount === null || $this->paid === null) return true;
+        if ($this->amount === null || $this->paid === null) {
+            return true;
+        }
 
         return (float) $this->paid >= (float) $this->amount - 0.01;
     }

@@ -4,16 +4,16 @@ return [
     'search_placeholder' => 'Search: name, passport, phone, tiger, store, contract...',
 
     'th' => [
-        'id'        => 'ID',
-        'store'     => 'Store',
-        'borrower'  => 'Borrower',
-        'phone'     => 'Phone',
-        'passport'  => 'Passport',
-        'contract'  => 'Contract',
-        'tiger'     => 'Tiger',
+        'id' => 'ID',
+        'store' => 'Store',
+        'borrower' => 'Borrower',
+        'phone' => 'Phone',
+        'passport' => 'Passport',
+        'contract' => 'Contract',
+        'tiger' => 'Tiger',
 
         'kt_expense' => 'KT Expense',
-        'dt_income'  => 'DT Income',
+        'dt_income' => 'DT Income',
 
         // Monthly Payments
         'm1' => 'Month 1',
@@ -24,25 +24,25 @@ return [
         'm6' => 'Month 6',
 
         'monthly_payment' => 'Monthly Payment',
-        'balance'         => 'Remaining',
+        'balance' => 'Remaining',
 
         'loan_date' => 'Loan Date',
-        'end_date'  => 'End Date',
+        'end_date' => 'End Date',
 
         'category' => 'Category',
-        'info'     => 'Information',
-        'note'     => 'Note',
+        'info' => 'Information',
+        'note' => 'Note',
 
         'will_pay_date' => 'Will Pay',
-        'status'        => 'Status',
+        'status' => 'Status',
 
         'created' => 'Created',
         'updated' => 'Updated',
     ],
 
-    'no_records'     => 'No records found.',
-    'total'          => 'Total',
-    'page'           => 'Page',
+    'no_records' => 'No records found.',
+    'total' => 'Total',
+    'page' => 'Page',
     'status_missing' => 'NO STATUS',
 
 ];

@@ -37,7 +37,6 @@ class User extends Authenticatable
         'token_expires_at' => 'datetime',
     ];
 
-
     public function getFullNameAttribute(): string
     {
         return trim("{$this->firstname} {$this->lastname}");

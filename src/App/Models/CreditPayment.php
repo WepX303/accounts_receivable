@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class CreditPayment extends Model
 {
     protected $table = 'credit_payments';
+
     public $timestamps = false;
 
     protected $fillable = [
         'credit_logicalref',
-
-
 
         'customer_name',
         'customer_phone',
@@ -23,8 +22,6 @@ class CreditPayment extends Model
         'created_by_name',
         'created_by_email',
         'created_by_phone',
-
-
 
         // pay_amount: müşterinin verdiği para (RECEIVED)
         'pay_amount',
@@ -50,20 +47,20 @@ class CreditPayment extends Model
 
     protected $casts = [
         'credit_logicalref' => 'integer',
-        'created_by'        => 'integer',
-        'created_at'        => 'datetime',
+        'created_by' => 'integer',
+        'created_at' => 'datetime',
 
-        'pay_amount'        => 'decimal:2',
-        'change_amount'     => 'decimal:2',
+        'pay_amount' => 'decimal:2',
+        'change_amount' => 'decimal:2',
 
-        'cash_amount'       => 'decimal:2',
-        'card_amount'       => 'decimal:2',
+        'cash_amount' => 'decimal:2',
+        'card_amount' => 'decimal:2',
 
-        'old_amount_local'  => 'decimal:2',
-        'new_amount_local'  => 'decimal:2',
+        'old_amount_local' => 'decimal:2',
+        'new_amount_local' => 'decimal:2',
 
-        'old_paid_local'    => 'decimal:2',
-        'new_paid_local'    => 'decimal:2',
+        'old_paid_local' => 'decimal:2',
+        'new_paid_local' => 'decimal:2',
     ];
 
     public function credit()
@@ -80,14 +77,12 @@ class CreditPayment extends Model
     public function getAppliedAmountAttribute(): float
     {
         $received = (float) $this->pay_amount;
-        $change   = (float) ($this->change_amount ?? 0);
-        $applied  = $received - $change;
-        if ($applied < 0) $applied = 0;
+        $change = (float) ($this->change_amount ?? 0);
+        $applied = $received - $change;
+        if ($applied < 0) {
+            $applied = 0;
+        }
+
         return round($applied, 2);
     }
 }
-
-
-
-
-

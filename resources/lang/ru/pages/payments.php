@@ -5,7 +5,7 @@ return [
     'search_placeholder' => 'Поиск: имя / телефон / паспорт / договор / clientref...',
 
     'empty_title' => 'Выполните поиск, чтобы найти клиентов',
-    'empty_desc'  => 'Или выберите клиентов в :customers_info и нажмите :payment.',
+    'empty_desc' => 'Или выберите клиентов в :customers_info и нажмите :payment.',
     'customers_info' => 'Информация о клиентах',
     'payment' => 'Оплата',
 
@@ -85,8 +85,8 @@ return [
     ],
 
     'method_values' => [
-        'cash'  => 'Наличные',
-        'card'  => 'Карта',
+        'cash' => 'Наличные',
+        'card' => 'Карта',
         'mixed' => 'Смешанный',
         'phone' => 'Телефон',
     ],

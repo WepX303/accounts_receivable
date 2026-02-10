@@ -30,8 +30,8 @@ class CreditsInitLocalFields extends Command
 
         $this->info("Table: {$table}");
         $this->info("Chunk: {$chunk}");
-        $this->info("Only NULL locals: " . ($onlyNull ? 'YES' : 'NO'));
-        $this->info("Dry-run: " . ($dryRun ? 'YES' : 'NO'));
+        $this->info('Only NULL locals: '.($onlyNull ? 'YES' : 'NO'));
+        $this->info('Dry-run: '.($dryRun ? 'YES' : 'NO'));
 
         // Güncellenecek kayıtları say
         $countQuery = DB::connection('pgsql')->table($table);
@@ -39,7 +39,7 @@ class CreditsInitLocalFields extends Command
         if ($onlyNull) {
             $countQuery->where(function ($q) {
                 $q->whereNull('amount_local')
-                  ->orWhereNull('paid_local');
+                    ->orWhereNull('paid_local');
             });
         }
 
@@ -48,11 +48,13 @@ class CreditsInitLocalFields extends Command
 
         if ($total === 0) {
             $this->info('Güncellenecek kayıt yok.');
+
             return self::SUCCESS;
         }
 
         if ($dryRun) {
             $this->warn('Dry-run açık: DB güncellemesi yapılmayacak.');
+
             return self::SUCCESS;
         }
 
@@ -63,7 +65,7 @@ class CreditsInitLocalFields extends Command
             ->when($onlyNull, function ($q) {
                 $q->where(function ($qq) {
                     $qq->whereNull('amount_local')
-                       ->orWhereNull('paid_local');
+                        ->orWhereNull('paid_local');
                 });
             })
             ->orderBy('logicalref')
@@ -80,15 +82,15 @@ class CreditsInitLocalFields extends Command
                     // sadece null olanları doldur: COALESCE ile
                     $affected = $update->update([
                         'amount_local' => DB::raw('COALESCE(amount_local, amount)'),
-                        'paid_local'   => DB::raw('COALESCE(paid_local, paid)'),
-                        'updated_at'   => now(),
+                        'paid_local' => DB::raw('COALESCE(paid_local, paid)'),
+                        'updated_at' => now(),
                     ]);
                 } else {
                     // hepsini overwrite et (one-time hızlı başlangıç için)
                     $affected = $update->update([
                         'amount_local' => DB::raw('amount'),
-                        'paid_local'   => DB::raw('paid'),
-                        'updated_at'   => now(),
+                        'paid_local' => DB::raw('paid'),
+                        'updated_at' => now(),
                     ]);
                 }
 
@@ -102,18 +104,15 @@ class CreditsInitLocalFields extends Command
     }
 }
 
-
-
 /**
  * Kullanım örnekleri:
- * 
+ *
  * Önce “kaç kayıt etkilenecek” gör
  * / php artisan credits:init-local --dry-run --only-null
- * 
+ *
  * Sonra sadece NULL olanları doldur (en güvenlisi)
  * / php artisan credits:init-local --only-null
- * 
+ *
  * İstersen hepsini overwrite et (one-time, daha agresif)
  * / php artisan credits:init-local
- * 
  */

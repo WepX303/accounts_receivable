@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'save'    => 'Save',
-    'update'  => 'Update',
-    'delete'  => 'Delete',
-    'cancel'  => 'Cancel',
-    'search'  => 'Search',
+    'save' => 'Save',
+    'update' => 'Update',
+    'delete' => 'Delete',
+    'cancel' => 'Cancel',
+    'search' => 'Search',
     'actions' => 'Actions',
-    'status'  => 'Status',
+    'status' => 'Status',
 ];

@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'save'    => 'Sakla',
-    'update'  => 'Täzele',
-    'delete'  => 'Poz',
-    'cancel'  => 'Ýatyr',
-    'search'  => 'Gözle',
+    'save' => 'Sakla',
+    'update' => 'Täzele',
+    'delete' => 'Poz',
+    'cancel' => 'Ýatyr',
+    'search' => 'Gözle',
     'actions' => 'Hereketler',
-    'status'  => 'Ýagdaý',
+    'status' => 'Ýagdaý',
 ];

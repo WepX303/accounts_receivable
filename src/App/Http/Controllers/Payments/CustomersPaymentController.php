@@ -13,8 +13,8 @@ class CustomersPaymentController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $q   = trim((string) $request->get('q', ''));
-        $id  = $this->sanitizeId($request->get('id'));
+        $q = trim((string) $request->get('q', ''));
+        $id = $this->sanitizeId($request->get('id'));
         $ids = $this->sanitizeIds($request->input('ids', []));
 
         /**
@@ -29,9 +29,9 @@ class CustomersPaymentController extends Controller
         //     $ids = [];
         //     } elseif (count($ids) > 0) {
         //         $q = '';
-        //         $id = null; 
+        //         $id = null;
         //     } elseif ($id !== null) {
-        //         $q = ''; 
+        //         $q = '';
         //     }
 
         if ($q !== '') {
@@ -49,10 +49,9 @@ class CustomersPaymentController extends Controller
         }
 
         // ✅ ids modunda, gelen id ids içinde değilse ilk elemana düş
-        if (count($ids) > 0 && $id !== null && !in_array($id, $ids, true)) {
+        if (count($ids) > 0 && $id !== null && ! in_array($id, $ids, true)) {
             $id = $ids[0] ?? null;
         }
-
 
         if (count($ids) === 0 && $id !== null) {
             $ids = [$id];
@@ -61,8 +60,8 @@ class CustomersPaymentController extends Controller
         $shouldFetchList = (count($ids) > 0) || ($q !== '');
 
         $customers = collect();
-        $selected  = null;
-        $history   = collect();
+        $selected = null;
+        $history = collect();
 
         if ($shouldFetchList) {
             $listQuery = Credit::query()->with('paidUpdatedByUser');
@@ -72,7 +71,7 @@ class CustomersPaymentController extends Controller
             }
 
             if ($q !== '') {
-                $like = '%' . $q . '%';
+                $like = '%'.$q.'%';
                 $listQuery->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -98,23 +97,27 @@ class CustomersPaymentController extends Controller
             //     ->appends($appends);
 
             $appends = [];
-            if ($q !== '') $appends['q'] = $q;
-            if (count($ids) > 0) $appends['ids'] = $ids; // ids[] olarak gider
-            if ($id !== null) $appends['id'] = $id;
+            if ($q !== '') {
+                $appends['q'] = $q;
+            }
+            if (count($ids) > 0) {
+                $appends['ids'] = $ids;
+            } // ids[] olarak gider
+            if ($id !== null) {
+                $appends['id'] = $id;
+            }
 
             $customers = $listQuery
                 ->orderByDesc('rv_bigint')
                 ->paginate(12)
                 ->appends($appends);
 
-
-
             $pageItems = collect($customers->items());
 
             if ($id !== null) {
                 $selected = $pageItems->firstWhere('logicalref', $id);
 
-                if (!$selected) {
+                if (! $selected) {
                     $selected = Credit::query()
                         ->with('paidUpdatedByUser')
                         ->where('logicalref', $id)
@@ -122,7 +125,7 @@ class CustomersPaymentController extends Controller
                 }
             }
 
-            if (!$selected) {
+            if (! $selected) {
                 $selected = $pageItems->first();
             }
         }
@@ -138,16 +141,15 @@ class CustomersPaymentController extends Controller
 
         return view('pages.payments.index', [
             'customers' => $customers,
-            'selected'  => $selected,
-            'history'   => $history,
-            'q'         => $q,
-            'emptyMode' => !$shouldFetchList,
+            'selected' => $selected,
+            'history' => $history,
+            'q' => $q,
+            'emptyMode' => ! $shouldFetchList,
         ]);
     }
 
     public function store(Request $request)
     {
-
 
         // $userId = Auth::id();
         // if (!$userId) {
@@ -155,11 +157,10 @@ class CustomersPaymentController extends Controller
         // }
 
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return back()->with('warning', 'Ödeme kaydetmek için giriş yapmalısınız.');
         }
         $userId = (int) $user->id;
-
 
         $customerId = $this->sanitizeId($request->input('customer_id'));
         if ($customerId === null) {
@@ -167,7 +168,7 @@ class CustomersPaymentController extends Controller
         }
 
         $method = (string) $request->input('payment_method', 'cash');
-        if (!in_array($method, ['cash', 'card', 'mixed', 'phone'], true)) {
+        if (! in_array($method, ['cash', 'card', 'mixed', 'phone'], true)) {
             return back()->with('warning', 'Payment method geçersiz.');
         }
 
@@ -220,7 +221,7 @@ class CustomersPaymentController extends Controller
                 }
 
                 $totalLocal = (float) $c->amount_local; // TOTAL BORÇ
-                $paidLocal  = (float) $c->paid_local;  // TOPLAM ÖDENEN
+                $paidLocal = (float) $c->paid_local;  // TOPLAM ÖDENEN
 
                 // ✅ kapanmışsa ödeme alma (eşik dahil)
                 if ($paidLocal >= $totalLocal - 0.01) {
@@ -228,7 +229,9 @@ class CustomersPaymentController extends Controller
                 }
 
                 $remaining = $totalLocal - $paidLocal;
-                if ($remaining < 0) $remaining = 0;
+                if ($remaining < 0) {
+                    $remaining = 0;
+                }
 
                 if ($remaining <= 0.01) {
                     throw new \RuntimeException('Bu müşterinin borcu kapanmış (kalan 0). Ödeme alınamaz.');
@@ -238,12 +241,12 @@ class CustomersPaymentController extends Controller
                 $maxExtra = 100; // izin verilen max para üstü
                 if ($received > $remaining + $maxExtra) {
                     throw new \RuntimeException(
-                        'Fazla ödeme çok yüksek. Maksimum para üstü: ' . number_format($maxExtra, 2)
+                        'Fazla ödeme çok yüksek. Maksimum para üstü: '.number_format($maxExtra, 2)
                     );
                 }
 
                 // ✅ Para üstü: borca uygulanacak miktar remaining kadar
-                $apply  = min($received, $remaining);
+                $apply = min($received, $remaining);
                 $change = $received - $apply;
 
                 // mixed için transaction içi garanti
@@ -259,37 +262,41 @@ class CustomersPaymentController extends Controller
                 $newPaidLocal = $paidLocal + $apply;
 
                 $newRemaining = $totalLocal - $newPaidLocal;
-                if ($newRemaining < 0) $newRemaining = 0;
+                if ($newRemaining < 0) {
+                    $newRemaining = 0;
+                }
 
                 // audit note
                 $detail = [
-                    'method=' . $method,
+                    'method='.$method,
 
-                    'received=' . $this->fmtMoney($received),
-                    'applied=' . $this->fmtMoney($apply),
-                    'change=' . $this->fmtMoney($change),
+                    'received='.$this->fmtMoney($received),
+                    'applied='.$this->fmtMoney($apply),
+                    'change='.$this->fmtMoney($change),
 
-                    'cash=' . $this->fmtMoney($cashTotal),
-                    'card=' . $this->fmtMoney($cardTotal),
+                    'cash='.$this->fmtMoney($cashTotal),
+                    'card='.$this->fmtMoney($cardTotal),
 
-                    'total_local=' . $this->fmtMoney($totalLocal),
+                    'total_local='.$this->fmtMoney($totalLocal),
 
-                    'old_paid_local=' . $this->fmtMoney($oldPaidLocal),
-                    'new_paid_local=' . $this->fmtMoney($newPaidLocal),
+                    'old_paid_local='.$this->fmtMoney($oldPaidLocal),
+                    'new_paid_local='.$this->fmtMoney($newPaidLocal),
 
-                    'old_remaining=' . $this->fmtMoney($oldRemaining),
-                    'new_remaining=' . $this->fmtMoney($newRemaining),
+                    'old_remaining='.$this->fmtMoney($oldRemaining),
+                    'new_remaining='.$this->fmtMoney($newRemaining),
                 ];
 
                 $finalNote = implode(' | ', $detail);
-                if ($note !== '') $finalNote .= ' | note=' . $note;
+                if ($note !== '') {
+                    $finalNote .= ' | note='.$note;
+                }
 
                 // ✅ sadece paid_local artar
                 $c->forceFill([
-                    'paid_local'      => $this->fmtMoney($newPaidLocal),
+                    'paid_local' => $this->fmtMoney($newPaidLocal),
                     'paid_updated_by' => $userId,
                     'paid_updated_at' => $now,
-                    'paid_note'       => $finalNote,
+                    'paid_note' => $finalNote,
                 ])->save();
 
                 // history:
@@ -299,61 +306,66 @@ class CustomersPaymentController extends Controller
                     'credit_logicalref' => (int) $c->logicalref,
 
                     // ✅ SNAPSHOT (kime ait olduğu ödeme kaydından anlaşılsın)
-                    'customer_name'     => mb_substr((string) $c->name, 0, 255),
-                    'customer_phone'    => mb_substr((string) $c->phone, 0, 50),
+                    'customer_name' => mb_substr((string) $c->name, 0, 255),
+                    'customer_phone' => mb_substr((string) $c->phone, 0, 50),
                     'customer_passport' => mb_substr((string) $c->passport, 0, 50),
                     'customer_contract' => mb_substr((string) $c->contract, 0, 50),
-                    'branch'            => mb_substr((string) $c->branch, 0, 50),
-
+                    'branch' => mb_substr((string) $c->branch, 0, 50),
 
                     // ✅ user snapshot
-                    'created_by'        => $userId,
-                    'created_by_name'   => mb_substr((string) $user->full_name, 0, 255),
-                    'created_by_email'  => mb_substr((string) $user->email, 0, 255),
-                    'created_by_phone'  => mb_substr((string) $user->phonenumber, 0, 50),
+                    'created_by' => $userId,
+                    'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
+                    'created_by_email' => mb_substr((string) $user->email, 0, 255),
+                    'created_by_phone' => mb_substr((string) $user->phonenumber, 0, 50),
 
+                    'pay_amount' => $this->fmtMoney($received),
+                    'change_amount' => $this->fmtMoney($change),
 
-                    'pay_amount'        => $this->fmtMoney($received),
-                    'change_amount'     => $this->fmtMoney($change),
+                    'method' => $method,
+                    'cash_amount' => $this->fmtMoney($cashTotal),
+                    'card_amount' => $this->fmtMoney($cardTotal),
 
-                    'method'            => $method,
-                    'cash_amount'       => $this->fmtMoney($cashTotal),
-                    'card_amount'       => $this->fmtMoney($cardTotal),
+                    'old_amount_local' => $this->fmtMoney($oldRemaining),
+                    'new_amount_local' => $this->fmtMoney($newRemaining),
 
-                    'old_amount_local'  => $this->fmtMoney($oldRemaining),
-                    'new_amount_local'  => $this->fmtMoney($newRemaining),
+                    'old_paid_local' => $this->fmtMoney($oldPaidLocal),
+                    'new_paid_local' => $this->fmtMoney($newPaidLocal),
 
-                    'old_paid_local'    => $this->fmtMoney($oldPaidLocal),
-                    'new_paid_local'    => $this->fmtMoney($newPaidLocal),
-
-                    'note'              => $note !== '' ? $note : null,
-                    'created_at'        => $now,
+                    'note' => $note !== '' ? $note : null,
+                    'created_at' => $now,
                 ]);
             });
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException ? $e->getMessage() : 'Payment kaydedilemedi.';
+
             return back()->with('warning', $msg)->withInput();
         }
 
         $redirectUrl = route('payments', array_merge($request->query(), ['id' => (string) $customerId]));
+
         return redirect($redirectUrl)->with('success', 'Payment saved successfully.');
     }
-
 
     private function sanitizeId($id): ?int
     {
         $v = trim((string) $id);
-        if ($v === '' || !ctype_digit($v)) return null;
+        if ($v === '' || ! ctype_digit($v)) {
+            return null;
+        }
+
         return (int) $v;
     }
 
     private function sanitizeIds($ids): array
     {
-        if (!is_array($ids)) return [];
+        if (! is_array($ids)) {
+            return [];
+        }
+
         return collect($ids)
-            ->map(fn($v) => trim((string) $v))
-            ->filter(fn($v) => $v !== '' && ctype_digit($v))
-            ->map(fn($v) => (int) $v)
+            ->map(fn ($v) => trim((string) $v))
+            ->filter(fn ($v) => $v !== '' && ctype_digit($v))
+            ->map(fn ($v) => (int) $v)
             ->unique()
             ->values()
             ->all();
@@ -362,15 +374,17 @@ class CustomersPaymentController extends Controller
     private function toMoney($v): float
     {
         $s = trim((string) $v);
-        if ($s === '') return 0.0;
+        if ($s === '') {
+            return 0.0;
+        }
 
         $s = str_replace([' ', "\u{00A0}"], '', $s);
 
-        $hasDot   = str_contains($s, '.');
+        $hasDot = str_contains($s, '.');
         $hasComma = str_contains($s, ',');
 
         if ($hasDot && $hasComma) {
-            $lastDot   = strrpos($s, '.');
+            $lastDot = strrpos($s, '.');
             $lastComma = strrpos($s, ',');
 
             if ($lastComma > $lastDot) {
@@ -380,13 +394,15 @@ class CustomersPaymentController extends Controller
                 $s = str_replace(',', '', $s);
             }
         } else {
-            if ($hasComma && !$hasDot) {
+            if ($hasComma && ! $hasDot) {
                 $s = str_replace(',', '.', $s);
             }
         }
 
         $n = (float) $s;
-        if (!is_finite($n)) return 0.0;
+        if (! is_finite($n)) {
+            return 0.0;
+        }
 
         return round($n, 2);
     }

@@ -14,23 +14,25 @@ class CustomersController extends Controller
     {
         // Search
         $q = trim((string) ($request->get('q') ?? ''));
-        if ($q === 'null') $q = '';
+        if ($q === 'null') {
+            $q = '';
+        }
 
         // Tek Quick Filter
         $quick = (string) $request->get('quick_filter', 'all');
 
         // Tarih aralıkları (ödeme bazlı)
         [$from, $to] = match ($quick) {
-            'paid_today'     => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+            'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
             'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
-            'paid_7d'        => [Carbon::now()->subDays(7), Carbon::now()],
-            'paid_14d'       => [Carbon::now()->subDays(14), Carbon::now()],
-            'paid_1m'        => [Carbon::now()->subMonth(), Carbon::now()],
-            'paid_3m'        => [Carbon::now()->subMonths(3), Carbon::now()],
-            'paid_6m'        => [Carbon::now()->subMonths(6), Carbon::now()],
-            'paid_9m'        => [Carbon::now()->subMonths(9), Carbon::now()],
-            'paid_12m'       => [Carbon::now()->subMonths(12), Carbon::now()],
-            default          => [null, null],
+            'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
+            'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
+            'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
+            'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
+            'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
+            'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
+            'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
+            default => [null, null],
         };
 
         /**
@@ -39,10 +41,10 @@ class CustomersController extends Controller
          * =========================
          */
         $todayFrom = Carbon::today()->startOfDay();
-        $todayTo   = Carbon::today()->endOfDay();
+        $todayTo = Carbon::today()->endOfDay();
 
         $yFrom = Carbon::yesterday()->startOfDay();
-        $yTo   = Carbon::yesterday()->endOfDay();
+        $yTo = Carbon::yesterday()->endOfDay();
 
         $stats = [
             // bugün tahsilat
@@ -52,13 +54,13 @@ class CustomersController extends Controller
                 ->count(),
 
             // dün tahsilat
-            'paid_y_sum'     => (float) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
+            'paid_y_sum' => (float) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
                 ->sum('pay_amount'),
-            'paid_y_cnt'     => (int) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
+            'paid_y_cnt' => (int) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
                 ->count(),
 
             // borçlu müşteri sayısı (MERKEZ amount/paid)
-            'has_debt_cnt'   => (int) Credit::whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
+            'has_debt_cnt' => (int) Credit::whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
                 ->count(),
 
             // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
@@ -76,7 +78,7 @@ class CustomersController extends Controller
 
             /* SEARCH */
             ->when($q !== '', function ($query) use ($q) {
-                $like = '%' . $q . '%';
+                $like = '%'.$q.'%';
                 $query->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -94,7 +96,7 @@ class CustomersController extends Controller
                 $query->whereExists(function ($sub) use ($from, $to, $table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereColumn('credit_payments.credit_logicalref', $table.'.logicalref')
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
             })
@@ -116,7 +118,7 @@ class CustomersController extends Controller
                 $query->whereNotExists(function ($sub) use ($table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref');
+                        ->whereColumn('credit_payments.credit_logicalref', $table.'.logicalref');
                 });
             })
 

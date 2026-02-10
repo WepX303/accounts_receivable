@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('credits_test', function (Blueprint $table) {
@@ -30,7 +31,7 @@ return new class extends Migration {
                 'amount_local',
                 'amount_updated_by',
                 'amount_updated_at',
-                'amount_note'
+                'amount_note',
             ]);
         });
     }

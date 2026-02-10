@@ -21,7 +21,7 @@ class DashboardController extends Controller
         if ($role === UserRoleEnum::CASHIER) {
 
             $start = now()->startOfDay();
-            $end   = now()->endOfDay();
+            $end = now()->endOfDay();
 
             // Bugün istatistikleri: applied = pay_amount - change_amount
             $today = CreditPayment::query()
@@ -33,9 +33,9 @@ class DashboardController extends Controller
                 ->first();
 
             $stats = [
-                'today_total'     => (float) ($today->today_total ?? 0),
-                'today_count'     => (int)   ($today->today_count ?? 0),
-                'avg_payment'     => (float) ($today->avg_payment ?? 0),
+                'today_total' => (float) ($today->today_total ?? 0),
+                'today_count' => (int) ($today->today_count ?? 0),
+                'avg_payment' => (float) ($today->avg_payment ?? 0),
                 'last_payment_at' => $today->last_payment_at ?? null,
             ];
 
@@ -53,6 +53,7 @@ class DashboardController extends Controller
                 ->map(function ($p) {
                     // Blade'de $p->amount kullanıldığı için eşliyoruz
                     $p->amount = $p->applied_amount; // model accessor
+
                     return $p;
                 });
 

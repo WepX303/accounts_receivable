@@ -52,7 +52,8 @@
                                             <td class="email">{{ $user->email }}</td>
                                             <td class="phonenumber">{{ $user->phonenumber }}</td>
                                             <td class="position">{{ $user->position }}</td>
-                                            <td class="role">{{ $user->role }}</td>
+                                            {{-- <td class="role">{{ $user->role }}</td> --}}
+                                            <td class="role">{{ $user->role->label() }}</td>
                                             <td class="status">
                                                 @if ($user->status)
                                                     <span class="badge bg-success-subtle text-success text-uppercase">
@@ -76,8 +77,8 @@
                                                             data-lastname="{{ $user->lastname }}"
                                                             data-email="{{ $user->email }}"
                                                             data-phonenumber="{{ $user->phonenumber }}"
-                                                            data-position="{{ $user->position }}"
-                                                            data-role="{{ $user->role }}"
+                                                            data-position="{{ $user->position }}" {{-- data-role="{{ $user->role }}" --}}
+                                                            data-role="{{ $user->role?->value }}"
                                                             data-status="{{ $user->status }}">
                                                             <i class="ri-pencil-fill fs-16"></i>
                                                         </a>
@@ -149,8 +150,8 @@
                                             <label class="form-label">{{ __('pages/users.email') }}</label>
                                             <input type="email" name="email"
                                                 class="form-control @error('email') is-invalid @enderror"
-                                                placeholder="{{ __('pages/users.enter_email') }}" value="{{ old('email') }}"
-                                                required>
+                                                placeholder="{{ __('pages/users.enter_email') }}"
+                                                value="{{ old('email') }}" required>
                                             @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -179,10 +180,16 @@
                                             <select name="role"
                                                 class="form-control @error('role') is-invalid @enderror" required>
                                                 <option value="">{{ __('pages/users.select_role') }}</option>
-                                                @foreach ($roles as $role)
+                                                {{-- @foreach ($roles as $role)
                                                     <option value="{{ $role }}"
                                                         {{ old('role') == $role ? 'selected' : '' }}>
                                                         {{ ucfirst($role) }}
+                                                    </option>
+                                                @endforeach --}}
+                                                @foreach (\App\Enums\UserRoleEnum::cases() as $role)
+                                                    <option value="{{ $role->value }}"
+                                                        {{ old('role', $user->role?->value ?? '') == $role->value ? 'selected' : '' }}>
+                                                        {{ $role->label() }}
                                                     </option>
                                                 @endforeach
                                             </select>

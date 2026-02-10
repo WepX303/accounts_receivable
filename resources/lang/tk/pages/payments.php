@@ -5,7 +5,7 @@ return [
     'search_placeholder' => 'Gözleg: ad / telefon / pasport / şertnama / clientref...',
 
     'empty_title' => 'Müşderi tapmak üçin gözleg ediň',
-    'empty_desc'  => 'Ýa-da :customers_info bölüminde müşderileri saýlap :payment düwmesine basyň.',
+    'empty_desc' => 'Ýa-da :customers_info bölüminde müşderileri saýlap :payment düwmesine basyň.',
     'customers_info' => 'Müşderi Maglumatlary',
     'payment' => 'Töleg',
 
@@ -85,8 +85,8 @@ return [
     ],
 
     'method_values' => [
-        'cash'  => 'Nagt',
-        'card'  => 'Kard',
+        'cash' => 'Nagt',
+        'card' => 'Kard',
         'mixed' => 'Garyşyk',
         'phone' => 'Telefon',
     ],

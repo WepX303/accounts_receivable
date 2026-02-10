@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
@@ -13,7 +13,7 @@ class ProfileController extends Controller
     {
         // Token bazlı auth
         $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
         }
 
@@ -23,14 +23,14 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
         }
 
         $validated = $request->validate([
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'phonenumber' => 'nullable|string|max:50',
             'old_password' => 'nullable|string',
             'new_password' => 'nullable|string|confirmed|min:6',
@@ -39,12 +39,12 @@ class ProfileController extends Controller
         $passwordChanged = false;
         $otherChanged = false;
 
-        if (!empty($validated['new_password'])) {
+        if (! empty($validated['new_password'])) {
             if (empty($validated['old_password'])) {
                 return back()->withErrors(['old_password' => 'Please enter your current password.']);
             }
 
-            if (!Hash::check($validated['old_password'], $user->password)) {
+            if (! Hash::check($validated['old_password'], $user->password)) {
                 return back()->withErrors(['old_password' => 'Your current password is incorrect.']);
             }
 
@@ -59,13 +59,13 @@ class ProfileController extends Controller
             }
         }
 
-        if (!$passwordChanged && !$otherChanged) {
+        if (! $passwordChanged && ! $otherChanged) {
             return back()->with('info', 'No changes detected.');
         }
 
         $user->save();
 
-        if ($passwordChanged && !$otherChanged) {
+        if ($passwordChanged && ! $otherChanged) {
             return back()->with('success', 'Password updated successfully.');
         }
 
@@ -76,7 +76,9 @@ class ProfileController extends Controller
     private function getAuthenticatedUser(Request $request)
     {
         $token = $request->cookie('auth_token');
-        if (!$token) return null;
+        if (! $token) {
+            return null;
+        }
 
         return User::where('token', $token)
             ->where('token_expires_at', '>', now())

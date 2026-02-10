@@ -10,7 +10,9 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, ...$roles)
     {
         $user = $request->user();
-        if (! $user) abort(401);
+        if (! $user) {
+            abort(401);
+        }
 
         // Enum cast varsa $user->role enum objesi olur
         $userRole = is_object($user->role) ? $user->role->value : $user->role;

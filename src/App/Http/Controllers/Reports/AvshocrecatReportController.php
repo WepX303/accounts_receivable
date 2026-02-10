@@ -2,10 +2,9 @@
 
 namespace app\Http\Controllers\Reports;
 
-use Illuminate\Http\Request;
 use app\Http\Controllers\Controller;
 use App\Models\AvshocrecatReport;
-
+use Illuminate\Http\Request;
 
 class AvshocrecatReportController extends Controller
 {

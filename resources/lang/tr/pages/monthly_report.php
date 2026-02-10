@@ -4,16 +4,16 @@ return [
     'search_placeholder' => 'Ara: ad soyad, pasaport, telefon, tiger, mağaza, sözleşme...',
 
     'th' => [
-        'id'        => 'ID',
-        'store'     => 'Mağaza',
-        'borrower'  => 'Borç Alan',
-        'phone'     => 'Telefon',
-        'passport'  => 'Pasaport',
-        'contract'  => 'Sözleşme',
-        'tiger'     => 'Tiger',
+        'id' => 'ID',
+        'store' => 'Mağaza',
+        'borrower' => 'Borç Alan',
+        'phone' => 'Telefon',
+        'passport' => 'Pasaport',
+        'contract' => 'Sözleşme',
+        'tiger' => 'Tiger',
 
         'kt_expense' => 'KT Gider',
-        'dt_income'  => 'DT Gelir',
+        'dt_income' => 'DT Gelir',
 
         // Aylık Ödemeler
         'm1' => '1. Ay',
@@ -24,24 +24,24 @@ return [
         'm6' => '6. Ay',
 
         'monthly_payment' => 'Aylık Ödeme',
-        'balance'         => 'Kalan',
+        'balance' => 'Kalan',
 
         'loan_date' => 'Başlangıç',
-        'end_date'  => 'Bitiş',
+        'end_date' => 'Bitiş',
 
         'category' => 'Kategori',
-        'info'     => 'Bilgi',
-        'note'     => 'Not',
+        'info' => 'Bilgi',
+        'note' => 'Not',
 
         'will_pay_date' => 'Ödeyecek',
-        'status'        => 'Durum',
+        'status' => 'Durum',
 
         'created' => 'Oluşturma',
         'updated' => 'Güncelleme',
     ],
 
-    'no_records'     => 'Kayıt bulunamadı.',
-    'total'          => 'Toplam',
-    'page'           => 'Sayfa',
+    'no_records' => 'Kayıt bulunamadı.',
+    'total' => 'Toplam',
+    'page' => 'Sayfa',
     'status_missing' => 'DURUM YOK',
 ];

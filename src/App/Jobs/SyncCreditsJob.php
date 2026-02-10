@@ -15,28 +15,29 @@ class SyncCreditsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+
     public int $timeout = 120;
 
     public function handle(): void
     {
         $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS_TEST
-        $pgTable    = (string) config('sync.pgsql.credits_table'); // credits_test
-        $chunkSize  = (int) config('sync.chunk_size', 1000);
+        $pgTable = (string) config('sync.pgsql.credits_table'); // credits_test
+        $chunkSize = (int) config('sync.chunk_size', 1000);
 
         /** @var ConnectionInterface $sqlsrv */
         $sqlsrv = DB::connection('sqlsrv');
         /** @var ConnectionInterface $pgsql */
-        $pgsql  = DB::connection('pgsql');
+        $pgsql = DB::connection('pgsql');
 
         // MSSQL DB context'i garantiye al
         $dbName = (string) config('database.connections.sqlsrv.database');
         $sqlsrv->statement("USE [$dbName]");
 
         // ortam bazlı state key (prod/test karışmasın)
-        $stateKey = app()->environment() . '_credits_last_rv';
+        $stateKey = app()->environment().'_credits_last_rv';
 
         $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
-        $lastRv   = $stateRow?->value ? (int) $stateRow->value : 0;
+        $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;
 
         $query = $sqlsrv
             ->table($mssqlTable)
@@ -47,7 +48,9 @@ class SyncCreditsJob implements ShouldQueue
         $maxRvSeen = $lastRv;
 
         $query->chunk($chunkSize, function ($rows) use (&$maxRvSeen, $pgTable, $pgsql) {
-            if ($rows->isEmpty()) return;
+            if ($rows->isEmpty()) {
+                return;
+            }
 
             $now = now();
 
@@ -56,10 +59,14 @@ class SyncCreditsJob implements ShouldQueue
             foreach ($rows as $row) {
                 $r = (array) $row;
                 $lr = (int) ($r['LOGICALREF'] ?? 0);
-                if ($lr > 0) $logicalRefs[] = $lr;
+                if ($lr > 0) {
+                    $logicalRefs[] = $lr;
+                }
             }
             $logicalRefs = array_values(array_unique($logicalRefs));
-            if (empty($logicalRefs)) return;
+            if (empty($logicalRefs)) {
+                return;
+            }
 
             // 2) existing kayıtları local alanlar + timestamps ile çek
             $existingRows = $pgsql->table($pgTable)
@@ -85,80 +92,86 @@ class SyncCreditsJob implements ShouldQueue
                 $r = (array) $row;
 
                 $logicalref = (int) ($r['LOGICALREF'] ?? 0);
-                if ($logicalref <= 0) continue;
+                if ($logicalref <= 0) {
+                    continue;
+                }
 
                 $rv = (int) ($r['rv_bigint'] ?? 0);
-                if ($rv > $maxRvSeen) $maxRvSeen = $rv;
+                if ($rv > $maxRvSeen) {
+                    $maxRvSeen = $rv;
+                }
 
                 $amount = $r['AMOUNT'] ?? null;
-                $paid   = $r['PAID'] ?? null;
+                $paid = $r['PAID'] ?? null;
 
-                $existing   = $existingMap[$logicalref] ?? null;
+                $existing = $existingMap[$logicalref] ?? null;
                 $isExisting = (bool) $existing;
 
                 // ✅ HER SATIRDA AYNI KEY'LER: local alanları default olarak mevcut değere set ediyoruz
                 $amountLocal = $isExisting ? $existing->amount_local : null;
-                $paidLocal   = $isExisting ? $existing->paid_local : null;
+                $paidLocal = $isExisting ? $existing->paid_local : null;
 
                 // ✅ KURAL-1: yeni kayıt -> local init
-                if (!$isExisting) {
+                if (! $isExisting) {
                     $amountLocal = $amount;
-                    $paidLocal   = $paid;
+                    $paidLocal = $paid;
                 } else {
                     // ✅ KURAL-2: eski kayıt ama local "bakir" ise ve remote artık doluysa -> local doldur
                     $amountNeverTouched = is_null($existing->amount_updated_at);
-                    $paidNeverTouched   = is_null($existing->paid_updated_at);
+                    $paidNeverTouched = is_null($existing->paid_updated_at);
 
-                    if (is_null($amountLocal) && $amountNeverTouched && !is_null($amount)) {
+                    if (is_null($amountLocal) && $amountNeverTouched && ! is_null($amount)) {
                         $amountLocal = $amount;
                     }
-                    if (is_null($paidLocal) && $paidNeverTouched && !is_null($paid)) {
+                    if (is_null($paidLocal) && $paidNeverTouched && ! is_null($paid)) {
                         $paidLocal = $paid;
                     }
                 }
 
                 $payload[] = [
-                    'logicalref'     => $logicalref,
-                    'branch'         => $r['BRANCH'] ?? null,
-                    'name'           => $r['NAME_'] ?? null,
-                    'passport'       => $r['PASSPORT_'] ?? null,
-                    'phone'          => $r['PHONE'] ?? null,
-                    'contract'       => $r['CONTRACT_'] ?? null,
-                    'date_'          => $r['DATE_'] ?? null,
+                    'logicalref' => $logicalref,
+                    'branch' => $r['BRANCH'] ?? null,
+                    'name' => $r['NAME_'] ?? null,
+                    'passport' => $r['PASSPORT_'] ?? null,
+                    'phone' => $r['PHONE'] ?? null,
+                    'contract' => $r['CONTRACT_'] ?? null,
+                    'date_' => $r['DATE_'] ?? null,
 
-                    'amount'         => $amount,
-                    'paid'           => $paid,
+                    'amount' => $amount,
+                    'paid' => $paid,
 
-                    'willpaiddate'   => $r['WILLPAIDDATE'] ?? null,
+                    'willpaiddate' => $r['WILLPAIDDATE'] ?? null,
                     'willpaidamount' => $r['WILLPAIDAMOUNT'] ?? null,
-                    'note'           => $r['NOTE'] ?? null,
-                    'lastnoteddate'  => $r['LASTNOTEDDATE'] ?? null,
-                    'status'         => $r['STATUS'] ?? null,
-                    'active'         => isset($r['ACTIVE']) ? (bool) $r['ACTIVE'] : false,
-                    'initiator_i'    => $r['INITIATOR_I'] ?? null,
-                    'clientref'      => $r['CLIENTREF'] ?? null,
-                    'custstatus'     => $r['CUSTSTATUS'] ?? null,
-                    'assurance'      => $r['ASSURANCE'] ?? null,
-                    'ctype'          => $r['CTYPE'] ?? null,
-                    'cardno'         => $r['CARDNO'] ?? null,
-                    'fishno'         => $r['FISHNO'] ?? null,
-                    'manager'        => $r['MANAGER'] ?? null,
-                    'confirmedby'    => $r['CONFIRMEDBY'] ?? null,
-                    'gstatus'        => $r['GSTATUS'] ?? null,
+                    'note' => $r['NOTE'] ?? null,
+                    'lastnoteddate' => $r['LASTNOTEDDATE'] ?? null,
+                    'status' => $r['STATUS'] ?? null,
+                    'active' => isset($r['ACTIVE']) ? (bool) $r['ACTIVE'] : false,
+                    'initiator_i' => $r['INITIATOR_I'] ?? null,
+                    'clientref' => $r['CLIENTREF'] ?? null,
+                    'custstatus' => $r['CUSTSTATUS'] ?? null,
+                    'assurance' => $r['ASSURANCE'] ?? null,
+                    'ctype' => $r['CTYPE'] ?? null,
+                    'cardno' => $r['CARDNO'] ?? null,
+                    'fishno' => $r['FISHNO'] ?? null,
+                    'manager' => $r['MANAGER'] ?? null,
+                    'confirmedby' => $r['CONFIRMEDBY'] ?? null,
+                    'gstatus' => $r['GSTATUS'] ?? null,
 
-                    'rv_bigint'      => $rv,
+                    'rv_bigint' => $rv,
 
                     // ✅ local alanlar HER SATIRDA var
-                    'amount_local'   => $amountLocal,
-                    'paid_local'     => $paidLocal,
+                    'amount_local' => $amountLocal,
+                    'paid_local' => $paidLocal,
 
                     // ✅ created_at her satırda var (existing için DB’deki değeri koruyoruz)
-                    'created_at'     => $isExisting ? $existing->created_at : $now,
-                    'updated_at'     => $now,
+                    'created_at' => $isExisting ? $existing->created_at : $now,
+                    'updated_at' => $now,
                 ];
             }
 
-            if (empty($payload)) return;
+            if (empty($payload)) {
+                return;
+            }
 
             // created_at update edilmeyecek!
             $pgsql->table($pgTable)->upsert(
@@ -195,7 +208,7 @@ class SyncCreditsJob implements ShouldQueue
                     'updated_at',
                 ]
             );
-        });;
+        });
 
         // sync_state: created_at'i her seferinde ezmeyelim
         $now = now();

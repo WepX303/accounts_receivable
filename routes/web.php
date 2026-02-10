@@ -1,15 +1,14 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Commands\CommandController;
 use App\Http\Controllers\Customers\CustomersController;
+use App\Http\Controllers\Customers\CustomersInfoController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Payments\CustomersPaymentController;
 use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
-use App\Http\Controllers\Customers\CustomersInfoController;
-use App\Http\Controllers\Payments\CustomersPaymentController;
-use App\Http\Controllers\Reports\AvshocrecatReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +30,7 @@ Route::get('/lang/{locale}', function (string $locale) {
         abort(404);
     }
     session(['locale' => $locale]);
+
     return redirect()->back();
 })->name('lang.switch');
 

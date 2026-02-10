@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('credits_test', function (Blueprint $table) {
@@ -25,7 +26,7 @@ return new class extends Migration {
         Schema::table('credits_test', function (Blueprint $table) {
             $table->dropForeign(['paid_updated_by']);
             $table->dropIndex(['paid_updated_at']);
-            $table->dropColumn(['paid_local','paid_updated_by','paid_updated_at','paid_note']);
+            $table->dropColumn(['paid_local', 'paid_updated_by', 'paid_updated_at', 'paid_note']);
         });
     }
 };

@@ -5,7 +5,7 @@ return [
     'search_placeholder' => 'Ara: ad / telefon / pasaport / sözleşme / clientref...',
 
     'empty_title' => 'Müşteri bulmak için arama yapın',
-    'empty_desc'  => 'Veya :customers_info sayfasında müşterileri seçip :payment butonuna tıklayın.',
+    'empty_desc' => 'Veya :customers_info sayfasında müşterileri seçip :payment butonuna tıklayın.',
     'customers_info' => 'Müşteri Bilgisi',
     'payment' => 'Ödeme',
 
@@ -85,8 +85,8 @@ return [
     ],
 
     'method_values' => [
-        'cash'  => 'Nakit',
-        'card'  => 'Kart',
+        'cash' => 'Nakit',
+        'card' => 'Kart',
         'mixed' => 'Karma',
         'phone' => 'Telefon',
     ],
