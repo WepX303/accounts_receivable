@@ -22,16 +22,18 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
+
         $user = $this->getAuthenticatedUser($request);
         if (! $user) {
             return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
         }
 
+
         $validated = $request->validate([
             'firstname' => 'required|string|max:255',
-            'lastname' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
-            'phonenumber' => 'nullable|string|max:50',
+            'lastname'  => 'required|string|max:255',
+            'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
+            'phonenumber' => 'required|string|max:50|unique:users,phonenumber,' . $user->id,
             'old_password' => 'nullable|string',
             'new_password' => 'nullable|string|confirmed|min:6',
         ]);
@@ -52,9 +54,11 @@ class ProfileController extends Controller
             $passwordChanged = true;
         }
 
+
         foreach (['firstname', 'lastname', 'email', 'phonenumber'] as $field) {
-            if ($validated[$field] !== $user->$field) {
-                $user->$field = $validated[$field];
+            $newValue = $validated[$field] ?? null;
+            if ($newValue !== $user->$field) {
+                $user->$field = $newValue;
                 $otherChanged = true;
             }
         }

@@ -2,66 +2,9 @@
 
 @section('content')
     <div class="position-relative mx-n4 mt-n4">
-
-        {{-- <div class="profile-wid-bg profile-setting-img">
-            <img src="{{ URL::asset('build/images/profile-bg.jpg') }}" class="profile-wid-img" alt="">          
-        </div> --}}
-
         <div class="profile-wid-bg profile-setting-img position-relative" style="border-radius: 4px; overflow: hidden;">
             <img src="{{ URL::asset('build/images/galaxy/img-3.png') }}" class="profile-wid-img" alt="">
-
-
-
             <!-- Dil değiştirici sağ üst köşe -->
-
-            {{-- <div class="dropdown position-absolute" style="top: 20px; right: 20px;">
-                <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
-                    style="width: 40px; height: 50px; padding: 8px;" data-bs-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">
-
-                    @php($loc = session('locale', 'tk'))
-
-                    @switch($loc)
-                        @case('ru')
-                            <img src="{{ URL::asset('build/images/flags/ru.svg') }}" class="rounded" height="28">
-                        @break
-
-                        @case('en')
-                            <img src="{{ URL::asset('build/images/flags/us.svg') }}" class="rounded" height="28">
-                        @break
-
-                        @case('tr')
-                            <img src="{{ URL::asset('build/images/flags/tr.svg') }}" class="rounded" height="28">
-                        @break
-
-                        @default
-                            <img src="{{ URL::asset('build/images/flags/tm.svg') }}" class="rounded" height="28">
-                    @endswitch
-                </button>
-
-                <div class="dropdown-menu dropdown-menu-end">
-                    <a href="{{ route('lang.switch', 'tk') }}" class="dropdown-item">
-                        <img src="{{ URL::asset('build/images/flags/tm.svg') }}" height="18" class="me-2 rounded">
-                        Turkmen
-                    </a>
-
-                    <a href="{{ route('lang.switch', 'ru') }}" class="dropdown-item">
-                        <img src="{{ URL::asset('build/images/flags/ru.svg') }}" height="18" class="me-2 rounded">
-                        Русский
-                    </a>
-
-                    <a href="{{ route('lang.switch', 'en') }}" class="dropdown-item">
-                        <img src="{{ URL::asset('build/images/flags/us.svg') }}" height="18" class="me-2 rounded">
-                        English
-                    </a>
-
-                    <a href="{{ route('lang.switch', 'tr') }}" class="dropdown-item">
-                        <img src="{{ URL::asset('build/images/flags/tr.svg') }}" height="18" class="me-2 rounded">
-                        Türkçe
-                    </a>
-                </div>
-            </div> --}}
-
         </div>
     </div>
 
@@ -118,7 +61,8 @@
                                 <div class="row">
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="firstnameInput" class="form-label">{{ __('pages/profile.first_name') }}</label>
+                                            <label for="firstnameInput"
+                                                class="form-label">{{ __('pages/profile.first_name') }}</label>
                                             <input type="text" class="form-control" id="firstnameInput" name="firstname"
                                                 placeholder="{{ __('pages/profile.enter_first_name') }}"
                                                 value="{{ old('firstname', $user->firstname) }}" required>
@@ -126,7 +70,8 @@
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="lastnameInput" class="form-label">{{ __('pages/profile.last_name') }}</label>
+                                            <label for="lastnameInput"
+                                                class="form-label">{{ __('pages/profile.last_name') }}</label>
                                             <input type="text" class="form-control" id="lastnameInput" name="lastname"
                                                 placeholder="{{ __('pages/profile.enter_last_name') }}"
                                                 value="{{ old('lastname', $user->lastname) }}" required>
@@ -134,20 +79,23 @@
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="phonenumberInput" class="form-label">{{ __('pages/profile.phone_number') }}</label>
+                                            <label for="phonenumberInput"
+                                                class="form-label">{{ __('pages/profile.phone_number') }}</label>
                                             <input type="tel" class="form-control" id="phonenumberInput"
                                                 name="phonenumber" placeholder="{{ __('pages/profile.enter_phone') }}"
                                                 value="{{ old('phonenumber', $user->phonenumber) }}" pattern="[0-9]{10,15}"
                                                 title="{{ __('pages/profile.digits_only') }}"
-                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                           
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="emailInput" class="form-label">{{ __('pages/profile.email') }}</label>
+                                            <label for="emailInput"
+                                                class="form-label">{{ __('pages/profile.email') }}</label>
                                             <input type="email" class="form-control" id="emailInput" name="email"
-                                                placeholder="{{ __('pages/profile.enter_email') }}" value="{{ old('email', $user->email) }}"
-                                                required>
+                                                placeholder="{{ __('pages/profile.enter_email') }}"
+                                                value="{{ old('email', $user->email) }}" required>
                                         </div>
                                     </div>
                                 </div>
@@ -155,23 +103,29 @@
                                 <div class="row g-2">
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="oldpasswordInput" class="form-label">{{ __('pages/profile.old_password') }}</label>
+                                            <label for="oldpasswordInput"
+                                                class="form-label">{{ __('pages/profile.old_password') }}</label>
                                             <input type="password" class="form-control" id="oldpasswordInput"
-                                                name="old_password" placeholder="{{ __('pages/profile.enter_old_password') }}">
+                                                name="old_password"
+                                                placeholder="{{ __('pages/profile.enter_old_password') }}">
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="newpasswordInput" class="form-label">{{ __('pages/profile.new_password') }}</label>
+                                            <label for="newpasswordInput"
+                                                class="form-label">{{ __('pages/profile.new_password') }}</label>
                                             <input type="password" class="form-control" id="newpasswordInput"
-                                                name="new_password" placeholder="{{ __('pages/profile.enter_new_password') }}">
+                                                name="new_password"
+                                                placeholder="{{ __('pages/profile.enter_new_password') }}">
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div>
-                                            <label for="confirmpasswordInput" class="form-label">{{ __('pages/profile.confirm_password') }}</label>
+                                            <label for="confirmpasswordInput"
+                                                class="form-label">{{ __('pages/profile.confirm_password') }}</label>
                                             <input type="password" class="form-control" id="confirmpasswordInput"
-                                                name="new_password_confirmation" placeholder="{{ __('pages/profile.confirm_new_password') }}">
+                                                name="new_password_confirmation"
+                                                placeholder="{{ __('pages/profile.confirm_new_password') }}">
                                         </div>
                                     </div>
                                 </div>
