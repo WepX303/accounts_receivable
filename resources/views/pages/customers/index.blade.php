@@ -194,12 +194,23 @@
 
                             {{-- Buttons --}}
                             <div class="col-xxl-2 col-sm-2 d-flex gap-2">
-
+                                {{-- 
                                 <a class="btn btn-outline-secondary w-100" href="{{ route('customers') }}">
                                     {{ __('pages/customers_index.reset') }}
                                 </a>
                                 <a class="btn btn-success w-100"
                                     href="{{ route('customers.export', array_merge(request()->query(), ['lang' => app()->getLocale()])) }}">
+                                    Export
+                                </a> --}}
+                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
+                                    href="{{ route('customers') }}">
+                                    <i class="ri-refresh-line"></i>
+                                    {{ __('pages/customers_index.reset') }}
+                                </a>
+
+                                <a class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-1"
+                                    href="{{ route('customers.export', array_merge(request()->query(), ['lang' => app()->getLocale()])) }}">
+                                    <i class="ri-file-excel-2-line"></i>
                                     Export
                                 </a>
                             </div>
