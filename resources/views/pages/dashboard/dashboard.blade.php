@@ -732,15 +732,8 @@
             </div>
         </div>
     </div>
-@if(config('app.debug'))
-    <small class="text-muted">
-        CacheV: {{ cache('admin_dashboard:v', 1) }}
-        | Key: {{ md5(json_encode([cache('admin_dashboard:v',1), $period, $start->toDateString(), $end->toDateString()])) }}
-        <span class="ms-2 badge {{ $cacheHit ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }}">
-            {{ $cacheHit ? 'HIT' : 'MISS' }}
-        </span>
-    </small>
-@endif
+
+
     {{-- Charts --}}
     <div class="row">
         <div class="col-xxl-12">
@@ -749,9 +742,6 @@
                     <h4 class="card-title mb-0 flex-grow-1">
                         Tahsilat ({{ $periodText }})
                     </h4>
-
-
-
                     {{-- Custom tarih formu --}}
                     <form class="d-flex gap-2 me-3" method="GET" action="{{ route('dashboard') }}">
                         <input type="hidden" name="period" value="custom">
@@ -922,21 +912,6 @@
                                         <td class="text-end">{{ number_format((float) ($p->cash_amount ?? 0), 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->card_amount ?? 0), 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->change_amount ?? 0), 2) }}</td>
-                                        {{-- <td>
-                                            <span class="badge bg-light text-dark">{{ $p->status ?? '-' }}</span>
-                                        </td> --}}
-                                        {{-- @php
-                                            $methodClass = match ($p->method) {
-                                                'cash' => 'bg-success-subtle text-success',
-                                                'card' => 'bg-primary-subtle text-primary',
-                                                'mixed' => 'bg-warning-subtle text-warning',
-                                                'phone' => 'bg-info-subtle text-info',
-                                                default => 'bg-light text-dark',
-                                            };
-                                        @endphp
-                                        <td> 
-                                            <span class="badge {{ $methodClass }}">{{ $p->method }}</span>
-                                        </td> --}}
                                     </tr>
                                 @empty
                                     <tr>
