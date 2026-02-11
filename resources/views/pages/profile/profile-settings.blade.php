@@ -86,7 +86,7 @@
                                                 value="{{ old('phonenumber', $user->phonenumber) }}" pattern="[0-9]{10,15}"
                                                 title="{{ __('pages/profile.digits_only') }}"
                                                 oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                           
+
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
@@ -108,6 +108,9 @@
                                             <input type="password" class="form-control" id="oldpasswordInput"
                                                 name="old_password"
                                                 placeholder="{{ __('pages/profile.enter_old_password') }}">
+                                            @error('old_password')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
@@ -139,6 +142,7 @@
                                 <!-- Save butonu -->
                                 <button type="submit" form="profileForm"
                                     class="btn btn-success">{{ __('common.save') }}</button>
+                                    
                             </div>
                         </div>
                         <!--end tab-pane-->

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customers\CustomersController;
 use App\Http\Controllers\Customers\CustomersInfoController;
+use App\Http\Controllers\Customers\CustomersExportController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Payments\CustomersPaymentController;
 use App\Http\Controllers\Profile\ProfileController;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 | Auth
 |--------------------------------------------------------------------------
 */
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -88,6 +90,8 @@ Route::middleware(['auth.token'])->group(function () {
         // Customers list
         Route::get('/customers', CustomersController::class)->name('customers');
 
+        Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
+
         // Users
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', UserController::class)->name('index');
@@ -112,4 +116,9 @@ Route::middleware(['auth.token'])->group(function () {
 */
 Route::get('/hata', function () {
     abort(403);
+});
+
+
+Route::get('/phpinfo', function () {
+    phpinfo();
 });
