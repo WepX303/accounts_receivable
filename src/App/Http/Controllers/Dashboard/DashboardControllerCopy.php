@@ -6,7 +6,7 @@ use App\Enums\UserRoleEnum;
 use App\Http\Controllers\Controller;
 use App\Models\CreditPayment;
 
-class DashboardController extends Controller
+class DashboardControllerCopy extends Controller
 {
     public function __invoke()
     {

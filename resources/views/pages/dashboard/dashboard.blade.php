@@ -355,6 +355,7 @@
                         </div>
                     </div>
 
+
                     <div class="d-flex align-items-center">
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-info-subtle rounded fs-3">
@@ -731,7 +732,15 @@
             </div>
         </div>
     </div>
-
+@if(config('app.debug'))
+    <small class="text-muted">
+        CacheV: {{ cache('admin_dashboard:v', 1) }}
+        | Key: {{ md5(json_encode([cache('admin_dashboard:v',1), $period, $start->toDateString(), $end->toDateString()])) }}
+        <span class="ms-2 badge {{ $cacheHit ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }}">
+            {{ $cacheHit ? 'HIT' : 'MISS' }}
+        </span>
+    </small>
+@endif
     {{-- Charts --}}
     <div class="row">
         <div class="col-xxl-12">
@@ -740,6 +749,21 @@
                     <h4 class="card-title mb-0 flex-grow-1">
                         Tahsilat ({{ $periodText }})
                     </h4>
+
+
+
+                    {{-- Custom tarih formu --}}
+                    <form class="d-flex gap-2 me-3" method="GET" action="{{ route('dashboard') }}">
+                        <input type="hidden" name="period" value="custom">
+
+                        <input type="date" name="start" class="form-control"
+                            value="{{ request('start') ?? \Carbon\Carbon::parse($start)->format('Y-m-d') }}">
+
+                        <input type="date" name="end" class="form-control"
+                            value="{{ request('end') ?? \Carbon\Carbon::parse($end)->format('Y-m-d') }}">
+
+                        <button class="btn btn-primary" type="submit">Uygula</button>
+                    </form>
                     <div class="flex-shrink-0">
                         <div class="dropdown card-header-dropdown">
                             <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
@@ -855,6 +879,78 @@
             </div><!-- end card -->
         </div><!-- end col -->
     </div><!-- end row -->
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header align-items-center d-flex">
+                    <h4 class="card-title mb-0 flex-grow-1">Son İşlemler ({{ $periodText }})</h4>
+                </div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Tarih</th>
+                                    <th>Şube</th>
+                                    <th>Kasiyer</th>
+                                    <th>Müşteri</th>
+                                    <th>Contract</th>
+                                    <th>Method</th>
+                                    <th class="text-end">Net</th>
+                                    <th class="text-end">Cash</th>
+                                    <th class="text-end">Card</th>
+                                    <th class="text-end">Change</th>
+
+                                    {{-- <th>Status</th> --}}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentAdminPayments as $p)
+                                    <tr>
+                                        <td>{{ $p->id }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($p->created_at)->format('d.m.Y H:i') }}</td>
+                                        <td>{{ $p->branch }}</td>
+                                        <td>{{ $p->created_by_name ?? 'N/A' }}</td>
+                                        <td>{{ $p->customer_name }}</td>
+                                        <td>{{ $p->customer_contract }}</td>
+                                        <td><span class="badge bg-primary-subtle text-primary">{{ $p->method }}</span>
+                                        </td>
+                                        <td class="text-end">{{ number_format((float) $p->net_amount, 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) ($p->cash_amount ?? 0), 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) ($p->card_amount ?? 0), 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) ($p->change_amount ?? 0), 2) }}</td>
+                                        {{-- <td>
+                                            <span class="badge bg-light text-dark">{{ $p->status ?? '-' }}</span>
+                                        </td> --}}
+                                        {{-- @php
+                                            $methodClass = match ($p->method) {
+                                                'cash' => 'bg-success-subtle text-success',
+                                                'card' => 'bg-primary-subtle text-primary',
+                                                'mixed' => 'bg-warning-subtle text-warning',
+                                                'phone' => 'bg-info-subtle text-info',
+                                                default => 'bg-light text-dark',
+                                            };
+                                        @endphp
+                                        <td> 
+                                            <span class="badge {{ $methodClass }}">{{ $p->method }}</span>
+                                        </td> --}}
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="11" class="text-center text-muted py-4">Kayıt bulunamadı</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 

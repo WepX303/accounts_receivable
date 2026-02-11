@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+
 
 class CreditPayment extends Model
 {
@@ -89,5 +91,17 @@ class CreditPayment extends Model
         }
 
         return round($applied, 2);
+    }
+
+
+    protected static function booted()
+    {
+        $bump = function () {
+            Cache::increment('admin_dashboard:v');
+        };
+
+        static::created($bump);
+        static::updated($bump);
+        static::deleted($bump);
     }
 }
