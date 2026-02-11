@@ -194,19 +194,15 @@
 
                             {{-- Buttons --}}
                             <div class="col-xxl-2 col-sm-2 d-flex gap-2">
-                                {{-- <button class="btn btn-primary w-100" type="submit">
-                                    {{ __('pages/customers_index.filter') }}
-                                </button> --}}
-                                <a class="btn btn-success w-100"
-                                    href="{{ route('customers.export', request()->query()) }}">
-                                    Export
-                                </a>
 
                                 <a class="btn btn-outline-secondary w-100" href="{{ route('customers') }}">
                                     {{ __('pages/customers_index.reset') }}
                                 </a>
+                                <a class="btn btn-success w-100"
+                                    href="{{ route('customers.export', array_merge(request()->query(), ['lang' => app()->getLocale()])) }}">
+                                    Export
+                                </a>
                             </div>
-
                         </div>
                     </form>
                 </div>
