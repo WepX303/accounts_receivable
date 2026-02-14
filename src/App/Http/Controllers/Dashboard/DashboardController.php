@@ -205,7 +205,6 @@ class DashboardController extends Controller
                     'cash_amount',
                     'card_amount',
                     'created_at',
-                    'status',
                 ])
                 ->map(function ($p) {
                     $p->net_amount = (float)$p->pay_amount - (float)($p->change_amount ?? 0);
