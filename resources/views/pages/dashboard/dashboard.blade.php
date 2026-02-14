@@ -906,7 +906,18 @@
                                         <td>{{ $p->created_by_name ?? 'N/A' }}</td>
                                         <td>{{ $p->customer_name }}</td>
                                         <td>{{ $p->customer_contract }}</td>
-                                        <td><span class="badge bg-primary-subtle text-primary">{{ $p->method }}</span>
+                                        
+                                        <td>
+                                            @php
+                                                $mKey =
+                                                    'pages/payments.method_values.' .
+                                                    strtolower(trim((string) $p->method));
+                                                $mTxt = __($mKey);
+                                            @endphp
+
+                                            <span class="badge bg-primary-subtle text-primary ms-1">
+                                                {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $p->method) }}
+                                            </span>
                                         </td>
                                         <td class="text-end">{{ number_format((float) $p->net_amount, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->cash_amount ?? 0), 2) }}</td>
@@ -936,16 +947,15 @@
             'payMethods' => [
                 'cash' => $kpi['total_cash'] ?? 0,
                 'card' => $kpi['total_card'] ?? 0,
+                'mixed' => $kpi['total_mixed'] ?? 0,
                 'phone' => $kpi['total_phone'] ?? 0,
             ],
         ]) !!};
     </script>
-
     <!-- apexcharts -->
     <script src="{{ URL::asset('build/libs/apexcharts/apexcharts.min.js') }}"></script>
 
     {{-- Demo init yerine bizim init --}}
     <script src="{{ URL::asset('build/js/pages/admin-dashboard.init.js') }}"></script>
 
-    <script src="{{ URL::asset('build/js/app.js') }}"></script>
 @endsection

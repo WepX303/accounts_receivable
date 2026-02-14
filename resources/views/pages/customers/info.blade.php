@@ -38,15 +38,6 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col" style="width: 50px;"></th>
-                                        {{-- <th scope="col">Name</th>
-                                        <th scope="col">Phone</th>
-                                        <th scope="col">Branch</th>
-                                        <th scope="col">Contract</th>
-                                        <th scope="col" class="text-end">Amount</th>
-                                        <th scope="col" class="text-end">Paid</th>
-                                        <th scope="col" class="text-end">Local Remaining</th>
-                                        <th scope="col">Active</th> --}}
-
                                         <th scope="col">{{ __('pages/customers_info.name') }}</th>
                                         <th scope="col">{{ __('pages/customers_info.phone') }}</th>
                                         <th scope="col">{{ __('pages/customers_info.branch') }}</th>
@@ -56,7 +47,6 @@
                                         <th scope="col" class="text-end">
                                             {{ __('pages/customers_info.local_remaining') }}</th>
                                         <th scope="col">{{ __('pages/customers_info.active') }}</th>
-
                                     </tr>
                                 </thead>
 
@@ -352,7 +342,6 @@
         };
     </script>
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
-    <script src="{{ URL::asset('build/js/app.js') }}"></script>
 
     <script>
         (function() {
@@ -391,18 +380,6 @@
                 setText('d_passport', d.passport);
                 setText('d_phone', d.phone);
                 setText('d_contract', d.contract);
-
-                // Amount Local + Center
-                // const amountLocal = d.amountLocal || '';
-                // const amountCenter = d.amountCenter || '';
-                // setText('d_amount_local', amountLocal !== '' ? amountLocal : amountCenter);
-                // setCenterLine('d_amount_center', 'Merkez: ', (amountLocal !== '' ? amountCenter : ''));
-
-                // // Paid Local + Center
-                // const paidLocal = d.paidLocal || '';
-                // const paidCenter = d.paidCenter || '';
-                // setText('d_paid_local', paidLocal !== '' ? paidLocal : paidCenter);
-                // setCenterLine('d_paid_center', 'Merkez: ', (paidLocal !== '' ? paidCenter : ''));
 
                 // Amount Local + Center
                 const amountLocal = d.amountLocal || '';

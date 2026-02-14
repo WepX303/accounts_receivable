@@ -567,7 +567,6 @@ if ($k === 'method') {
 @endsection
 
 @section('script')
-    <script src="{{ URL::asset('build/js/app.js') }}"></script>
 
     <script>
         (function() {
