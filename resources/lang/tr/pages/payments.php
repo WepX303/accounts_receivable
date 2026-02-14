@@ -87,7 +87,7 @@ return [
     'method_values' => [
         'cash' => 'Nakit',
         'card' => 'Kart',
-        'mixed' => 'Karma',
+        'mixed' => 'Karışık',
         'phone' => 'Telefon',
     ],
 ];
