@@ -3,6 +3,7 @@
 Bu doküman, projeyi production sunucuya (VPS/Dedicated) deploy etmek için **standart ve güvenli** bir akış sunar.
 
 > Bu proje özelinde kritik noktalar:
+>
 > - Ana DB: PostgreSQL (`pgsql`)
 > - Kaynak DB: MSSQL (`sqlsrv`)
 > - Queue: `database` driver (jobs tablosu PG’de)
@@ -180,7 +181,8 @@ php artisan queue:work --stop-when-empty
 ```
 
 Kontrol:
-- `credits_test` güncellendi mi?
+
+- `credits` güncellendi mi?
 - `avshocrecat_report` doldu mu?
 - `failed_jobs` oluştu mu?
 
@@ -205,6 +207,7 @@ tail -f storage/logs/queue-worker.log
 ## Rollback Stratejisi (Öneri)
 
 ### Kod Rollback
+
 - Git ile bir önceki commit’e dön
 
 ### Migration Rollback (dikkat)
@@ -254,4 +257,3 @@ php artisan migrate:rollback --step=1 --force
 - Production deploy: `.env` → composer → migrate → cache → queue restart
 - Queue worker Supervisor ile ayakta tutulmalı
 - Senkron smoke test deploy sonrası yapılmalı
-

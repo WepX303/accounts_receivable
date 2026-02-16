@@ -19,19 +19,19 @@ class CreditsInitLocalFields extends Command
         {--dry-run : Güncelleme yapmaz, sadece sayıları gösterir}
         {--chunk=2000 : Parça boyutu}';
 
-    protected $description = 'credits_test tablosunda amount/paid değerlerini amount_local/paid_local alanlarına ilk kez aktarır (one-time).';
+    protected $description = 'credits tablosunda amount/paid değerlerini amount_local/paid_local alanlarına ilk kez aktarır (one-time).';
 
     public function handle(): int
     {
-        $table = (string) (config('sync.pgsql.credits_table') ?: 'credits_test');
+        $table = (string) (config('sync.pgsql.credits_table') ?: 'credits');
         $chunk = (int) $this->option('chunk');
         $onlyNull = (bool) $this->option('only-null');
         $dryRun = (bool) $this->option('dry-run');
 
         $this->info("Table: {$table}");
         $this->info("Chunk: {$chunk}");
-        $this->info('Only NULL locals: '.($onlyNull ? 'YES' : 'NO'));
-        $this->info('Dry-run: '.($dryRun ? 'YES' : 'NO'));
+        $this->info('Only NULL locals: ' . ($onlyNull ? 'YES' : 'NO'));
+        $this->info('Dry-run: ' . ($dryRun ? 'YES' : 'NO'));
 
         // Güncellenecek kayıtları say
         $countQuery = DB::connection('pgsql')->table($table);

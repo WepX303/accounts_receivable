@@ -9,7 +9,7 @@ return [
     ],
 
     'pgsql' => [
-        'credits_table' => env('PG_CREDITS_TABLE', 'credits_test'),
+        'credits_table' => env('PG_CREDITS_TABLE', 'credits'),
         'avshocrecat_table' => env('PG_AVSHOCRECAT_TABLE', 'avshocrecat_report'),
     ],
 

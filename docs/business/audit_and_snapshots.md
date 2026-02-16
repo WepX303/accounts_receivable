@@ -4,7 +4,7 @@ Bu doküman, sistemdeki kritik tabloların neden **snapshot (immutable)** mantı
 
 > Bu proje özelinde audit yaklaşımı özellikle:
 > - `credit_payments`
-> - `credits_test` local alanları
+> - `credits` local alanları
 > üzerinden uygulanır.
 
 ---
@@ -89,9 +89,9 @@ Amaç:
 
 ---
 
-## 2) `credits_test` Local Audit Alanları
+## 2) `credits` Local Audit Alanları
 
-`credits_test` tablosunda local override alanları için audit tutulur.
+`credits` tablosunda local override alanları için audit tutulur.
 
 ### Amount Local Audit
 
@@ -177,7 +177,7 @@ Amaç:
 ## Özet
 
 - `credit_payments` = **snapshot + immutable**
-- `credits_test` local alanları = **audit’li override**
+- `credits` local alanları = **audit’li override**
 - Geçmiş kayıtlar **asla değişmez**
 - Düzeltme yeni kayıtla yapılır
 

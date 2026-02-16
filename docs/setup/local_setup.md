@@ -3,6 +3,7 @@
 Bu doküman, projeyi **local ortamda** çalıştırmak için gerekli adımları içerir.
 
 > Bu projede:
+>
 > - Ana DB: **PostgreSQL (pgsql)**
 > - Kaynak DB: **MSSQL (sqlsrv)**
 > - Queue driver: **database** (jobs tablosu PostgreSQL’de)
@@ -30,6 +31,7 @@ Bu doküman, projeyi **local ortamda** çalıştırmak için gerekli adımları 
 ## Gereksinimler
 
 ### Yazılımlar
+
 - PHP (Laravel 12 ile uyumlu)
 - Composer
 - PostgreSQL
@@ -39,7 +41,9 @@ Bu doküman, projeyi **local ortamda** çalıştırmak için gerekli adımları 
 > Not: Node/NPM bu projede zorunlu değil (Vite kullanımı opsiyonel).
 
 ### PHP Eklentileri
+
 Genelde gerekli olanlar:
+
 - `pdo_pgsql`
 - `pdo_sqlsrv` / `sqlsrv` (SQL Server için)
 - `mbstring`, `openssl`, `json`, `tokenizer`, `ctype`, `xml`
@@ -67,16 +71,16 @@ Ardından `.env` içindeki DB bilgilerini ayarla.
 Bu proje için kritik alanlar:
 
 - PostgreSQL:
-  - `DB_CONNECTION=pgsql`
-  - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+    - `DB_CONNECTION=pgsql`
+    - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
 
 - MSSQL:
-  - `MSSQL_HOST`, `MSSQL_PORT`, `MSSQL_DATABASE`, `MSSQL_USERNAME`, `MSSQL_PASSWORD`
-  - `MSSQL_CREDITS_TABLE`, `MSSQL_AVSHOCRECAT_PROC`
+    - `MSSQL_HOST`, `MSSQL_PORT`, `MSSQL_DATABASE`, `MSSQL_USERNAME`, `MSSQL_PASSWORD`
+    - `MSSQL_CREDITS_TABLE`, `MSSQL_AVSHOCRECAT_PROC`
 
 - Queue:
-  - `QUEUE_CONNECTION=database`
-  - `DB_QUEUE_CONNECTION=pgsql`
+    - `QUEUE_CONNECTION=database`
+    - `DB_QUEUE_CONNECTION=pgsql`
 
 ---
 
@@ -129,7 +133,8 @@ php artisan migrate
 ```
 
 Bu işlem şu tabloları oluşturur:
-- `users`, `credits_test`, `credit_payments`, `sync_state`, `jobs`, `failed_jobs` vb.
+
+- `users`, `credits`, `credit_payments`, `sync_state`, `jobs`, `failed_jobs` vb.
 - Ayrıca `avshocrecat_report` tablosu migration içinde `Schema::connection('pgsql')` ile PG’de oluşur.
 
 ---
@@ -167,6 +172,7 @@ php artisan queue:work
 ## 9) Senkronu Çalıştır
 
 Komut iki job dispatch eder:
+
 - `SyncCreditsJob` (incremental)
 - `SyncAvshocrecatReportJob` (truncate + insert)
 
@@ -189,15 +195,18 @@ php artisan sync:run --passport=123456
 ## 10) Sık Karşılaşılan Sorunlar
 
 ### “could not find driver” (pgsql/sqlsrv)
+
 - PHP extension eksik
 - Doğru `pdo_pgsql` ve `sqlsrv/pdo_sqlsrv` kurulduğundan emin ol
 
 ### MSSQL connection refused / timeout
+
 - SQL Server port: `1433` açık mı?
 - Firewall / network erişimi var mı?
 - Kullanıcı/şifre doğru mu?
 
 ### Queue job çalışmıyor
+
 - Worker çalışıyor mu?
 - `jobs` tablosu var mı?
 - `QUEUE_CONNECTION=database` doğru mu?
@@ -209,4 +218,3 @@ php artisan sync:run --passport=123456
 - Production’da queue için Supervisor kullan
 - Senkron job’ları için log/sync-state kayıtlarını standartlaştır
 - Büyük veri varsa `retry_after`/`timeout` değerlerini yükselt
-

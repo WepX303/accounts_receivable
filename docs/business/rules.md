@@ -3,7 +3,7 @@
 Bu doküman, kredi ve ödeme tarafındaki **iş kurallarını** net ve tartışmasız şekilde tanımlar. Amaç; backend, frontend ve raporların **aynı mantıkla** çalışmasını sağlamaktır.
 
 > Kapsam:
-> - `credits_test` (Credit modeli)
+> - `credits` (Credit modeli)
 > - `credit_payments` (CreditPayment modeli)
 > - Local override alanları
 > - Kapanma (closed) ve kalan (remaining) hesapları

@@ -131,9 +131,9 @@ change_amount <= cash_amount
 
 Ödeme kaydedildiğinde:
 
-- `credits_test.paid_local`:
+- `credits.paid_local`:
   - `old_paid_local` → `new_paid_local`
-- `credits_test.amount_local`:
+- `credits.amount_local`:
   - **değişmez**
 
 > Kredi güncellemesi ve ödeme kaydı **aynı transaction** içinde yapılmalıdır.

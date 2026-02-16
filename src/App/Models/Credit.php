@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Credit extends Model
 {
-    protected $table = 'credits_test';
+    protected $table = 'credits';
 
     protected $primaryKey = 'logicalref';
 

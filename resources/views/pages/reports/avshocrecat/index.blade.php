@@ -8,7 +8,7 @@
                 {{-- Filters --}}
                 <div class="card-body border border-dashed border-end-0 border-start-0">
                     <form method="GET" action="{{ route('report') }}">
-                        <div class="row g-3 align-items-end">
+                        <div class="row g-3 align-items-end"
                             {{-- Search --}}
                             <div class="col-xxl-6 col-sm-6">
                                 <div class="search-box">

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('credits_test', function (Blueprint $table) {
+        Schema::table('credits', function (Blueprint $table) {
             $table->decimal('amount_local', 18, 2)->nullable()->after('amount');
             $table->unsignedBigInteger('amount_updated_by')->nullable()->after('amount_local');
             $table->timestamp('amount_updated_at')->nullable()->after('amount_updated_by');
@@ -24,7 +24,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('credits_test', function (Blueprint $table) {
+        Schema::table('credits', function (Blueprint $table) {
             $table->dropForeign(['amount_updated_by']);
             $table->dropIndex(['amount_updated_at']);
             $table->dropColumn([

@@ -3,8 +3,9 @@
 Bu doküman, `App\Jobs\SyncCreditsJob` job’unun **gerçek koduna birebir uygun** şekilde nasıl çalıştığını açıklar.
 
 > Senkron tipi: **Incremental**
+>
 > - Kaynak: MSSQL (`sqlsrv`) – `CREDITS_TEST / CREDITS`
-> - Hedef: PostgreSQL (`pgsql`) – `credits_test`
+> - Hedef: PostgreSQL (`pgsql`) – `credits`
 > - Incremental anahtar: MSSQL `RV` (rowversion) → PG `rv_bigint`
 > - State tablosu: `sync_state`
 
@@ -13,7 +14,7 @@ Bu doküman, `App\Jobs\SyncCreditsJob` job’unun **gerçek koduna birebir uygun
 ## Amaç
 
 - MSSQL’deki Credits tablosundaki yeni/değişen satırları **kaldığı yerden** çekmek
-- PostgreSQL’de `credits_test` tablosuna **upsert** ile yazmak
+- PostgreSQL’de `credits` tablosuna **upsert** ile yazmak
 - Local alanları korumak ve gerektiğinde “ilk init” yapmak
 
 ---
@@ -58,7 +59,7 @@ $chunkSize  = config('sync.chunk_size', 1000);
 `.env` tarafında genelde şunlara karşılık gelir:
 
 - `MSSQL_CREDITS_TABLE=BPA.dbo.CREDITS_TEST`
-- `PG_CREDITS_TABLE=credits_test`
+- `PG_CREDITS_TABLE=credits`
 
 ---
 
@@ -72,6 +73,7 @@ $sqlsrv->statement("USE [$dbName]");
 ```
 
 Bu yaklaşım özellikle:
+
 - bağlantı farklı DB’ye düşerse
 - stored proc / tablo isimleri farklı DB’de olursa
 
@@ -88,10 +90,12 @@ $stateKey = app()->environment() . '_credits_last_rv';
 ```
 
 Örnek:
+
 - local: `local_credits_last_rv`
 - production: `production_credits_last_rv`
 
 ### Neden?
+
 - Test/Prod aynı PostgreSQL’i paylaşıyorsa “state karışmasın” diye.
 
 ---
@@ -136,10 +140,10 @@ $query->chunk($chunkSize, function ($rows) { ... });
 
 Chunk içinde iş akışı:
 
-1) Chunk’taki `LOGICALREF` listesi çıkarılır
-2) PG’den mevcut kayıtlar çekilir (local alanları korumak için)
-3) Payload hazırlanır
-4) PG’ye `upsert` yapılır
+1. Chunk’taki `LOGICALREF` listesi çıkarılır
+2. PG’den mevcut kayıtlar çekilir (local alanları korumak için)
+3. Payload hazırlanır
+4. PG’ye `upsert` yapılır
 
 ---
 
@@ -195,6 +199,7 @@ Ve eğer local değer **hala null** ise, remote doluysa local doldurulur:
 Job, MSSQL kolonlarını hedef PG kolonlarına map eder.
 
 Örnek eşlemeler:
+
 - `LOGICALREF` → `logicalref` (PK)
 - `NAME_` → `name`
 - `PASSPORT_` → `passport`
@@ -203,6 +208,7 @@ Job, MSSQL kolonlarını hedef PG kolonlarına map eder.
 - `RV` → `rv_bigint`
 
 Ayrıca:
+
 - `created_at`: mevcut kayıtta eski `created_at` korunur
 - `updated_at`: her senkron run’ında `now()` set edilir
 
@@ -287,9 +293,11 @@ php artisan queue:work --timeout=120 --tries=5
 ### 3) State yanlış ilerledi
 
 Belirti:
+
 - bazı kayıtlar gelmiyor
 
 Çözüm:
+
 - `sync_state` içinde ilgili key’in value’sunu kontrollü şekilde geri çek
 - job’u tekrar çalıştır
 
@@ -302,6 +310,7 @@ Belirti:
 - `chunk_size` büyükse RAM artar, küçükse DB round-trip artar
 
 Pratik aralık:
+
 - 500 – 2000
 
 ---
@@ -309,10 +318,10 @@ Pratik aralık:
 ## İyileştirme Önerileri
 
 - Senkron logları için `sync_logs` tablosu:
-  - start/end time
-  - rows processed
-  - max rv
-  - status + error
+    - start/end time
+    - rows processed
+    - max rv
+    - status + error
 
 - MSSQL tarafında sadece gerekli kolonları select etmek (şu an `*` çekiliyor)
 
@@ -325,8 +334,7 @@ Pratik aralık:
 - Incremental filtre `RV > lastRv`
 - Ortam bazlı state key ile test/prod karışmaz
 - Local alanlar:
-  - yeni kayıt → init
-  - eski kayıt ama bakir local → remote’dan doldur
+    - yeni kayıt → init
+    - eski kayıt ama bakir local → remote’dan doldur
 - Upsert ile insert/update aynı anda
 - State, job sonunda tek sefer güncellenir
-

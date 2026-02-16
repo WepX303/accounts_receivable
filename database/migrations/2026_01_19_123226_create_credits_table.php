@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('credits_test', function (Blueprint $table) {
+        Schema::create('credits', function (Blueprint $table) {
             $table->bigInteger('logicalref')->primary();
 
             $table->string('branch')->nullable();
@@ -50,6 +50,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('credits_test');
+        Schema::dropIfExists('credits');
     }
 };

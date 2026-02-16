@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('credit_payments', function (Blueprint $table) {
             $table->id();
 
-            // credits_test.logicalref BIGINT (primary)
+            // credits.logicalref BIGINT (primary)
             $table->unsignedBigInteger('credit_logicalref')->index();
 
             $table->decimal('pay_amount', 18, 2);
@@ -35,7 +35,7 @@ return new class extends Migration
 
             $table->foreign('credit_logicalref')
                 ->references('logicalref')
-                ->on('credits_test')
+                ->on('credits')
                 ->cascadeOnDelete();
 
             $table->foreign('created_by')

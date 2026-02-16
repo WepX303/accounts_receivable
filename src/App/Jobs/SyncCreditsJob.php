@@ -21,7 +21,7 @@ class SyncCreditsJob implements ShouldQueue
     public function handle(): void
     {
         $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS_TEST
-        $pgTable = (string) config('sync.pgsql.credits_table'); // credits_test
+        $pgTable = (string) config('sync.pgsql.credits_table'); // credits
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
         /** @var ConnectionInterface $sqlsrv */
@@ -34,7 +34,7 @@ class SyncCreditsJob implements ShouldQueue
         $sqlsrv->statement("USE [$dbName]");
 
         // ortam bazlı state key (prod/test karışmasın)
-        $stateKey = app()->environment().'_credits_last_rv';
+        $stateKey = app()->environment() . '_credits_last_rv';
 
         $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
         $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;

@@ -3,6 +3,7 @@
 Bu doküman, projenin `.env` dosyasında bulunan ayarların ne işe yaradığını ve senkronizasyon (MSSQL → PostgreSQL) akışında nasıl kullanıldığını açıklar.
 
 > ⚠️ Güvenlik Notu
+>
 > - `.env` dosyası **git’e commit edilmemelidir**.
 > - İçindeki `APP_KEY`, DB kullanıcı/şifreleri ve MSSQL şifreleri gizli bilgidir.
 > - Versiyon kontrolüne yalnızca `.env.example` koyulmalıdır.
@@ -60,6 +61,7 @@ Bu ayarlar Laravel’in **varsayılan veritabanı bağlantısını** belirler.
 - **DB_DATABASE / DB_USERNAME / DB_PASSWORD** → bağlantı kimlik bilgileri.
 
 ### Not: Alternatif host/port satırları
+
 Dosyada bazı seçenekler yorum satırına alınmış:
 
 ```env
@@ -102,14 +104,17 @@ MSSQL_AVSHOCRECAT_PASPORT=
 ```
 
 ### 5.1 `MSSQL_CREDITS_TABLE`
+
 - Incremental senkron yapılacak MSSQL tablo adıdır.
 - Test ortamında `CREDITS_TEST` kullanılmış.
 
 ### 5.2 `MSSQL_AVSHOCRECAT_PROC`
+
 - Rapor için çağrılacak Stored Procedure adıdır.
 - Test ortamında `AVSHOCRECAT_TEST` kullanılmış.
 
 ### 5.3 `MSSQL_AVSHOCRECAT_PASPORT`
+
 - SP çağrısı için opsiyonel pasaport filtresi.
 - Boşsa tüm kayıtlar alınır.
 
@@ -120,7 +125,7 @@ MSSQL_AVSHOCRECAT_PASPORT=
 ## 6) PostgreSQL Hedef Tablo Adları
 
 ```env
-PG_CREDITS_TABLE=credits_test
+PG_CREDITS_TABLE=credits
 PG_AVSHOCRECAT_TABLE=avshocrecat_report
 ```
 
@@ -144,13 +149,14 @@ DB_QUEUE_CONNECTION=pgsql
 ```
 
 ### Queue
+
 - **QUEUE_CONNECTION=database**
-  - Queue driver olarak database kullanılır.
-  - Bekleyen job’lar `jobs` tablosunda tutulur.
+    - Queue driver olarak database kullanılır.
+    - Bekleyen job’lar `jobs` tablosunda tutulur.
 
 - **DB_QUEUE_CONNECTION=pgsql**
-  - Queue tablolarının hangi DB bağlantısında olduğu.
-  - PostgreSQL üzerinde `jobs` tablosu kullanılacağı anlamına gelir.
+    - Queue tablolarının hangi DB bağlantısında olduğu.
+    - PostgreSQL üzerinde `jobs` tablosu kullanılacağı anlamına gelir.
 
 > ⚠️ Job’ların çalışması için worker gerekli:
 >
@@ -159,6 +165,7 @@ DB_QUEUE_CONNECTION=pgsql
 > ```
 
 ### Cache & Session
+
 - Dosya tabanlı cache ve session (local için uygundur).
 
 ---
@@ -234,7 +241,7 @@ MSSQL_CREDITS_TABLE=BPA.dbo.CREDITS_TEST
 MSSQL_AVSHOCRECAT_PROC=BPA.dbo.AVSHOCRECAT_TEST
 MSSQL_AVSHOCRECAT_PASPORT=
 
-PG_CREDITS_TABLE=credits_test
+PG_CREDITS_TABLE=credits
 PG_AVSHOCRECAT_TABLE=avshocrecat_report
 
 QUEUE_CONNECTION=database

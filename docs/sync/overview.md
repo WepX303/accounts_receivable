@@ -52,6 +52,7 @@ Bu projede **iki farklı senkron stratejisi** vardır:
 - Kaynak tabloda **artımlı bir alan** gerekir
 
 Bu projede:
+
 - Tablo: `CREDITS_TEST`
 - Alan: `rv_bigint`
 
@@ -65,6 +66,7 @@ Bu projede:
 - Kaynaktan **tüm veri yeniden çekilir**
 
 Bu projede:
+
 - Kaynak: `AVSHOCRECAT` (Stored Procedure)
 - Hedef: `avshocrecat_report`
 
@@ -74,10 +76,10 @@ Bu projede:
 
 ## Senkron Job’ları
 
-| Job | Tür | Açıklama |
-|----|----|---------|
-| `SyncCreditsJob` | Incremental | MSSQL CREDITS → PG credits_test |
-| `SyncAvshocrecatReportJob` | Snapshot | SP output → PG report |
+| Job                        | Tür         | Açıklama                   |
+| -------------------------- | ----------- | -------------------------- |
+| `SyncCreditsJob`           | Incremental | MSSQL CREDITS → PG credits |
+| `SyncAvshocrecatReportJob` | Snapshot    | SP output → PG report      |
 
 Bu job’lar genellikle **birlikte** çalıştırılır.
 
@@ -107,6 +109,7 @@ job’larını queue’ya dispatch eder.
 - Retry / timeout kontrolü sağlar
 
 Bu projede:
+
 - Queue driver: `database`
 - Worker: Supervisor veya manuel
 
@@ -175,14 +178,14 @@ MSSQL_AVSHOCRECAT_PROC=BPA.dbo.AVSHOCRECAT
 ## İyileştirme Önerileri
 
 - Incremental sync için:
-  - transaction + upsert
-  - satır sayısı / süre loglama
+    - transaction + upsert
+    - satır sayısı / süre loglama
 
 - Snapshot sync için:
-  - atomic refresh (tmp table + swap)
+    - atomic refresh (tmp table + swap)
 
 - Senkron sonuçlarını izlemek için:
-  - `sync_logs` tablosu
+    - `sync_logs` tablosu
 
 ---
 
@@ -193,4 +196,3 @@ MSSQL_AVSHOCRECAT_PROC=BPA.dbo.AVSHOCRECAT
 - Queue, performans ve güvenlik için kritiktir
 - `.env` ile test/canlı ayrımı yapılır
 - Bu mimari uzun vadeli ve ölçeklenebilirdir
-

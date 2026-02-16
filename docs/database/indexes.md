@@ -4,7 +4,7 @@ Bu doküman, projedeki index’leri (migration’lardan gelen) ve **hangi sorgul
 
 > Kapsam:
 > - `users`
-> - `credits_test`
+> - `credits`
 > - `credit_payments`
 > - `avshocrecat_report`
 > - Queue tabloları (`jobs`, `failed_jobs`)
@@ -50,9 +50,9 @@ Migration: `2014_10_12_000000_create_users_table.php`
 
 ---
 
-## 2) `credits_test` Indexleri
+## 2) `credits` Indexleri
 
-Migration: `2026_01_19_123226_create_credits_test_table.php`
+Migration: `2026_01_19_123226_create_credits_table.php`
 
 ### Var olan index/constraint’ler
 
@@ -83,7 +83,7 @@ Eğer UI’da sık kullanılıyorsa, aşağıdaki alanlar için index düşünü
 - `contract`
 - `branch`
 
-> ⚠️ Ancak `credits_test` senkron sırasında yoğun update aldığı için ek index’ler senkron performansını düşürebilir. Önce sorgu ihtiyacını netleştir.
+> ⚠️ Ancak `credits` senkron sırasında yoğun update aldığı için ek index’ler senkron performansını düşürebilir. Önce sorgu ihtiyacını netleştir.
 
 ---
 
@@ -231,14 +231,14 @@ order by id desc;
   - gereksiz index’leri kaldırmayı düşün
 
 - Senkron performansı düşerse:
-  - `credits_test` üzerinde eklenen index’leri tekrar değerlendir
+  - `credits` üzerinde eklenen index’leri tekrar değerlendir
   - chunk size ve worker concurrency (numprocs) ayarla
 
 ---
 
 ## Özet
 
-- `credits_test.rv_bigint` incremental sync için kritik
+- `credits.rv_bigint` incremental sync için kritik
 - `credit_payments` index’leri raporlama ve hızlı lookup için zengin
 - `avshocrecat_report` index’leri rapor filtreleri için gerekli
 - Yeni index eklemeden önce gerçek sorgu ihtiyacını doğrula
