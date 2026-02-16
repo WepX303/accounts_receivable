@@ -21,7 +21,7 @@ class SyncCreditsJob implements ShouldQueue
     public function handle(): void
     {
         $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS_TEST
-        $pgTable = (string) config('sync.pgsql.credits_table'); // credits
+        $pgTable = (string) config('sync.pgsql.credits_table'); // credits_table
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
         /** @var ConnectionInterface $sqlsrv */
@@ -39,11 +39,17 @@ class SyncCreditsJob implements ShouldQueue
         $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
         $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;
 
+        // $query = $sqlsrv
+        //     ->table($mssqlTable)
+        //     ->selectRaw('*, CONVERT(bigint, RV) as rv_bigint')
+        //     ->whereRaw('CONVERT(bigint, RV) > ?', [$lastRv])
+        //     ->orderByRaw('RV');
+
         $query = $sqlsrv
             ->table($mssqlTable)
-            ->selectRaw('*, CONVERT(bigint, RV) as rv_bigint')
-            ->whereRaw('CONVERT(bigint, RV) > ?', [$lastRv])
-            ->orderByRaw('RV');
+            ->selectRaw('*, CONVERT(bigint, CONVERT(binary(8), RV)) as rv_bigint')
+            ->whereRaw('CONVERT(bigint, CONVERT(binary(8), RV)) > ?', [$lastRv])
+            ->orderByRaw('rv_bigint');
 
         $maxRvSeen = $lastRv;
 

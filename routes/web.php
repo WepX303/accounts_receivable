@@ -114,11 +114,11 @@ Route::middleware(['auth.token'])->group(function () {
 | Error Test
 |--------------------------------------------------------------------------
 */
-Route::get('/hata', function () {
-    abort(403);
-});
+// Route::get('/hata', function () {
+//     abort(403);
+// });
 
 
-Route::get('/phpinfo', function () {
-    phpinfo();
-});
+// Route::get('/phpinfo', function () {
+//     phpinfo();
+// });
