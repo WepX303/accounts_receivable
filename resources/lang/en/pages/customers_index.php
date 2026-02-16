@@ -24,6 +24,7 @@ return [
     'branch_contract' => 'Branch | Contract',
     'amount' => 'Amount',
     'paid' => 'Paid',
+    'today_paid' => 'Today Paid',
     'local_remaining' => 'Local Remaining',
     'payment_status' => 'Payment Status',
     'note' => 'Note',

@@ -24,6 +24,7 @@ return [
     'branch_contract' => 'Şahamça | Şertnama',
     'amount' => 'Jemi',
     'paid' => 'Tölenen',
+    'today_paid' => 'Şugün töledi',
     'local_remaining' => 'Ýerli Galan',
     'payment_status' => 'Töleg ýagdaýy',
     'note' => 'Bellik',

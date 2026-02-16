@@ -78,7 +78,7 @@ class CustomersController extends Controller
 
             /* SEARCH */
             ->when($q !== '', function ($query) use ($q) {
-                $like = '%'.$q.'%';
+                $like = '%' . $q . '%';
                 $query->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -96,7 +96,7 @@ class CustomersController extends Controller
                 $query->whereExists(function ($sub) use ($from, $to, $table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table.'.logicalref')
+                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
             })
@@ -118,15 +118,15 @@ class CustomersController extends Controller
                 $query->whereNotExists(function ($sub) use ($table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table.'.logicalref');
+                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref');
                 });
             })
 
             /* BLOK OLANLAR */
-            ->when($quick === 'blocked', fn ($q) => $q->where('active', false))
+            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
 
             /* AKTİF OLANLAR */
-            ->when($quick === 'active', fn ($q) => $q->where('active', true))
+            ->when($quick === 'active', fn($q) => $q->where('active', true))
 
             /* STATUS = BERMEJEK */
             ->when($quick === 'bermejek', function ($q) {
@@ -140,6 +140,10 @@ class CustomersController extends Controller
                 $query->whereNotNull('paid_local')
                     ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
             })
+
+            ->withSum(['payments as today_paid_sum' => function ($q) use ($todayFrom, $todayTo) {
+                $q->whereBetween('created_at', [$todayFrom, $todayTo]);
+            }], 'pay_amount')
 
             ->orderByDesc('rv_bigint')
             ->paginate(25)

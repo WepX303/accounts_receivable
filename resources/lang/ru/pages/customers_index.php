@@ -24,6 +24,7 @@ return [
     'branch_contract' => 'Филиал | Договор',
     'amount' => 'Сумма',
     'paid' => 'Оплачено',
+    'today_paid' => 'Сегодня оплачено',
     'local_remaining' => 'Остаток (лок.)',
     'payment_status' => 'Статус платежа',
     'note' => 'Заметка',

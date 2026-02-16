@@ -24,6 +24,7 @@ return [
     'branch_contract' => 'Şube | Sözleşme',
     'amount' => 'Tutar',
     'paid' => 'Ödenen',
+    'today_paid' => 'Bugün ödendi',
     'local_remaining' => 'Yerel Kalan',
     'payment_status' => 'Ödeme Durumu',
 
