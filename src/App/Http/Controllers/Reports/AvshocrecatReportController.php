@@ -2,7 +2,7 @@
 
 namespace app\Http\Controllers\Reports;
 
-use app\Http\Controllers\Controller;
+use App\Http\Controllers\Controller;
 use App\Models\AvshocrecatReport;
 use Illuminate\Http\Request;
 
