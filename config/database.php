@@ -93,6 +93,21 @@ return [
         //     // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         // ],
 
+        // 'sqlsrv' => [
+        //     'driver' => 'sqlsrv',
+        //     'url' => env('DATABASE_URL'),
+        //     'host' => env('MSSQL_HOST', 'localhost'),
+        //     'port' => env('MSSQL_PORT', '1433'),
+        //     'database' => env('MSSQL_DATABASE', 'master'),
+        //     'username' => env('MSSQL_USERNAME', 'sa'),
+        //     'password' => env('MSSQL_PASSWORD', ''),
+        //     'charset' => 'utf8',
+        //     'prefix' => '',
+        //     'prefix_indexes' => true,
+        //     // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+        //     // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        // ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
@@ -104,8 +119,10 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+
+            // ODBC Driver 18 default Encrypt=Yes + cert verify ister
+            'encrypt' => env('MSSQL_ENCRYPT', 'yes'),
+            'trust_server_certificate' => env('MSSQL_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
     ],
@@ -140,7 +157,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [
