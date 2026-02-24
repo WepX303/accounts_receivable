@@ -232,7 +232,8 @@
                                         <th>{{ __('pages/customers_index.branch_contract') }}</th>
                                         <th>{{ __('pages/customers_index.amount') }}</th>
                                         <th>{{ __('pages/customers_index.paid') }}</th>
-                                        <th>{{ __('pages/customers_index.today_paid') }}</th>
+                                        {{-- <th>{{ __('pages/customers_index.today_paid') }}</th> --}}
+                                        <th>{{ $periodLabel }}</th>
                                         <th>{{ __('pages/customers_index.local_remaining') }}</th>
                                         <th>{{ __('pages/customers_index.payment_status') }}</th>
                                         <th>{{ __('pages/customers_index.note') }}</th>
@@ -324,7 +325,7 @@
                                             </td>
                                             <td>
                                                 <div class="fw-medium text-success">
-                                                    {{ number_format((float) ($c->today_paid_sum ?? 0), 2) }}
+                                                    {{ number_format((float) ($c->period_paid_sum ?? 0), 2) }}
                                                 </div>
                                             </td>
                                             {{-- Local Remaining + Remote Remaining --}}

@@ -63,7 +63,33 @@
 
                             <tbody class="list form-check-all">
                                 @forelse ($rows as $r)
-                                    <tr>
+                                    @php
+                                        $tolerance = 0.15;
+
+                                        $ktRaw = $r->kt_cykdajy;
+                                        $dtRaw = $r->dt_girdeji;
+
+                                        $kt =
+                                            $ktRaw === null
+                                                ? null
+                                                : (float) str_replace([',', ' '], ['.', ''], trim((string) $ktRaw));
+                                        $dt =
+                                            $dtRaw === null
+                                                ? null
+                                                : (float) str_replace([',', ' '], ['.', ''], trim((string) $dtRaw));
+
+                                        $rowClass = '';
+
+                                        if ($kt !== null && $dt !== null) {
+                                            $diff = abs($kt - $dt);
+
+                                            if ($diff > $tolerance) {
+                                                $rowClass = 'table-danger';
+                                            }
+                                        }
+                                    @endphp
+
+                                    <tr  class="{{ $rowClass }}">
                                         {{-- Store / ID --}}
                                         <td class="id">
                                             <span class="fw-medium text-primary">

@@ -35,6 +35,26 @@ class CustomersController extends Controller
             default => [null, null],
         };
 
+        // Tablodaki "Today Paid" kolonu için dinamik tarih aralığı
+        // Eğer ödeme bazlı filtre seçiliyse ($from/$to dolu) o aralığı kullan,
+        // değilse varsayılan olarak bugünü kullan.
+        [$periodFrom, $periodTo] = ($from && $to)
+            ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
+            : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+
+        $periodLabel = match ($quick) {
+            'paid_today' => __('pages/customers_index.today_paid'),
+            'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
+            'paid_7d' => __('pages/customers_index.paid_last_7_days'),
+            'paid_14d' => __('pages/customers_index.paid_last_14_days'),
+            'paid_1m' => __('pages/customers_index.paid_last_1_month'),
+            'paid_3m' => __('pages/customers_index.paid_last_3_months'),
+            'paid_6m' => __('pages/customers_index.paid_last_6_months'),
+            'paid_9m' => __('pages/customers_index.paid_last_9_months'),
+            'paid_12m' => __('pages/customers_index.paid_last_12_months'),
+            default => __('pages/customers_index.today_paid'),
+        };
+
         /**
          * =========================
          *  DASHBOARD CARDS (STATS)
@@ -141,14 +161,14 @@ class CustomersController extends Controller
                     ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
             })
 
-            ->withSum(['payments as today_paid_sum' => function ($q) use ($todayFrom, $todayTo) {
-                $q->whereBetween('created_at', [$todayFrom, $todayTo]);
+            ->withSum(['payments as period_paid_sum' => function ($q) use ($periodFrom, $periodTo) {
+                $q->whereBetween('created_at', [$periodFrom, $periodTo]);
             }], 'pay_amount')
 
             ->orderByDesc('rv_bigint')
             ->paginate(25)
             ->appends($request->query());
 
-        return view('pages.customers.index', compact('credit_users', 'quick', 'stats'));
+        return view('pages.customers.index', compact('credit_users', 'quick', 'stats', 'periodLabel'));
     }
 }
