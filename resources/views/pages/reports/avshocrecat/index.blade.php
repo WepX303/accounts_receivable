@@ -9,7 +9,7 @@
                 <div class="card-body border border-dashed border-end-0 border-start-0">
                     <form method="GET" action="{{ route('report') }}">
                         <div class="row g-3 align-items-end">
-                            
+
                             <div class="col-xxl-6 col-sm-6">
                                 <div class="search-box">
                                     <input type="text" class="form-control" name="q" value="{{ request('q') }}"
@@ -20,7 +20,6 @@
                         </div>
                     </form>
                 </div>
-
                 <div class="card-body pt-4">
                     <div class="table-responsive table-card mb-1">
                         <table class="table table-nowrap align-middle" id="orderTable">

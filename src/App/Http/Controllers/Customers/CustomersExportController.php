@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Customers;
 use App\Exports\CustomersExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CustomersExportController extends Controller
