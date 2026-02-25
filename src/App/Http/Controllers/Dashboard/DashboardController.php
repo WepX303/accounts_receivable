@@ -24,7 +24,11 @@ class DashboardController extends Controller
             $start = now()->startOfDay();
             $end   = now()->endOfDay();
 
-            $base = CreditPayment::query()->forCashier(auth()->id()); // ✅ sadece kendi
+            // $base = CreditPayment::query()->forCashier(auth()->id()); // ✅ sadece kendi
+
+            $base = CreditPayment::query()
+                ->notVoided()
+                ->forCashier(auth()->id());
 
             $today = (clone $base)
                 ->whereBetween('created_at', [$start, $end])
@@ -124,8 +128,12 @@ class DashboardController extends Controller
         ]));
 
         $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($start, $end, $period) {
-                                                     
+
+            // $base = CreditPayment::query()
+            //     ->whereBetween('created_at', [$start, $end]);
+
             $base = CreditPayment::query()
+                ->notVoided()
                 ->whereBetween('created_at', [$start, $end]);
 
             // =========================
@@ -219,7 +227,10 @@ class DashboardController extends Controller
             if ($period === 'today' || $period === 'yesterday') {
                 $hours = collect(range(0, 23));
 
+                // $rows = CreditPayment::query()
+                //     ->whereBetween('created_at', [$start, $end])
                 $rows = CreditPayment::query()
+                    ->notVoided()
                     ->whereBetween('created_at', [$start, $end])
                     ->selectRaw("EXTRACT(HOUR FROM created_at) as h, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
                     ->groupBy('h')
@@ -233,6 +244,7 @@ class DashboardController extends Controller
                 $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
 
                 $rows = CreditPayment::query()
+                    ->notVoided()
                     ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
                     ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
                     ->groupBy('d')
@@ -246,7 +258,10 @@ class DashboardController extends Controller
                 $daysInMonth = now()->day;
                 $days = collect(range(1, $daysInMonth));
 
+                // $rows = CreditPayment::query()
+                //     ->whereBetween('created_at', [$start, $end])
                 $rows = CreditPayment::query()
+                    ->notVoided()
                     ->whereBetween('created_at', [$start, $end])
                     ->selectRaw("EXTRACT(DAY FROM created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
                     ->groupBy('d')
@@ -260,6 +275,7 @@ class DashboardController extends Controller
                 $days = collect(range(29, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
 
                 $rows = CreditPayment::query()
+                    ->notVoided()
                     ->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()])
                     ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
                     ->groupBy('d')

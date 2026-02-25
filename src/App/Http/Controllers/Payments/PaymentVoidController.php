@@ -8,6 +8,8 @@ use App\Models\CreditPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Enums\UserRoleEnum;
+
 
 class PaymentVoidController extends Controller
 {
@@ -15,7 +17,8 @@ class PaymentVoidController extends Controller
     {
         // Admin-only (route middleware de koyacağız ama burada da garanti)
         $user = Auth::user();
-        if (! $user || (string)$user->role !== 'Admin') {
+
+        if (!$user || $user->role !== UserRoleEnum::ADMIN) {
             return back()->with('warning', 'Only Admin can void payments.');
         }
 
@@ -66,11 +69,11 @@ class PaymentVoidController extends Controller
                     'paid_updated_by' => (int) $user->id,
                     'paid_updated_at' => now(), // void işlemi anı (payment_at değil)
                     'paid_note' => 'voided=yes'
-                        .' | voided_payment_id='.$p->id
-                        .' | voided_applied='.number_format($applied, 2, '.', '')
-                        .' | void_reason='.$reason
-                        .' | voided_by='.$user->full_name
-                        .' | voided_at='.now()->format('Y-m-d H:i:s'),
+                        . ' | voided_payment_id=' . $p->id
+                        . ' | voided_applied=' . number_format($applied, 2, '.', '')
+                        . ' | void_reason=' . $reason
+                        . ' | voided_by=' . $user->full_name
+                        . ' | voided_at=' . now()->format('Y-m-d H:i:s'),
                 ])->save();
 
                 // payment void işaretle
@@ -80,7 +83,6 @@ class PaymentVoidController extends Controller
                     'void_reason' => $reason,
                 ])->save();
             });
-
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException ? $e->getMessage() : 'Payment void failed.';
             return back()->with('warning', $msg);

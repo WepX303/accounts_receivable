@@ -7,6 +7,7 @@ use App\Models\Credit;
 use App\Models\CreditPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomersController extends Controller
 {
@@ -68,25 +69,26 @@ class CustomersController extends Controller
 
         $stats = [
             // bugün tahsilat
-            'paid_today_sum' => (float) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
-                ->sum('pay_amount'),
-            'paid_today_cnt' => (int) CreditPayment::whereBetween('created_at', [$todayFrom, $todayTo])
+            'paid_today_sum' => (float) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
+                ->sum(DB::raw('pay_amount - COALESCE(change_amount,0)')),
+
+            'paid_today_cnt' => (int) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
                 ->count(),
 
-            // dün tahsilat
-            'paid_y_sum' => (float) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
-                ->sum('pay_amount'),
-            'paid_y_cnt' => (int) CreditPayment::whereBetween('created_at', [$yFrom, $yTo])
+            'paid_y_sum' => (float) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$yFrom, $yTo])
+                ->sum(DB::raw('pay_amount - COALESCE(change_amount,0)')),
+
+            'paid_y_cnt' => (int) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$yFrom, $yTo])
                 ->count(),
 
-            // borçlu müşteri sayısı (MERKEZ amount/paid)
-            'has_debt_cnt' => (int) Credit::whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
-                ->count(),
-
-            // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
-            'paid_mismatch_cnt' => (int) Credit::whereNotNull('paid_local')
-                ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
-                ->count(),
         ];
 
         /**
@@ -117,6 +119,9 @@ class CustomersController extends Controller
                     $sub->selectRaw('1')
                         ->from('credit_payments')
                         ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        // void olanlari alma
+                        ->whereNull('credit_payments.voided_at')
+
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
             })
@@ -138,7 +143,8 @@ class CustomersController extends Controller
                 $query->whereNotExists(function ($sub) use ($table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref');
+                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereNull('credit_payments.voided_at');
                 });
             })
 
@@ -161,9 +167,17 @@ class CustomersController extends Controller
                     ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
             })
 
-            ->withSum(['payments as period_paid_sum' => function ($q) use ($periodFrom, $periodTo) {
-                $q->whereBetween('created_at', [$periodFrom, $periodTo]);
+            //void without
+
+            ->withSum(['payments as period_pay_sum' => function ($q) use ($periodFrom, $periodTo) {
+                $q->whereNull('voided_at')
+                    ->whereBetween('created_at', [$periodFrom, $periodTo]);
             }], 'pay_amount')
+
+            ->withSum(['payments as period_change_sum' => function ($q) use ($periodFrom, $periodTo) {
+                $q->whereNull('voided_at')
+                    ->whereBetween('created_at', [$periodFrom, $periodTo]);
+            }], 'change_amount')
 
             ->orderByDesc('rv_bigint')
             ->paginate(25)

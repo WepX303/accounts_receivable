@@ -370,7 +370,7 @@ if ($k === 'method') {
                             <div class="text-muted small">{{ __('pages/payments.no_payment_history') }}</div>
                         @else
                             <div class="list-group">
-                                @foreach ($history as $h)
+                                {{-- @foreach ($history as $h)
                                     @php
                                         $u = $h->createdByUser
                                             ? $h->createdByUser->firstname . ' ' . $h->createdByUser->lastname
@@ -388,9 +388,7 @@ if ($k === 'method') {
                                         <div class="d-flex justify-content-between">
                                             <div class="fw-semibold">
                                                 {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
-                                                {{-- <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ strtoupper((string) $h->method) }}
-                                                </span> --}}
+                                              
                                                 @php
                                                     $mKey =
                                                         'pages/payments.method_values.' .
@@ -401,9 +399,6 @@ if ($k === 'method') {
                                                 <span class="badge bg-primary-subtle text-primary ms-1">
                                                     {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
                                                 </span>
-                                                {{-- <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ __('pages/payments.method_values.' . strtolower((string) $h->method)) }}
-                                                </span> --}}
                                             </div>
                                             <div class="text-muted small">
                                                 {{ $h->created_at ? $h->created_at->format('Y-m-d H:i') : '-' }}
@@ -433,6 +428,122 @@ if ($k === 'method') {
 
                                         @if (!empty($h->note))
                                             <div class="small mt-1" style="white-space: pre-wrap;">{{ $h->note }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach --}}
+
+                                @foreach ($history as $h)
+                                    @php
+                                        $u = $h->createdByUser
+                                            ? $h->createdByUser->firstname . ' ' . $h->createdByUser->lastname
+                                            : '-';
+
+                                        $received = (float) $h->pay_amount;
+                                        $change = (float) ($h->change_amount ?? 0);
+                                        $applied = $received - $change;
+                                        if ($applied < 0) {
+                                            $applied = 0;
+                                        }
+
+                                        $mKey = 'pages/payments.method_values.' . strtolower(trim((string) $h->method));
+                                        $mTxt = __($mKey);
+
+                                        $isVoided = !empty($h->voided_at);
+                                        $isAdmin = auth()->user() && auth()->user()->role->value === 'Admin';
+                                    @endphp
+
+                                    <div class="list-group-item">
+                                        {{-- TOP LINE --}}
+                                        <div class="d-flex justify-content-between">
+                                            <div class="fw-semibold">
+                                                {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
+
+                                                <span class="badge bg-primary-subtle text-primary ms-1">
+                                                    {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
+                                                </span>
+
+                                                @if ($isVoided)
+                                                    <span class="badge bg-danger-subtle text-danger ms-1">VOIDED</span>
+                                                @endif
+                                            </div>
+
+                                            <div class="text-muted small d-flex align-items-center gap-2">
+                                                <span>{{ $h->created_at ? $h->created_at->format('Y-m-d H:i') : '-' }}</span>
+
+                                                @if ($isAdmin && !$isVoided)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#voidModal{{ $h->id }}">
+                                                        Void
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- DETAILS --}}
+                                        <div class="text-muted small mt-1">
+                                            {{ __('pages/payments.applied') }}: {{ number_format($applied, 2) }} |
+                                            {{ __('pages/payments.change') }}: {{ number_format($change, 2) }}
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            {{ __('pages/payments.cash') }}:
+                                            {{ number_format((float) $h->cash_amount, 2) }} |
+                                            {{ __('pages/payments.card') }}:
+                                            {{ number_format((float) $h->card_amount, 2) }}
+                                        </div>
+
+                                        <div class="text-muted small">{{ __('pages/payments.by') }}: {{ $u }}
+                                        </div>
+
+                                        <div class="text-muted small">
+                                            {{ __('pages/payments.remaining') }}:
+                                            {{ number_format((float) $h->old_amount_local, 2) }}
+                                            → {{ number_format((float) $h->new_amount_local, 2) }}
+                                        </div>
+
+                                        @if (!empty($h->note))
+                                            <div class="small mt-1" style="white-space: pre-wrap;">{{ $h->note }}
+                                            </div>
+                                        @endif
+
+                                        {{-- VOID MODAL --}}
+                                        @if ($isAdmin && !$isVoided)
+                                            <div class="modal fade" id="voidModal{{ $h->id }}" tabindex="-1"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <form method="POST"
+                                                            action="{{ route('payments.void', ['payment' => $h->id] + request()->query()) }}">
+                                                            @csrf
+
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Void Payment #{{ $h->id }}
+                                                                </h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+
+                                                            <div class="modal-body">
+                                                                <div class="mb-2 small text-muted">
+                                                                    This will reverse the applied amount from the customer
+                                                                    debt and mark the payment as voided.
+                                                                </div>
+
+                                                                <label class="form-label">Reason (required)</label>
+                                                                <textarea name="void_reason" class="form-control" rows="3" required></textarea>
+                                                            </div>
+
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-light"
+                                                                    data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-danger">Void
+                                                                    Payment</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
@@ -522,7 +633,8 @@ if ($k === 'method') {
                             <div class="border rounded p-2 mb-3 d-none" id="mixedBox">
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="form-label mb-1">{{ __('pages/payments.form.method_cash') }}</label>
+                                        <label
+                                            class="form-label mb-1">{{ __('pages/payments.form.method_cash') }}</label>
                                         <input type="number" min="0" step="0.01"
                                             class="form-control text-end" name="cash_total" id="cashTotal"
                                             value="{{ $oldCash }}" {{ $isClosed ? 'disabled' : '' }}>

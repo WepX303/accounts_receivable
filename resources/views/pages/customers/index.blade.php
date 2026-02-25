@@ -323,9 +323,24 @@
                                                     </div>
                                                 @endif
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 <div class="fw-medium text-success">
                                                     {{ number_format((float) ($c->period_paid_sum ?? 0), 2) }}
+                                                </div>
+                                            </td> --}}
+
+                                            <td>
+                                                @php
+                                                    $net =
+                                                        (float) ($c->period_pay_sum ?? 0) -
+                                                        (float) ($c->period_change_sum ?? 0);
+                                                    if ($net < 0) {
+                                                        $net = 0;
+                                                    }
+                                                @endphp
+
+                                                <div class="fw-medium text-success">
+                                                    {{ number_format($net, 2) }}
                                                 </div>
                                             </td>
                                             {{-- Local Remaining + Remote Remaining --}}
