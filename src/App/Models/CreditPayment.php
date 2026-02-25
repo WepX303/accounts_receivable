@@ -63,6 +63,8 @@ class CreditPayment extends Model
 
         'old_paid_local' => 'decimal:2',
         'new_paid_local' => 'decimal:2',
+
+        'voided_at' => 'datetime',
     ];
 
     public function credit()
@@ -93,10 +95,27 @@ class CreditPayment extends Model
         return round($applied, 2);
     }
 
+    public function scopeNotVoided($query)
+    {
+        return $query->whereNull('voided_at');
+    }
+
+    public function getIsVoidedAttribute(): bool
+    {
+        return $this->voided_at !== null;
+    }
+
 
     protected static function booted()
     {
+        // $bump = function () {
+        //     Cache::increment('admin_dashboard:v');
+        // };
         $bump = function () {
+            if (!Cache::has('admin_dashboard:v')) {
+                Cache::forever('admin_dashboard:v', 1);
+            }
+
             Cache::increment('admin_dashboard:v');
         };
 

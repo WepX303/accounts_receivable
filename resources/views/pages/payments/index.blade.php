@@ -445,6 +445,16 @@ if ($k === 'method') {
                         {{-- PAYMENT FORM --}}
                         <form method="POST" action="{{ route('payments.store', request()->query()) }}" id="payForm">
                             @csrf
+                            {{-- Payment Date (Backdate allowed) --}}
+                            <div class="mb-3">
+                                <label class="form-label">Payment Date</label>
+                                <input type="datetime-local" name="payment_at" class="form-control"
+                                    value="{{ old('payment_at', now()->format('Y-m-d\TH:i')) }}"
+                                    {{ $isClosed ? 'disabled' : '' }}>
+                                <div class="small text-muted mt-1">
+                                    You can enter any past date. Future dates are not allowed.
+                                </div>
+                            </div>
                             <input type="hidden" name="customer_id" value="{{ (string) $selected->logicalref }}">
 
                             <div class="mb-3">
@@ -567,7 +577,6 @@ if ($k === 'method') {
 @endsection
 
 @section('script')
-
     <script>
         (function() {
             const payAmount = document.getElementById('payAmount');

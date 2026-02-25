@@ -8,6 +8,7 @@ use App\Models\CreditPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CustomersPaymentController extends Controller
 {
@@ -71,7 +72,7 @@ class CustomersPaymentController extends Controller
             }
 
             if ($q !== '') {
-                $like = '%'.$q.'%';
+                $like = '%' . $q . '%';
                 $listQuery->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -203,11 +204,36 @@ class CustomersPaymentController extends Controller
             }
         }
 
-        $now = now();
+        // $now = now();
+        // Payment date (backdate support)
+        $paymentAtRaw = (string) $request->input('payment_at', '');
+        $paymentAtRaw = trim($paymentAtRaw);
+
+        $enteredAt = now(); // sistemin gerçek zamanı (kayıt anı)
+        $paymentAtProvided = ($paymentAtRaw !== '');
+
+        if ($paymentAtProvided) {
+            try {
+                $now = Carbon::createFromFormat('Y-m-d\TH:i', $paymentAtRaw);
+            } catch (\Throwable $e) {
+                return back()->with('warning', 'Invalid payment date.')->withInput();
+            }
+        } else {
+            $now = $enteredAt;
+        }
+
+        // Future date not allowed
+        if ($now->isFuture()) {
+            return back()->with('warning', 'Future payment date is not allowed.')->withInput();
+        }
+
+        // backdated flag (payment date is in the past compared to entered time)
+        $backdated = $paymentAtProvided && $now->lt($enteredAt);
 
         try {
 
-            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $method, $cashTotal, $cardTotal, $note) {
+            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $method, $cashTotal, $cardTotal, $note) {
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $note) {
 
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
@@ -241,7 +267,7 @@ class CustomersPaymentController extends Controller
                 $maxExtra = 100; // izin verilen max para üstü
                 if ($received > $remaining + $maxExtra) {
                     throw new \RuntimeException(
-                        'Fazla ödeme çok yüksek. Maksimum para üstü: '.number_format($maxExtra, 2)
+                        'Fazla ödeme çok yüksek. Maksimum para üstü: ' . number_format($maxExtra, 2)
                     );
                 }
 
@@ -268,27 +294,32 @@ class CustomersPaymentController extends Controller
 
                 // audit note
                 $detail = [
-                    'method='.$method,
 
-                    'received='.$this->fmtMoney($received),
-                    'applied='.$this->fmtMoney($apply),
-                    'change='.$this->fmtMoney($change),
+                    'backdated=' . ($backdated ? 'yes' : 'no'),
+                    'payment_at=' . $now->format('Y-m-d H:i:s'),
+                    'entered_at=' . $enteredAt->format('Y-m-d H:i:s'),
 
-                    'cash='.$this->fmtMoney($cashTotal),
-                    'card='.$this->fmtMoney($cardTotal),
+                    'method=' . $method,
 
-                    'total_local='.$this->fmtMoney($totalLocal),
+                    'received=' . $this->fmtMoney($received),
+                    'applied=' . $this->fmtMoney($apply),
+                    'change=' . $this->fmtMoney($change),
 
-                    'old_paid_local='.$this->fmtMoney($oldPaidLocal),
-                    'new_paid_local='.$this->fmtMoney($newPaidLocal),
+                    'cash=' . $this->fmtMoney($cashTotal),
+                    'card=' . $this->fmtMoney($cardTotal),
 
-                    'old_remaining='.$this->fmtMoney($oldRemaining),
-                    'new_remaining='.$this->fmtMoney($newRemaining),
+                    'total_local=' . $this->fmtMoney($totalLocal),
+
+                    'old_paid_local=' . $this->fmtMoney($oldPaidLocal),
+                    'new_paid_local=' . $this->fmtMoney($newPaidLocal),
+
+                    'old_remaining=' . $this->fmtMoney($oldRemaining),
+                    'new_remaining=' . $this->fmtMoney($newRemaining),
                 ];
 
                 $finalNote = implode(' | ', $detail);
                 if ($note !== '') {
-                    $finalNote .= ' | note='.$note;
+                    $finalNote .= ' | note=' . $note;
                 }
 
                 // ✅ sadece paid_local artar
@@ -363,9 +394,9 @@ class CustomersPaymentController extends Controller
         }
 
         return collect($ids)
-            ->map(fn ($v) => trim((string) $v))
-            ->filter(fn ($v) => $v !== '' && ctype_digit($v))
-            ->map(fn ($v) => (int) $v)
+            ->map(fn($v) => trim((string) $v))
+            ->filter(fn($v) => $v !== '' && ctype_digit($v))
+            ->map(fn($v) => (int) $v)
             ->unique()
             ->values()
             ->all();

@@ -6,6 +6,7 @@ use App\Http\Controllers\Customers\CustomersInfoController;
 use App\Http\Controllers\Customers\CustomersExportController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Payments\CustomersPaymentController;
+use App\Http\Controllers\Payments\PaymentVoidController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Stores\StoreController;
@@ -99,6 +100,9 @@ Route::middleware(['auth.token'])->group(function () {
             Route::put('/{user}', [UserController::class, 'update'])->name('update');
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         });
+
+        // Edit payment
+        Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
     });
 
     /*
