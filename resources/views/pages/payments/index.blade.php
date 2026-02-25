@@ -453,6 +453,25 @@ if ($k === 'method') {
                                         $isAdmin = auth()->user() && auth()->user()->role->value === 'Admin';
                                     @endphp
 
+                                    @php
+                                        $isAdmin =
+                                            auth()->check() && auth()->user()->role === \App\Enums\UserRoleEnum::ADMIN;
+                                    @endphp
+
+                                    @if ($isAdmin && empty($h->voided_at))
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2 js-correct-btn"
+                                            data-bs-toggle="modal" data-bs-target="#correctModal"
+                                            data-action="{{ route('payments.correct', $h->id) }}"
+                                            data-payment-at="{{ $h->created_at ? $h->created_at->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i') }}"
+                                            data-method="{{ $h->method }}"
+                                            data-pay-amount="{{ (float) $h->pay_amount }}"
+                                            data-cash="{{ (float) $h->cash_amount }}"
+                                            data-card="{{ (float) $h->card_amount }}"
+                                            data-note="{{ (string) ($h->note ?? '') }}">
+                                            Correct
+                                        </button>
+                                    @endif
+
                                     <div class="list-group-item">
                                         {{-- TOP LINE --}}
                                         <div class="d-flex justify-content-between">
@@ -686,6 +705,94 @@ if ($k === 'method') {
         </div>
 
     </div>
+
+    <div class="modal fade" id="correctModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" action="#" id="correctForm" class="modal-content">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Correct Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="datetime-local" name="payment_at" id="c_payment_at" class="form-control" required>
+                        <div class="small text-muted mt-1">Past dates allowed. Future not allowed.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Received Amount</label>
+                        <input type="number" min="0" step="0.01" name="pay_amount" id="c_pay_amount"
+                            class="form-control text-end" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="form-check">
+                                <input class="form-check-input c-method" type="radio" name="payment_method"
+                                    value="cash" id="c_mCash">
+                                <label class="form-check-label" for="c_mCash">Cash</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input c-method" type="radio" name="payment_method"
+                                    value="card" id="c_mCard">
+                                <label class="form-check-label" for="c_mCard">Card</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input c-method" type="radio" name="payment_method"
+                                    value="mixed" id="c_mMixed">
+                                <label class="form-check-label" for="c_mMixed">Mixed</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input c-method" type="radio" name="payment_method"
+                                    value="phone" id="c_mPhone">
+                                <label class="form-check-label" for="c_mPhone">Phone</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded p-2 mb-3 d-none" id="c_mixedBox">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label mb-1">Cash</label>
+                                <input type="number" min="0" step="0.01" class="form-control text-end"
+                                    name="cash_total" id="c_cash_total" value="0.00">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label mb-1">Card</label>
+                                <input type="number" min="0" step="0.01" class="form-control text-end"
+                                    name="card_total" id="c_card_total" value="0.00">
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">Mixed rule: Cash + Card must equal Pay Amount.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <input type="text" name="note" id="c_note" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reason (why correcting)</label>
+                        <input type="text" name="reason" id="c_reason" class="form-control"
+                            placeholder="Example: wrong amount/date/method">
+                    </div>
+
+                    <div class="alert alert-warning mb-0">
+                        This will <b>void the old payment</b> and create a <b>new payment</b>.
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Save Correction</button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -810,6 +917,83 @@ if ($k === 'method') {
             });
 
             refresh();
+        })();
+    </script>
+
+    <script>
+        (function() {
+            const form = document.getElementById('correctForm');
+            const modal = document.getElementById('correctModal');
+            if (!form || !modal) return;
+
+            const paymentAt = document.getElementById('c_payment_at');
+            const payAmount = document.getElementById('c_pay_amount');
+            const note = document.getElementById('c_note');
+            const reason = document.getElementById('c_reason');
+
+            const mixedBox = document.getElementById('c_mixedBox');
+            const cashTotal = document.getElementById('c_cash_total');
+            const cardTotal = document.getElementById('c_card_total');
+
+            const methods = Array.from(document.querySelectorAll('.c-method'));
+
+            const toNum = (v) => {
+                const n = parseFloat((v ?? '').toString().replace(',', '.'));
+                return Number.isFinite(n) ? n : 0;
+            };
+
+            const setMethod = (m) => {
+                methods.forEach(r => r.checked = (r.value === m));
+                if (m === 'mixed') mixedBox.classList.remove('d-none');
+                else mixedBox.classList.add('d-none');
+            };
+
+            const normalizeMixed = () => {
+                if (mixedBox.classList.contains('d-none')) return;
+                const total = toNum(payAmount.value);
+                let c = toNum(cashTotal.value);
+                let k = toNum(cardTotal.value);
+
+                if (total <= 0) {
+                    cashTotal.value = '0.00';
+                    cardTotal.value = '0.00';
+                    return;
+                }
+                if (Math.abs((c + k) - total) > 0.009) {
+                    c = Math.max(0, Math.min(total, c));
+                    k = total - c;
+                }
+                cashTotal.value = c.toFixed(2);
+                cardTotal.value = k.toFixed(2);
+            };
+
+            document.querySelectorAll('.js-correct-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    form.action = btn.dataset.action;
+
+                    paymentAt.value = btn.dataset.paymentAt || '';
+                    payAmount.value = (toNum(btn.dataset.payAmount)).toFixed(2);
+
+                    const m = (btn.dataset.method || 'cash').toLowerCase();
+                    setMethod(m);
+
+                    cashTotal.value = (toNum(btn.dataset.cash)).toFixed(2);
+                    cardTotal.value = (toNum(btn.dataset.card)).toFixed(2);
+
+                    note.value = btn.dataset.note || '';
+                    reason.value = '';
+                    normalizeMixed();
+                });
+            });
+
+            methods.forEach(r => r.addEventListener('change', () => {
+                setMethod(methods.find(x => x.checked)?.value || 'cash');
+                normalizeMixed();
+            }));
+
+            payAmount.addEventListener('input', normalizeMixed);
+            cashTotal.addEventListener('input', normalizeMixed);
+            cardTotal.addEventListener('input', normalizeMixed);
         })();
     </script>
 @endsection

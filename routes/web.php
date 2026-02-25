@@ -7,6 +7,7 @@ use App\Http\Controllers\Customers\CustomersExportController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Payments\CustomersPaymentController;
 use App\Http\Controllers\Payments\PaymentVoidController;
+use App\Http\Controllers\Payments\PaymentCorrectController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Stores\StoreController;
@@ -103,6 +104,10 @@ Route::middleware(['auth.token'])->group(function () {
 
         // Edit payment
         Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
+
+
+        Route::post('/payments/{payment}/correct', PaymentCorrectController::class)
+            ->name('payments.correct');
     });
 
     /*
