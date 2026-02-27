@@ -89,6 +89,17 @@ class CustomersController extends Controller
                 ->whereBetween('created_at', [$yFrom, $yTo])
                 ->count(),
 
+            // borçlu müşteri sayısı (MERKEZ amount/paid)
+            'has_debt_cnt' => (int) Credit::query()
+                ->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
+                ->count(),
+
+            // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
+            'paid_mismatch_cnt' => (int) Credit::query()
+                ->whereNotNull('paid_local')
+                ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
+                ->count(),
+
         ];
 
         /**

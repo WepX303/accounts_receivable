@@ -18,34 +18,11 @@ class CustomersPaymentController extends Controller
         $id = $this->sanitizeId($request->get('id'));
         $ids = $this->sanitizeIds($request->input('ids', []));
 
-        /**
-         * ✅ MOD SEÇİMİ (karışmayı bitiren kural)
-         * - q doluysa: SEARCH MODU => id/ids yok say
-         * - ids doluysa: IDS MODU => q yok say
-         * - id doluysa: DETAIL MODU => q yok say (isteğe bağlı ama stabil)
-         */
-
-        // if ($q !== '') {
-        //     $id = null;
-        //     $ids = [];
-        //     } elseif (count($ids) > 0) {
-        //         $q = '';
-        //         $id = null;
-        //     } elseif ($id !== null) {
-        //         $q = '';
-        //     }
-
         if ($q !== '') {
-            // ✅ SEARCH modu: liste q ile filtrelenir
-            // ✅ ids karışmasın diye temizlenir
-            // ✅ AMA id KALIR: arama sonuçlarında satıra tıklayınca seçili değişebilsin
             $ids = [];
         } elseif (count($ids) > 0) {
-            // ✅ IDS modu: arama kapansın, çoklu liste sabit kalsın
             $q = '';
-            // id burada kalsın (ids içinde seçim için)
         } elseif ($id !== null) {
-            // ✅ DETAIL modu: arama kapansın
             $q = '';
         }
 
@@ -81,21 +58,6 @@ class CustomersPaymentController extends Controller
                         ->orWhere('clientref', 'ilike', $like);
                 });
             }
-
-            // $customers = $listQuery
-            //     ->orderByDesc('rv_bigint')
-            //     ->paginate(12)
-            //     ->appends($request->query());
-
-            // $appends = [];
-            // if ($q !== '') $appends['q'] = $q;
-            // if (count($ids) > 0) $appends['ids'] = $ids; // ids[] olarak gider
-            // if ($id !== null) $appends['id'] = $id;
-
-            // $customers = $listQuery
-            //     ->orderByDesc('rv_bigint')
-            //     ->paginate(12)
-            //     ->appends($appends);
 
             $appends = [];
             if ($q !== '') {
@@ -151,11 +113,6 @@ class CustomersPaymentController extends Controller
 
     public function store(Request $request)
     {
-
-        // $userId = Auth::id();
-        // if (!$userId) {
-        //     return back()->with('warning', 'Ödeme kaydetmek için giriş yapmalısınız.');
-        // }
 
         $user = Auth::user();
         if (! $user) {
@@ -228,8 +185,10 @@ class CustomersPaymentController extends Controller
         }
 
         // backdated flag (payment date is in the past compared to entered time)
-        $backdated = $paymentAtProvided && $now->lt($enteredAt);
+        // $backdated = $paymentAtProvided && $now->lt($enteredAt);
 
+        //fix
+        $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
         try {
 
             // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $method, $cashTotal, $cardTotal, $note) {

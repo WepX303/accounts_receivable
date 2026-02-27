@@ -118,6 +118,19 @@ class PaymentCorrectController extends Controller
                 $remaining = $totalLocal - $paidAfterVoid;
                 if ($remaining < 0) $remaining = 0;
 
+                // ✅ Same rules as store()
+                $remaining = round($remaining, 2);
+                $received  = round($received, 2);
+
+                if ($remaining <= 0.01) {
+                    throw new \RuntimeException('Debt is already closed. You cannot enter a new received amount in correct. Use VOID only.');
+                }
+
+                $maxExtra = 100; // same as store
+                if ($received > $remaining + $maxExtra) {
+                    throw new \RuntimeException('Overpayment is too high. Max change allowed: ' . number_format($maxExtra, 2));
+                }
+
                 $apply = min($received, $remaining);
                 $change = $received - $apply;
 
