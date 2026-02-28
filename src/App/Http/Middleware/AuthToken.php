@@ -38,7 +38,7 @@ class AuthToken
             return redirect()->route('login')
                 ->withCookie($cookie)
                 ->withErrors([
-                    'login' => 'Hesabınız pasif hale getirildi, lütfen yönetici ile iletişime geçin.',
+                    'login' => 'Your account has been deactivated. Please contact the administrator.',
                 ]);
         }
 

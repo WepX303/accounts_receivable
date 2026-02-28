@@ -6,7 +6,8 @@
             <div id="two-column-menu"></div>
 
             @php
-                $role = auth()->user()->role->value; // Enum cast var sende
+                $user = auth()->user();
+                $role = is_object($user->role) ? $user->role->value : $user->role;
             @endphp
 
             <ul class="navbar-nav" id="navbar-nav">
@@ -19,18 +20,37 @@
                 </li>
 
                 <!-- ADMIN ONLY: customers list -->
-                @if($role === 'Admin')
+                {{-- @if ($role === 'Admin')
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('customers') }}" role="button">
+                            <i class="ri-user-line"></i> <span>{{ __('menu.customers') }}</span>
+                        </a>
+                    </li>
+                @endif --}}
+
+                {{-- Customers (Admin + Manager + Analyst + Operator) --}}
+                @if (in_array($role, ['Admin', 'Manager', 'Analyst', 'Operator'], true))
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="{{ route('customers') }}">
                             <i class="ri-user-line"></i> <span>{{ __('menu.customers') }}</span>
                         </a>
                     </li>
                 @endif
 
                 <!-- CASHIER + ADMIN: payments -->
-                @if(in_array($role, ['Admin', 'Cashier'], true))
+                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('payments') }}" role="button">
+                            <i class="ri-money-dollar-box-line"></i>
+                            <span>{{ __('menu.payments') }}</span>
+                        </a>
+                    </li>
+                @endif --}}
+
+                {{-- Payments (Admin + Cashier + Operator) --}}
+                @if (in_array($role, ['Admin', 'Cashier', 'Operator'], true))
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="{{ route('payments') }}">
                             <i class="ri-money-dollar-box-line"></i>
                             <span>{{ __('menu.payments') }}</span>
                         </a>
@@ -38,9 +58,19 @@
                 @endif
 
                 <!-- CASHIER + ADMIN: customer info -->
-                @if(in_array($role, ['Admin', 'Cashier'], true))
+                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('customers.info') }}" role="button">
+                            <i class="ri-contacts-line"></i>
+                            <span>{{ __('menu.customer_info') }}</span>
+                        </a>
+                    </li>
+                @endif --}}
+
+                {{-- Customer Info (Admin + Cashier + Operator) --}}
+                @if (in_array($role, ['Admin', 'Cashier', 'Operator'], true))
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="{{ route('customers.info') }}">
                             <i class="ri-contacts-line"></i>
                             <span>{{ __('menu.customer_info') }}</span>
                         </a>
@@ -48,9 +78,19 @@
                 @endif
 
                 <!-- CASHIER + ADMIN: report -->
-                @if(in_array($role, ['Admin', 'Cashier'], true))
+                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('report') }}" role="button">
+                            <i class="ri-folder-chart-line"></i>
+                            <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
+                        </a>
+                    </li>
+                @endif --}}
+
+                {{-- Report (Admin + Cashier + Analyst + Operator) --}}
+                @if (in_array($role, ['Admin', 'Cashier', 'Analyst', 'Operator'], true))
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="{{ route('report') }}">
                             <i class="ri-folder-chart-line"></i>
                             <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
                         </a>
@@ -58,10 +98,10 @@
                 @endif
 
                 <!-- SETTINGS (ADMIN ONLY) -->
-                @if($role === 'Admin')
+                @if ($role === 'Admin')
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="#sidebarSettings" data-bs-toggle="collapse" role="button"
-                           aria-expanded="false" aria-controls="sidebarSettings">
+                            aria-expanded="false" aria-controls="sidebarSettings">
                             <i class="ri-settings-3-line"></i> <span>{{ __('menu.settings') }}</span>
                         </a>
 

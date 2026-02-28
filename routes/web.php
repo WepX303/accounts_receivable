@@ -42,88 +42,137 @@ Route::get('/lang/{locale}', function (string $locale) {
 | Protected Routes
 |--------------------------------------------------------------------------
 */
+// Route::middleware(['auth.token'])->group(function () {
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | Common (Admin + Cashier + others)
+//     |--------------------------------------------------------------------------
+//     */
+//     Route::get('/', DashboardController::class)->name('dashboard');
+
+//     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+//     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | CASHIER + ADMIN
+//     |--------------------------------------------------------------------------
+//     */
+//     Route::middleware(['role:Cashier,Admin'])->group(function () {
+
+//         // Customer info (kasiyer görebilir)
+//         Route::get('/customers/info', CustomersInfoController::class)
+//             ->name('customers.info');
+
+//         // Monthly payments report
+//         Route::get('/report', [AvshocrecatReportController::class, 'index'])
+//             ->name('report');
+
+//         // Payments (ödeme al)
+//         Route::get('/payments', CustomersPaymentController::class)
+//             ->name('payments');
+
+//         Route::post('/payments', [CustomersPaymentController::class, 'store'])
+//             ->name('payments.store');
+//     });
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | ADMIN ONLY
+//     |--------------------------------------------------------------------------
+//     */
+//     Route::middleware(['role:Admin'])->group(function () {
+
+
+//         // Customers list
+//         Route::get('/customers', CustomersController::class)->name('customers');
+
+//         Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
+
+//         // Users
+//         Route::prefix('users')->name('users.')->group(function () {
+//             Route::get('/', UserController::class)->name('index');
+//             Route::post('/', [UserController::class, 'store'])->name('store');
+//             Route::put('/{user}', [UserController::class, 'update'])->name('update');
+//             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+//         });
+
+//         // Edit payment
+//         Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
+
+
+//         Route::post('/payments/{payment}/correct', PaymentCorrectController::class)
+//             ->name('payments.correct');
+//     });
+
+//     /*
+//     |--------------------------------------------------------------------------
+//     | Apps Pages
+//     |--------------------------------------------------------------------------
+//     */
+//     Route::prefix('apps')->name('apps.')->group(function () {});
+// });
+
 Route::middleware(['auth.token'])->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Common (Admin + Cashier + others)
-    |--------------------------------------------------------------------------
-    */
+    // Everyone authenticated
     Route::get('/', DashboardController::class)->name('dashboard');
-
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    /*
-    |--------------------------------------------------------------------------
-    | CASHIER + ADMIN
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware(['role:Cashier,Admin'])->group(function () {
+    /**
+     * CUSTOMER INFO / PAYMENTS / REPORT
+     * Admin + Cashier (+ Operator için isteniyor) + Analyst report istiyor
+     */
 
-        // Customer info (kasiyer görebilir)
-        Route::get('/customers/info', CustomersInfoController::class)
-            ->name('customers.info');
-
-        // Monthly payments report
-        Route::get('/report', [AvshocrecatReportController::class, 'index'])
-            ->name('report');
-
-        // Payments (ödeme al)
-        Route::get('/payments', CustomersPaymentController::class)
-            ->name('payments');
-
-        Route::post('/payments', [CustomersPaymentController::class, 'store'])
-            ->name('payments.store');
+    // Customer info: Admin, Cashier, Operator
+    Route::middleware(['role:Admin,Cashier,Operator'])->group(function () {
+        Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | ADMIN ONLY
-    |--------------------------------------------------------------------------
-    */
-    Route::middleware(['role:Admin'])->group(function () {
+    // Payments (ödeme al): Admin, Cashier, Operator
+    Route::middleware(['role:Admin,Cashier,Operator'])->group(function () {
+        Route::get('/payments', CustomersPaymentController::class)->name('payments');
+        Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
+    });
 
+    // Report: Admin, Cashier, Analyst, Operator
+    Route::middleware(['role:Admin,Cashier,Analyst,Operator'])->group(function () {
+        Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
+    });
 
-        // Customers list
+    /**
+     * CUSTOMERS LIST + EXPORT
+     * Manager/Analyst/Operator/Admin
+     */
+    Route::middleware(['role:Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers', CustomersController::class)->name('customers');
+    });
 
+    // Export: Admin + Operator + Manager + Analyst
+    Route::middleware(['role:Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
+    });
 
-        // Users
+    /**
+     * PAYMENT EDIT ACTIONS (void/correct)
+     * Admin + Operator
+     */
+    Route::middleware(['role:Admin,Operator'])->group(function () {
+        Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
+        Route::post('/payments/{payment}/correct', PaymentCorrectController::class)->name('payments.correct');
+    });
+
+    /**
+     * SETTINGS (USERS MANAGEMENT) - Admin only
+     */
+    Route::middleware(['role:Admin'])->group(function () {
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', UserController::class)->name('index');
             Route::post('/', [UserController::class, 'store'])->name('store');
             Route::put('/{user}', [UserController::class, 'update'])->name('update');
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         });
-
-        // Edit payment
-        Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
-
-
-        Route::post('/payments/{payment}/correct', PaymentCorrectController::class)
-            ->name('payments.correct');
     });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Apps Pages
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('apps')->name('apps.')->group(function () {});
 });
-
-/*
-|--------------------------------------------------------------------------
-| Error Test
-|--------------------------------------------------------------------------
-*/
-// Route::get('/hata', function () {
-//     abort(403);
-// });
-
-
-// Route::get('/phpinfo', function () {
-//     phpinfo();
-// });

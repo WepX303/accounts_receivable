@@ -7,5 +7,8 @@ return [
     '500_title' => 'Internal Server Error!',
     '500_desc' => "Server Error 500. We're not exactly sure what happened, but our servers say something is wrong.",
 
+    'default_title' => 'Something went wrong',
+    'default_desc'  => 'The page you are looking for is unavailable or an unexpected error has occurred.',
+
     'back_home' => 'Back to home',
 ];

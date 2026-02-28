@@ -8,9 +8,10 @@ enum UserRoleEnum: string
 {
     case ADMIN = 'Admin';
     case USER = 'User';
-    case MANAGER = 'MANAGER';
+    case MANAGER = 'Manager';
     case ANALYST = 'Analyst';
     case CASHIER = 'Cashier';
+    case OPERATOR = 'Operator';
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum UserRoleEnum: string
                 self::MANAGER => 'Manager',
                 self::ANALYST => 'Analist',
                 self::CASHIER => 'Kasiyer',
+                self::OPERATOR => 'Operatör',
             },
             'ru' => match ($this) {
                 self::ADMIN => 'Администратор',
@@ -28,6 +30,7 @@ enum UserRoleEnum: string
                 self::MANAGER => 'Менеджер',
                 self::ANALYST => 'Аналитик',
                 self::CASHIER => 'Кассир',
+                self::OPERATOR => 'Оператор',
             },
             'tk' => match ($this) {
                 self::ADMIN => 'Administrator',
@@ -35,6 +38,7 @@ enum UserRoleEnum: string
                 self::MANAGER => 'Menejer',
                 self::ANALYST => 'Analitik',
                 self::CASHIER => 'Kassir',
+                self::OPERATOR => 'Operator', 
             },
             default => match ($this) { // tk
                 self::ADMIN => 'Administrator',
@@ -42,6 +46,7 @@ enum UserRoleEnum: string
                 self::MANAGER => 'Manager',
                 self::ANALYST => 'Analyst',
                 self::CASHIER => 'Cashier',
+                self::OPERATOR => 'Operator',
             },
         };
     }

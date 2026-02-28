@@ -13,26 +13,8 @@
                 </svg>
             </div>
         </div>
-
-        <!-- auth page content -->
         <div class="auth-page-content">
             <div class="container">
-                {{-- <div class="row">
-                        <div class="col-lg-12">
-                            <div class="text-center pt-4">
-                                <div class="">
-                                    <img src="{{ URL::asset('build/images/error.svg') }}" alt="" class="error-basic-img move-animation">
-                                </div>
-                                <div class="mt-n4">
-                                    <h1 class="display-1 fw-medium">404</h1>
-                                    <h3 class="text-uppercase">{{ __('errors.404_title') }}</h3>
-                                    <p class="text-muted mb-4">{{ __('errors.404_desc') }}</p>
-                                    <a href="{{route('dashboard')}}" class="btn btn-success"><i class="mdi mdi-home me-1"></i>{{ __('errors.back_home') }}</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-
                 @php
                     $code = $status ?? ($exception->getStatusCode() ?? 500);
                 @endphp
@@ -48,15 +30,15 @@
                             <div class="mt-n4">
                                 <h1 class="display-1 fw-medium">{{ $code }}</h1>
 
-                                <h3 class="text-uppercase">Something went wrong</h3>
+                                <h3 class="text-uppercase">{{__('errors.default_title')}}</h3>
 
                                 <p class="text-muted mb-4">
-                                    The page you are looking for is unavailable or an unexpected error has occurred.
+                                   {{ __('errors.default_desc')}}
                                 </p>
 
                                 <a href="{{ route('dashboard') }}" class="btn btn-success">
                                     <i class="mdi mdi-home me-1"></i>
-                                    Back to Dashboard
+                                    {{ __('errors.back_home') }}
                                 </a>
                             </div>
                         </div>
