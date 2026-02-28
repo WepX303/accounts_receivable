@@ -15,8 +15,8 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
 
         $schedule->command('sync:run')
-            // ->everyFiveMinutes()
             ->everyFifteenMinutes()
+            ->between('09:00', '22:59')
             ->withoutOverlapping(10)
             ->runInBackground();
     }
