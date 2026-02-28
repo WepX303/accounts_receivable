@@ -34,9 +34,60 @@
 
                 <div class="row justify-content-center">
                     <div class="col-md-8 col-lg-6 col-xl-5">
-                        <div class="card mt-4">
+                        <div class="card mt-4 position-relative">
 
-                            <div class="card-body p-4">
+                            {{-- Language Switch --}}
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-light btn-sm rounded-pill shadow-sm"
+                                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                                        @php($loc = session('locale', 'tk'))
+
+                                        @switch($loc)
+                                            @case('ru')
+                                                <img src="{{ URL::asset('build/images/flags/ru.svg') }}" height="16">
+                                            @break
+
+                                            @case('en')
+                                                <img src="{{ URL::asset('build/images/flags/us.svg') }}" height="16">
+                                            @break
+
+                                            @case('tr')
+                                                <img src="{{ URL::asset('build/images/flags/tr.svg') }}" height="16">
+                                            @break
+
+                                            @default
+                                                <img src="{{ URL::asset('build/images/flags/tm.svg') }}" height="16">
+                                        @endswitch
+                                    </button>
+
+                                    <div class="dropdown-menu dropdown-menu-end shadow">
+                                        <a href="{{ route('lang.switch', 'tk') }}" class="dropdown-item">
+                                            <img src="{{ URL::asset('build/images/flags/tm.svg') }}" height="16"
+                                                class="me-2 rounded">
+                                            Turkmen
+                                        </a>
+                                        <a href="{{ route('lang.switch', 'ru') }}" class="dropdown-item">
+                                            <img src="{{ URL::asset('build/images/flags/ru.svg') }}" height="16"
+                                                class="me-2 rounded">
+                                            Русский
+                                        </a>
+                                        <a href="{{ route('lang.switch', 'en') }}" class="dropdown-item">
+                                            <img src="{{ URL::asset('build/images/flags/us.svg') }}" height="16"
+                                                class="me-2 rounded">
+                                            English
+                                        </a>
+                                        <a href="{{ route('lang.switch', 'tr') }}" class="dropdown-item">
+                                            <img src="{{ URL::asset('build/images/flags/tr.svg') }}" height="16"
+                                                class="me-2 rounded">
+                                            Türkçe
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-4 pt-5">
+
                                 <div class="text-center mt-2">
                                     <h5 class="text-primary">{{ __('pages/auth_login.welcome_back') }}</h5>
                                     <p class="text-muted">{{ __('pages/auth_login.signin_to_continue') }}</p>
@@ -45,11 +96,13 @@
                                     <form action="{{ route('login.post') }}" method="POST">
                                         @csrf
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">{{ __('pages/auth_login.username') }}<span
+                                            <label for="username"
+                                                class="form-label">{{ __('pages/auth_login.username') }}<span
                                                     class="text-danger">*</span></label>
 
                                             <input type="text" class="form-control @error('login') is-invalid @enderror"
-                                                id="login" name="login" placeholder="{{ __('pages/auth_login.login_placeholder') }}"
+                                                id="login" name="login"
+                                                placeholder="{{ __('pages/auth_login.login_placeholder') }}"
                                                 value="{{ old('login') }}">
                                             @error('login')
                                                 <span class="invalid-feedback" role="alert">
@@ -61,12 +114,15 @@
                                         <div class="mb-3">
                                             <div class="float-end">
                                             </div>
-                                            <label class="form-label" for="password-input">{{ __('pages/auth_login.password') }}<span
+                                            <label class="form-label"
+                                                for="password-input">{{ __('pages/auth_login.password') }}<span
                                                     class="text-danger">*</span></label>
                                             <div class="position-relative auth-pass-inputgroup mb-3">
                                                 <input type="password"
                                                     class="form-control password-input pe-5 @error('password') is-invalid @enderror"
-                                                    name="password" placeholder="{{ __('pages/auth_login.enter_password') }}" id="password-input">
+                                                    name="password"
+                                                    placeholder="{{ __('pages/auth_login.enter_password') }}"
+                                                    id="password-input">
 
                                                 <button
                                                     class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
@@ -82,48 +138,48 @@
                                         </div>
 
                                         <div class="mt-4">
-                                            <button class="btn btn-success w-100" type="submit">{{ __('pages/auth_login.sign_in') }}</button>
+                                            <button class="btn btn-success w-100"
+                                                type="submit">{{ __('pages/auth_login.sign_in') }}</button>
                                         </div>
 
                                     </form>
                                 </div>
+                                <!-- end card body -->
                             </div>
-                            <!-- end card body -->
-                        </div>
-                        <!-- end card -->
+                            <!-- end card -->
 
-                        <div class="mt-4 text-center">
-                        </div>
+                            <div class="mt-4 text-center">
+                            </div>
 
+                        </div>
+                    </div>
+                    <!-- end row -->
+                </div>
+                <!-- end container -->
+            </div>
+            <!-- end auth page content -->
+
+            <!-- footer -->
+            <footer class="footer">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="text-center">
+                                <p class="mb-0 text-muted">&copy;
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> <br> Crafted by WepX
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- end row -->
-            </div>
-            <!-- end container -->
+            </footer>
+            <!-- end Footer -->
         </div>
-        <!-- end auth page content -->
-
-        <!-- footer -->
-        <footer class="footer">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy;
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> <br> Crafted by WepX
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
-        <!-- end Footer -->
-    </div>
-@endsection
-@section('script')
-    <script src="{{ URL::asset('build/libs/particles.js/particles.js') }}"></script>
-    <script src="{{ URL::asset('build/js/pages/particles.app.js') }}"></script>
-    <script src="{{ URL::asset('build/js/pages/password-addon.init.js') }}"></script>
-@endsection
+    @endsection
+    @section('script')
+        <script src="{{ URL::asset('build/libs/particles.js/particles.js') }}"></script>
+        <script src="{{ URL::asset('build/js/pages/particles.app.js') }}"></script>
+        <script src="{{ URL::asset('build/js/pages/password-addon.init.js') }}"></script>
+    @endsection

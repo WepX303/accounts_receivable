@@ -17,14 +17,13 @@ class DashboardController extends Controller
         $role = auth()->user()->role;
 
         // =========================
-        // CASHIER
+        // CASHIER (cashier.blade.php)
         // =========================
         if ($role === UserRoleEnum::CASHIER) {
 
             $start = now()->startOfDay();
             $end   = now()->endOfDay();
 
-            // $base = CreditPayment::query()->forCashier(auth()->id()); // ✅ sadece kendi
 
             $base = CreditPayment::query()
                 ->notVoided()
@@ -66,43 +65,56 @@ class DashboardController extends Controller
         // =========================
         // ADMIN (dashboard.blade.php)
         // =========================
+
+        $request->validate([
+            'period' => 'nullable|in:today,yesterday,week,month,last7,last30,custom',
+            'start'  => 'nullable|date',
+            'end'    => 'nullable|date|after_or_equal:start',
+        ], [
+            'period.in' => __('validations/validations.dashboard.period_invalid'),
+            'start.date' => __('validations/validations.dashboard.start_date_invalid'),
+            'end.date' => __('validations/validations.dashboard.end_date_invalid'),
+            'end.after_or_equal' => __('validations/validations.dashboard.end_before_start'),
+        ]);
+
+        
         $period = $request->get('period', 'today');
 
         $start = now()->startOfDay();
         $end   = now()->endOfDay();
 
         switch ($period) {
-            case 'today':
+            case 'today': // today
                 $start = now()->startOfDay();
                 $end   = now()->endOfDay();
                 break;
 
-            case 'yesterday':
+            case 'yesterday': // yesterday
                 $start = now()->subDay()->startOfDay();
                 $end   = now()->subDay()->endOfDay();
                 break;
 
-            case 'week': // bu hafta (pazartesi->bugün)
+            case 'week': // this week (Monday to today)
                 $start = now()->startOfWeek()->startOfDay();
                 $end   = now()->endOfDay();
                 break;
 
-            case 'month': // bu ay (ayın 1'i->bugün)
+            case 'month': // this month (1st of the month -> today)
                 $start = now()->startOfMonth()->startOfDay();
                 $end   = now()->endOfDay();
                 break;
 
-            case 'last7': // son 7 gün
+            case 'last7': // last 7 days
                 $start = now()->subDays(6)->startOfDay();
                 $end   = now()->endOfDay();
                 break;
 
-            case 'last30': // son 30 gün
+            case 'last30': // last 30 days
                 $start = now()->subDays(29)->startOfDay();
                 $end   = now()->endOfDay();
                 break;
 
-            case 'custom':
+            case 'custom': // custom
                 if ($request->filled('start')) {
                     $start = Carbon::parse($request->start)->startOfDay();
                 }
@@ -111,7 +123,7 @@ class DashboardController extends Controller
                 }
                 break;
 
-            default:
+            default: // default period today
                 $period = 'today';
                 $start = now()->startOfDay();
                 $end   = now()->endOfDay();
@@ -129,8 +141,6 @@ class DashboardController extends Controller
 
         $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($start, $end, $period) {
 
-            // $base = CreditPayment::query()
-            //     ->whereBetween('created_at', [$start, $end]);
 
             $base = CreditPayment::query()
                 ->notVoided()
@@ -220,15 +230,13 @@ class DashboardController extends Controller
                 });
 
             // =========================
-            // CHART (period'a göre)
+            // CHART (by period)
             // =========================
             $chartDaily = ['labels' => [], 'series' => []];
 
             if ($period === 'today' || $period === 'yesterday') {
                 $hours = collect(range(0, 23));
 
-                // $rows = CreditPayment::query()
-                //     ->whereBetween('created_at', [$start, $end])
                 $rows = CreditPayment::query()
                     ->notVoided()
                     ->whereBetween('created_at', [$start, $end])
@@ -258,8 +266,6 @@ class DashboardController extends Controller
                 $daysInMonth = now()->day;
                 $days = collect(range(1, $daysInMonth));
 
-                // $rows = CreditPayment::query()
-                //     ->whereBetween('created_at', [$start, $end])
                 $rows = CreditPayment::query()
                     ->notVoided()
                     ->whereBetween('created_at', [$start, $end])
@@ -290,8 +296,6 @@ class DashboardController extends Controller
             return compact('kpi', 'byCashier', 'topCashier', 'byBranch', 'recentAdminPayments', 'chartDaily');
         });
 
-
-        // cache içinden çıkar
         $kpi = $data['kpi'];
         $byCashier = $data['byCashier'];
         $topCashier = $data['topCashier'];

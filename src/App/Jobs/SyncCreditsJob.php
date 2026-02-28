@@ -20,7 +20,7 @@ class SyncCreditsJob implements ShouldQueue
 
     public function handle(): void
     {
-        $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS_TEST
+        $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS
         $pgTable = (string) config('sync.pgsql.credits_table'); // credits_table
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
@@ -29,21 +29,15 @@ class SyncCreditsJob implements ShouldQueue
         /** @var ConnectionInterface $pgsql */
         $pgsql = DB::connection('pgsql');
 
-        // MSSQL DB context'i garantiye al
+        // Secure the MSSQL DB context
         $dbName = (string) config('database.connections.sqlsrv.database');
         $sqlsrv->statement("USE [$dbName]");
 
-        // ortam bazlı state key (prod/test karışmasın)
+        // Environment-based state key (to prevent mixing of production and test environments)
         $stateKey = app()->environment() . '_credits_last_rv';
 
         $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
         $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;
-
-        // $query = $sqlsrv
-        //     ->table($mssqlTable)
-        //     ->selectRaw('*, CONVERT(bigint, RV) as rv_bigint')
-        //     ->whereRaw('CONVERT(bigint, RV) > ?', [$lastRv])
-        //     ->orderByRaw('RV');
 
         $query = $sqlsrv
             ->table($mssqlTable)
@@ -60,7 +54,7 @@ class SyncCreditsJob implements ShouldQueue
 
             $now = now();
 
-            // 1) logicalref list
+            // 1) Logicalref list
             $logicalRefs = [];
             foreach ($rows as $row) {
                 $r = (array) $row;
@@ -74,7 +68,7 @@ class SyncCreditsJob implements ShouldQueue
                 return;
             }
 
-            // 2) existing kayıtları local alanlar + timestamps ile çek
+            // 2) Retrieve existing records with local fields + timestamps
             $existingRows = $pgsql->table($pgTable)
                 ->select([
                     'logicalref',
@@ -113,16 +107,16 @@ class SyncCreditsJob implements ShouldQueue
                 $existing = $existingMap[$logicalref] ?? null;
                 $isExisting = (bool) $existing;
 
-                // ✅ HER SATIRDA AYNI KEY'LER: local alanları default olarak mevcut değere set ediyoruz
+                // SAME KEYS IN EVERY LINE: We set local fields to the default value by default.
                 $amountLocal = $isExisting ? $existing->amount_local : null;
                 $paidLocal = $isExisting ? $existing->paid_local : null;
 
-                // ✅ KURAL-1: yeni kayıt -> local init
+                // RULE-1: new registration -> local initialisation
                 if (! $isExisting) {
                     $amountLocal = $amount;
                     $paidLocal = $paid;
                 } else {
-                    // ✅ KURAL-2: eski kayıt ama local "bakir" ise ve remote artık doluysa -> local doldur
+                    // RULE-2: if it's an old record but the local is ‘virgin’ and the remote is now full -> fill the local
                     $amountNeverTouched = is_null($existing->amount_updated_at);
                     $paidNeverTouched = is_null($existing->paid_updated_at);
 
@@ -165,11 +159,11 @@ class SyncCreditsJob implements ShouldQueue
 
                     'rv_bigint' => $rv,
 
-                    // ✅ local alanlar HER SATIRDA var
+                    // local variables are present in EVERY LINE
                     'amount_local' => $amountLocal,
                     'paid_local' => $paidLocal,
-
-                    // ✅ created_at her satırda var (existing için DB’deki değeri koruyoruz)
+                    
+                    // created_at is present in every row (we are preserving the value in the database for existing records)
                     'created_at' => $isExisting ? $existing->created_at : $now,
                     'updated_at' => $now,
                 ];
@@ -179,7 +173,7 @@ class SyncCreditsJob implements ShouldQueue
                 return;
             }
 
-            // created_at update edilmeyecek!
+            // created_at will not be updated!
             $pgsql->table($pgTable)->upsert(
                 $payload,
                 ['logicalref'],
@@ -216,7 +210,7 @@ class SyncCreditsJob implements ShouldQueue
             );
         });
 
-        // sync_state: created_at'i her seferinde ezmeyelim
+        // sync_state: Let's not overwrite created_at every time
         $now = now();
         $existingState = $pgsql->table('sync_state')->where('key', $stateKey)->first();
 

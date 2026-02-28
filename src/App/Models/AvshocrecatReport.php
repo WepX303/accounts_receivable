@@ -10,7 +10,6 @@ class AvshocrecatReport extends Model
 
     protected $table = 'avshocrecat_report';
 
-    // report tablo => genelde insert/truncate ile doluyor; guard kapatalım
     protected $guarded = [];
 
     public $timestamps = true;

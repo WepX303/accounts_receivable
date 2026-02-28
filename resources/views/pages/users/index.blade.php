@@ -180,12 +180,6 @@
                                             <select name="role"
                                                 class="form-control @error('role') is-invalid @enderror" required>
                                                 <option value="">{{ __('pages/users.select_role') }}</option>
-                                                {{-- @foreach ($roles as $role)
-                                                    <option value="{{ $role }}"
-                                                        {{ old('role') == $role ? 'selected' : '' }}>
-                                                        {{ ucfirst($role) }}
-                                                    </option>
-                                                @endforeach --}}
                                                 @foreach (\App\Enums\UserRoleEnum::cases() as $role)
                                                     <option value="{{ $role->value }}"
                                                         {{ old('role', $user->role?->value ?? '') == $role->value ? 'selected' : '' }}>

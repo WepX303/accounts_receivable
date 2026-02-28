@@ -10,12 +10,23 @@ class CustomersInfoController extends Controller
 {
     public function __invoke(Request $request)
     {
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'id' => 'nullable|integer|min:1',
+        ], [
+            'q.string' => __('validations/validations.customers_info.q_string'),
+            'q.max' => __('validations/validations.customers_info.q_max'),
+            'id.integer' => __('validations/validations.customers_info.id_integer'),
+            'id.min' => __('validations/validations.customers_info.id_min'),
+        ]);
+
         $q = trim((string) $request->get('q', ''));
-        $id = $request->get('id'); // opsiyonel: satır tıklanınca url'e id yazmak istersen kullanırız
+        // $id = $request->get('id');
+        $id = $request->integer('id'); // null or int
 
         $credit_users_info = Credit::query()
             ->when($q !== '', function ($query) use ($q) {
-                $like = '%'.$q.'%';
+                $like = '%' . $q . '%';
                 $query->where(function ($qq) use ($like) {
                     $qq->where('name', 'ilike', $like)
                         ->orWhere('phone', 'ilike', $like)
@@ -29,23 +40,21 @@ class CustomersInfoController extends Controller
             ->paginate(16)
             ->appends($request->query());
 
-        // ✅ Sayfadaki kayıtları collection yap
+        // Create a collection of the records on the page
         $pageItems = collect($credit_users_info->items());
 
-        // ✅ Sağ panel seçili kayıt
+        // Selected record in the right panel
         $selected = null;
 
         if (! empty($id)) {
-            // önce bu sayfanın içinden bul
+            // first find it within this page
             $selected = $pageItems->firstWhere('logicalref', (int) $id);
-
-            // yoksa DB’den çek (id başka sayfadaysa)
+            // otherwise fetch from the database (if the id is on another page)
             if (! $selected) {
                 $selected = Credit::query()->where('logicalref', (int) $id)->first();
             }
         }
-
-        // id yoksa ilk kaydı seç
+        // If there is no ID, select the first record
         if (! $selected) {
             $selected = $pageItems->first();
         }

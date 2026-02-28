@@ -13,16 +13,25 @@ class CustomersController extends Controller
 {
     public function __invoke(Request $request)
     {
+
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+        ], [
+            'q.string' => __('validations/validations.customers.q_string'),
+            'q.max' => __('validations/validations.customers.q_max'),
+            'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+        ]);
         // Search
         $q = trim((string) ($request->get('q') ?? ''));
         if ($q === 'null') {
             $q = '';
         }
 
-        // Tek Quick Filter
+        // Quick Filter
         $quick = (string) $request->get('quick_filter', 'all');
 
-        // Tarih aralıkları (ödeme bazlı)
+        // Date ranges (payment-based)
         [$from, $to] = match ($quick) {
             'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
             'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
@@ -36,9 +45,9 @@ class CustomersController extends Controller
             default => [null, null],
         };
 
-        // Tablodaki "Today Paid" kolonu için dinamik tarih aralığı
-        // Eğer ödeme bazlı filtre seçiliyse ($from/$to dolu) o aralığı kullan,
-        // değilse varsayılan olarak bugünü kullan.
+        // Dynamic date range for the ‘Today Paid’ column in the table
+        // If the payment-based filter is selected (where $from/$to are populated), use that range;
+        // otherwise, use today by default.
         [$periodFrom, $periodTo] = ($from && $to)
             ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
             : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
@@ -68,7 +77,7 @@ class CustomersController extends Controller
         $yTo = Carbon::yesterday()->endOfDay();
 
         $stats = [
-            // bugün tahsilat
+            // today's collection
             'paid_today_sum' => (float) CreditPayment::query()
                 ->notVoided()
                 ->whereBetween('created_at', [$todayFrom, $todayTo])
@@ -89,12 +98,12 @@ class CustomersController extends Controller
                 ->whereBetween('created_at', [$yFrom, $yTo])
                 ->count(),
 
-            // borçlu müşteri sayısı (MERKEZ amount/paid)
+            // number of customers in debt (CENTRAL amount/paid)
             'has_debt_cnt' => (int) Credit::query()
                 ->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
                 ->count(),
 
-            // local != remote paid olan satırlar (tabloda kırmızıya boyadıkların)
+            // local != remote paid rows (the ones we coloured red in the table)
             'paid_mismatch_cnt' => (int) Credit::query()
                 ->whereNotNull('paid_local')
                 ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
@@ -122,7 +131,7 @@ class CustomersController extends Controller
                 });
             })
 
-            /* ÖDEME TARİHİNE GÖRE (credit_payments üzerinden) */
+            /* BY PAYMENT DATE (via credit_payments) */
             ->when($from && $to, function ($query) use ($from, $to) {
                 $table = $query->getModel()->getTable();
 
@@ -130,24 +139,22 @@ class CustomersController extends Controller
                     $sub->selectRaw('1')
                         ->from('credit_payments')
                         ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
-                        // void olanlari alma
                         ->whereNull('credit_payments.voided_at')
-
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
             })
 
-            /* BORCU KALANLAR (MERKEZ: amount/paid) */
+            /* OUTSTANDING DEBTS (CENTRE: amount/paid) */
             ->when($quick === 'has_debt', function ($query) {
                 $query->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)');
             })
 
-            /* BORCU OLMAYANLAR (MERKEZ: amount/paid) */
+            /* THOSE WITHOUT DEBT (CENTRE: amount/paid) */
             ->when($quick === 'no_debt', function ($query) {
                 $query->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)');
             })
 
-            /* HİÇ ÖDEME YAPMAYANLAR */
+            /* THOSE WHO HAVE NEVER MADE A PAYMENT */
             ->when($quick === 'no_payment', function ($query) {
                 $table = $query->getModel()->getTable();
 
@@ -159,27 +166,26 @@ class CustomersController extends Controller
                 });
             })
 
-            /* BLOK OLANLAR */
+            /* THOSE WHO ARE BLOCKED */
             ->when($quick === 'blocked', fn($q) => $q->where('active', false))
 
-            /* AKTİF OLANLAR */
+            /* ACTIVE MEMBERS */
             ->when($quick === 'active', fn($q) => $q->where('active', true))
 
-            /* STATUS = BERMEJEK */
+            /* STATUS = IN PROGRESS */
             ->when($quick === 'bermejek', function ($q) {
                 $q->whereNotNull('status')
                     ->where('status', '!=', '')
                     ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
             })
 
-            /* PAID MISMATCH (LOCAL != REMOTE) */
+            /* PAID MISMATCH (LOCAL ≠ REMOTE) */
             ->when($quick === 'paid_mismatch', function ($query) {
                 $query->whereNotNull('paid_local')
                     ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
             })
 
-            //void without
-
+            /* WITHOUT VOID */
             ->withSum(['payments as period_pay_sum' => function ($q) use ($periodFrom, $periodTo) {
                 $q->whereNull('voided_at')
                     ->whereBetween('created_at', [$periodFrom, $periodTo]);

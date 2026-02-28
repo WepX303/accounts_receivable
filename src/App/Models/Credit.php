@@ -57,7 +57,7 @@ class Credit extends Model
             ->orderByDesc('id');
     }
 
-    // ✅ Local remaining accessor (SADECE LOCAL)
+    // Local remaining accessor (LOCAL ONLY)
     public function getLocalRemainingAttribute(): ?float
     {
         if ($this->amount_local === null || $this->paid_local === null) {
@@ -87,7 +87,7 @@ class Credit extends Model
         return $paid >= $total - 0.01;
     }
 
-    // ✅ REMOTE remaining (amount - paid) => negatif olabilir
+    // Remote balance (amount - paid) => may be negative
     public function getRemoteRemainingAttribute(): ?float
     {
         if ($this->amount === null || $this->paid === null) {
@@ -97,7 +97,7 @@ class Credit extends Model
         return round(((float) $this->amount - (float) $this->paid), 2);
     }
 
-    // ✅ REMOTE closed
+    // Remote closed
     public function getRemoteClosedAttribute(): bool
     {
         if ($this->amount === null || $this->paid === null) {

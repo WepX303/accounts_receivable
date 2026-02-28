@@ -24,13 +24,13 @@ class SyncAvshocrecatReportJob implements ShouldQueue
         $pgTable = config('sync.pgsql.avshocrecat_table');     // avshocrecat_report
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
-        // 1) MSSQL SP çağır
+        // 1) Call MSSQL stored procedure
         $rows = DB::connection('sqlsrv')->select(
             "EXEC {$proc} @PASPORT = ?",
             [$pasport]
         );
 
-        // 2) Snapshot: hedef tabloyu sıfırla
+        // 2) Snapshot: reset the target table
         DB::connection('pgsql')->table($pgTable)->truncate();
 
         if (empty($rows)) {
@@ -113,7 +113,7 @@ class SyncAvshocrecatReportJob implements ShouldQueue
 
         $v = trim((string) $value);
 
-        // MSSQL CAST(date) genelde YYYY-MM-DD döner
+        // MSSQL CAST(date) generally returns YYYY-MM-DD
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
             return $v;
         }

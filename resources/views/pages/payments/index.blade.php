@@ -1,8 +1,6 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
-
-    {{-- ✅ Laravel validation errors --}}
     @if ($errors->any())
         <div class="alert alert-danger">
             <div class="fw-semibold mb-2">{{ __('pages/payments.validation_fix') }}</div>
@@ -14,8 +12,6 @@
         </div>
     @endif
 
-
-    {{-- ✅ Controller warnings/success --}}
     @if (session('warning'))
         <div class="alert alert-warning">{{ session('warning') }}</div>
     @endif
@@ -37,24 +33,6 @@
                                         placeholder="{{ __('pages/payments.search_placeholder') }}"
                                         value="{{ $q ?? request('q') }}">
                                     <i class="ri-search-line search-icon"></i>
-
-
-                                    {{-- selected id korunsun --}}
-                                    {{-- @if ($selected)
-                                        <input type="hidden" name="id" value="{{ (string) $selected->logicalref }}">
-                                    @endif --}}
-
-
-                                    {{-- customers.info’dan ids[] ile gelindiyse koru --}}
-                                    {{-- @if (is_array(request('ids')))
-                                        @foreach (request('ids') as $hid)
-                                            @if (is_numeric($hid))
-                                                <input type="hidden" name="ids[]" value="{{ $hid }}">
-                                            @endif
-                                        @endforeach
-                                    @endif --}}
-
-                                    {{-- customers.info’dan ids[] ile gelindiyse koru (AMA sadece q boşken) --}}
                                     @if (is_array(request('ids')) && trim((string) request('q', '')) === '')
                                         @foreach (request('ids') as $hid)
                                             @if (is_numeric($hid))
@@ -107,26 +85,14 @@
                                         @php
                                             $isActive =
                                                 $selected && (string) $selected->logicalref === (string) $c->logicalref;
-
                                             $hasLocal = $c->amount_local !== null && $c->paid_local !== null;
-
                                             $totalLocal = $hasLocal ? (float) $c->amount_local : null;
                                             $paidLocal = $hasLocal ? (float) $c->paid_local : null;
-
                                             $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
 
-                                            // Row URL new style: sadece id parametresi
-                                            // $rowUrl = route('payments', ['id' => (string) $c->logicalref]);
-
-                                            // ✅ Row URL: mevcut query (ids[], q vs) korunsun, sadece id değişsin
                                             $query = request()->query();
                                             $query['id'] = (string) $c->logicalref;
                                             $rowUrl = route('payments', $query);
-
-                                            // Row URL old style: mevcut query korunsun
-                                            // $query = request()->query();
-                                            // $query['id'] = (string) $c->logicalref;
-                                            // $rowUrl = route('payments', $query);
 
                                         @endphp
 
@@ -307,22 +273,9 @@
                             }
                         @endphp
 
-                        {{-- <div class="mb-2 fw-semibold">{{ __('pages/payments.last_payment_detail') }}</div>
-                        <div class="bg-light rounded p-2 small">
-                            @forelse($details as $key => $value)
-                                <div class="d-flex justify-content-between border-bottom py-1">
-                                    <span class="text-muted">{{ ucfirst(str_replace('_', ' ', $key)) }}</span>
-                                    <span class="fw-semibold">{{ $value }}</span>
-                                </div>
-                            @empty
-                                —
-                            @endforelse
-                        </div> --}}
-
                         <div class="mb-2 fw-semibold">{{ __('pages/payments.last_payment_detail') }}</div>
 
                         @php
-                            // paid_note içinden gelen key’leri çeviride aramak için normalize ediyoruz
                             $labelKey = function ($rawKey) {
                                 $k = strtolower(trim((string) $rawKey)); // METHOD, method, Method => method
                                 $k = preg_replace('/\s+/', '_', $k);
@@ -337,7 +290,6 @@
                                     $transKey = "pages/payments.detail_keys.$k";
                                     $label = __($transKey);
 
-                                    // Eğer çeviri bulunamazsa Laravel aynı key'i döndürür -> fallback
 if ($label === $transKey) {
     $label = ucfirst(str_replace('_', ' ', $k));
 }
@@ -359,10 +311,7 @@ if ($k === 'method') {
                                 —
                             @endforelse
                         </div>
-
-
                         <hr>
-
                         {{-- Payment History --}}
                         <div class="mb-2 fw-semibold">{{ __('pages/payments.payment_history_last_10') }}
                         </div>
@@ -370,69 +319,6 @@ if ($k === 'method') {
                             <div class="text-muted small">{{ __('pages/payments.no_payment_history') }}</div>
                         @else
                             <div class="list-group">
-                                {{-- @foreach ($history as $h)
-                                    @php
-                                        $u = $h->createdByUser
-                                            ? $h->createdByUser->firstname . ' ' . $h->createdByUser->lastname
-                                            : '-';
-
-                                        $received = (float) $h->pay_amount;
-                                        $change = (float) ($h->change_amount ?? 0);
-                                        $applied = $received - $change;
-                                        if ($applied < 0) {
-                                            $applied = 0;
-                                        }
-                                    @endphp
-
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between">
-                                            <div class="fw-semibold">
-                                                {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
-                                              
-                                                @php
-                                                    $mKey =
-                                                        'pages/payments.method_values.' .
-                                                        strtolower(trim((string) $h->method));
-                                                    $mTxt = __($mKey);
-                                                @endphp
-
-                                                <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
-                                                </span>
-                                            </div>
-                                            <div class="text-muted small">
-                                                {{ $h->created_at ? $h->created_at->format('Y-m-d H:i') : '-' }}
-                                            </div>
-                                        </div>
-
-                                        <div class="text-muted small">
-                                            {{ __('pages/payments.applied') }}: {{ number_format($applied, 2) }} |
-                                            {{ __('pages/payments.change') }}: {{ number_format($change, 2) }}
-                                        </div>
-
-                                        <div class="text-muted small">
-                                            {{ __('pages/payments.cash') }}:
-                                            {{ number_format((float) $h->cash_amount, 2) }} |
-                                            {{ __('pages/payments.card') }}:
-                                            {{ number_format((float) $h->card_amount, 2) }}
-                                        </div>
-
-                                        <div class="text-muted small">{{ __('pages/payments.by') }}: {{ $u }}
-                                        </div>
-
-                                        <div class="text-muted small">
-                                            {{ __('pages/payments.remaining') }}:
-                                            {{ number_format((float) $h->old_amount_local, 2) }}
-                                            → {{ number_format((float) $h->new_amount_local, 2) }}
-                                        </div>
-
-                                        @if (!empty($h->note))
-                                            <div class="small mt-1" style="white-space: pre-wrap;">{{ $h->note }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach --}}
-
                                 @foreach ($history as $h)
                                     @php
                                         $u = $h->createdByUser

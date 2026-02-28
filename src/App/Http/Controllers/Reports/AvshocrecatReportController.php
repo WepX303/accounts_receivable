@@ -12,10 +12,10 @@ class AvshocrecatReportController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        // Base query (tüm kayıtlar)
+        // Base query (all records)
         $query = AvshocrecatReport::query();
 
-        // Search varsa
+        // Search 
         if ($q !== '') {
             $query->where(function ($sub) use ($q) {
                 $sub->where('karz_alyjy', 'ILIKE', "%{$q}%")
@@ -27,7 +27,6 @@ class AvshocrecatReportController extends Controller
                     ->orWhere('sertnama_nomeri', 'ILIKE', "%{$q}%");
             });
         }
-
         // Pagination
         $rows = $query
             ->orderByDesc('id')

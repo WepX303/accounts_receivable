@@ -25,17 +25,16 @@ class CreditPayment extends Model
         'created_by_email',
         'created_by_phone',
 
-        // pay_amount: müşterinin verdiği para (RECEIVED)
+        // pay_amount: the money given by the customer (RECEIVED)
         'pay_amount',
 
-        // change_amount: para üstü
+        // change_amount: change
         'change_amount',
 
         'method',
         'cash_amount',
         'card_amount',
 
-        // old_amount_local/new_amount_local: biz burada REMAINING logluyoruz
         'old_amount_local',
         'new_amount_local',
 
@@ -82,7 +81,7 @@ class CreditPayment extends Model
         return $query->where('created_by', $userId);
     }
 
-    // ✅ computed: borca uygulanan miktar
+    // computed: amount applied to the debt
     public function getAppliedAmountAttribute(): float
     {
         $received = (float) $this->pay_amount;
@@ -108,9 +107,7 @@ class CreditPayment extends Model
 
     protected static function booted()
     {
-        // $bump = function () {
-        //     Cache::increment('admin_dashboard:v');
-        // };
+ 
         $bump = function () {
             if (!Cache::has('admin_dashboard:v')) {
                 Cache::forever('admin_dashboard:v', 1);

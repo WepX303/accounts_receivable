@@ -11,10 +11,10 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // tk ana dil, session yoksa tk kullan
+        // If the primary language is not available in the session, use tk.
         $locale = session('locale', config('app.locale', 'tk'));
 
-        // sadece izin verilen dillere set et
+        // Set only to permitted languages
         if (! in_array($locale, ['tk', 'en', 'ru', 'tr'], true)) {
             $locale = 'tk';
         }

@@ -25,13 +25,13 @@ class AuthToken
             ->first();
 
         if (! $user) {
-            // Token geçersiz veya süresi dolmuş
+            // Token is invalid or has expired
             return redirect()->route('login')
                 ->withCookie(cookie()->forget('auth_token'));
         }
 
         if (! $user->status) {
-            // Kullanıcı pasif, logout ve cookie sil
+            // User is inactive, logout and delete cookies
             $cookie = cookie()->forget('auth_token');
             Auth::logout();
 
@@ -42,10 +42,8 @@ class AuthToken
                 ]);
         }
 
-        // Laravel auth'a fresh user ver
+        // Provide a fresh user to Laravel auth
         Auth::login($user->fresh());
-
-        // Blade için paylaş
         view()->share('user', Auth::user());
 
         return $next($request);

@@ -10,7 +10,6 @@ use App\Http\Controllers\Payments\PaymentVoidController;
 use App\Http\Controllers\Payments\PaymentCorrectController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
-use App\Http\Controllers\Stores\StoreController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -85,9 +84,6 @@ Route::middleware(['auth.token'])->group(function () {
     */
     Route::middleware(['role:Admin'])->group(function () {
 
-        // Store
-        Route::get('/store', StoreController::class)->name('store');
-        Route::get('/store-details', [StoreController::class, 'details'])->name('store.details');
 
         // Customers list
         Route::get('/customers', CustomersController::class)->name('customers');

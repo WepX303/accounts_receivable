@@ -15,18 +15,18 @@ class PaymentVoidController extends Controller
 {
     public function __invoke(Request $request, CreditPayment $payment)
     {
-        // Admin-only (route middleware de koyacağız ama burada da garanti)
+        // Admin only
         $user = Auth::user();
 
         if (!$user || $user->role !== UserRoleEnum::ADMIN) {
-            return back()->with('warning', 'Only Admin can void payments.');
+            return back()->with('warning', __('validations/validations.payment_void.admin_only'));
         }
 
         $reason = trim((string) $request->input('void_reason', ''));
         $reason = preg_replace('/\s+/', ' ', $reason);
 
         if ($reason === '') {
-            return back()->with('warning', 'Void reason is required.')->withInput();
+            return back()->with('warning', __('validations/validations.payment_void.void_reason_required'))->withInput();
         }
 
         try {
@@ -39,8 +39,9 @@ class PaymentVoidController extends Controller
                     ->firstOrFail();
 
                 if ($p->voided_at !== null) {
-                    throw new \RuntimeException('This payment is already voided.');
+                    throw new \RuntimeException(__('validations/validations.payment_void.already_voided'));
                 }
+
 
                 /** @var Credit $c */
                 $c = Credit::query()
@@ -49,10 +50,9 @@ class PaymentVoidController extends Controller
                     ->firstOrFail();
 
                 if ($c->amount_local === null || $c->paid_local === null) {
-                    throw new \RuntimeException('Local debt data missing (amount_local/paid_local NULL).');
+                    throw new \RuntimeException(__('validations/validations.payment_void.local_debt_missing'));
                 }
 
-                // ödeme borca ne kadar uygulanmıştı?
                 $received = (float) $p->pay_amount;
                 $change = (float) ($p->change_amount ?? 0);
                 $applied = $received - $change;
@@ -63,11 +63,12 @@ class PaymentVoidController extends Controller
                 $newPaidLocal = $paidLocal - $applied;
                 if ($newPaidLocal < 0) $newPaidLocal = 0;
 
-                // credit güncelle (paid_local geri alınır)
+
+                // Credit update (paid_local is refunded)
                 $c->forceFill([
                     'paid_local' => number_format(round($newPaidLocal, 2), 2, '.', ''),
                     'paid_updated_by' => (int) $user->id,
-                    'paid_updated_at' => now(), // void işlemi anı (payment_at değil)
+                    'paid_updated_at' => now(),
                     'paid_note' => 'voided=yes'
                         . ' | voided_payment_id=' . $p->id
                         . ' | voided_applied=' . number_format($applied, 2, '.', '')
@@ -76,7 +77,7 @@ class PaymentVoidController extends Controller
                         . ' | voided_at=' . now()->format('Y-m-d H:i:s'),
                 ])->save();
 
-                // payment void işaretle
+                // Payment void flag
                 $p->forceFill([
                     'voided_at' => now(),
                     'voided_by' => (int) $user->id,
@@ -84,10 +85,10 @@ class PaymentVoidController extends Controller
                 ])->save();
             });
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : 'Payment void failed.';
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_void.void_failed');
             return back()->with('warning', $msg);
         }
 
-        return back()->with('success', 'Payment voided successfully.');
+        return back()->with('success', __('validations/validations.payment_void.void_success'));
     }
 }

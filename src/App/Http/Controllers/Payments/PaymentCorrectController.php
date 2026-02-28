@@ -15,16 +15,26 @@ class PaymentCorrectController extends Controller
 {
     public function __invoke(Request $request, CreditPayment $payment)
     {
-        // ✅ Admin-only
+        // Admin-only
         $user = Auth::user();
         if (!$user || $user->role !== UserRoleEnum::ADMIN) {
-            return back()->with('warning', 'Only Admin can correct payments.');
+            return back()->with('warning', __('validations/validations.payment_correct.admin_only'));
         }
 
-        // ✅ Cannot correct already voided
+        // Cannot correct already voided
         if ($payment->voided_at) {
-            return back()->with('warning', 'This payment is already voided.');
+            return back()->with('warning', __('validations/validations.payment_correct.already_voided'));
         }
+
+        // $data = $request->validate([
+        //     'payment_at' => ['nullable', 'date'],
+        //     'payment_method' => ['required', 'in:cash,card,mixed,phone'],
+        //     'pay_amount' => ['required', 'numeric', 'min:0.01'],
+        //     'cash_total' => ['nullable', 'numeric', 'min:0'],
+        //     'card_total' => ['nullable', 'numeric', 'min:0'],
+        //     'note' => ['nullable', 'string', 'max:500'],
+        //     'reason' => ['nullable', 'string', 'max:300'],
+        // ]);
 
         $data = $request->validate([
             'payment_at' => ['nullable', 'date'],
@@ -34,13 +44,33 @@ class PaymentCorrectController extends Controller
             'card_total' => ['nullable', 'numeric', 'min:0'],
             'note' => ['nullable', 'string', 'max:500'],
             'reason' => ['nullable', 'string', 'max:300'],
-        ]);
+        ], [
+            'payment_at.date' => __('validations/validations.payment_correct.payment_at_date'),
 
+            'payment_method.required' => __('validations/validations.payment_correct.payment_method_required'),
+            'payment_method.in' => __('validations/validations.payment_correct.payment_method_invalid'),
+
+            'pay_amount.required' => __('validations/validations.payment_correct.pay_amount_required'),
+            'pay_amount.numeric' => __('validations/validations.payment_correct.pay_amount_numeric'),
+            'pay_amount.min' => __('validations/validations.payment_correct.pay_amount_min'),
+
+            'cash_total.numeric' => __('validations/validations.payment_correct.cash_total_numeric'),
+            'cash_total.min' => __('validations/validations.payment_correct.cash_total_min'),
+
+            'card_total.numeric' => __('validations/validations.payment_correct.card_total_numeric'),
+            'card_total.min' => __('validations/validations.payment_correct.card_total_min'),
+
+            'note.string' => __('validations/validations.payment_correct.note_string'),
+            'note.max' => __('validations/validations.payment_correct.note_max'),
+
+            'reason.string' => __('validations/validations.payment_correct.reason_string'),
+            'reason.max' => __('validations/validations.payment_correct.reason_max'),
+        ]);
         $enteredAt = now();
         $now = !empty($data['payment_at']) ? Carbon::parse($data['payment_at']) : $enteredAt;
 
         if ($now->isFuture()) {
-            return back()->with('warning', 'Future payment date is not allowed.')->withInput();
+            return back()->with('warning', __('validations/validations.payment_correct.future_payment_date_not_allowed'))->withInput();
         }
 
         $method = $data['payment_method'];
@@ -48,7 +78,7 @@ class PaymentCorrectController extends Controller
         $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
         $cardTotal = $this->toMoney($data['card_total'] ?? 0);
 
-        // normalize totals by method
+        // Normalize totals by method
         if ($method === 'cash') {
             $cashTotal = $received;
             $cardTotal = 0.0;
@@ -57,7 +87,7 @@ class PaymentCorrectController extends Controller
             $cardTotal = $received;
         } else {
             if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
-                return back()->with('warning', 'Mixed: Cash + Card must equal Pay Amount.')->withInput();
+                return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
             }
         }
 
@@ -74,7 +104,7 @@ class PaymentCorrectController extends Controller
                 $p = CreditPayment::query()->lockForUpdate()->findOrFail($payment->id);
 
                 if ($p->voided_at) {
-                    throw new \RuntimeException('This payment is already voided.');
+                    throw new \RuntimeException(__('validations/validations.payment_correct.already_voided'));
                 }
 
                 // lock credit
@@ -84,14 +114,14 @@ class PaymentCorrectController extends Controller
                     ->firstOrFail();
 
                 if ($c->amount_local === null || $c->paid_local === null) {
-                    throw new \RuntimeException('Local debt data missing. Cannot correct.');
+                    throw new \RuntimeException(__('validations/validations.payment_correct.local_debt_missing'));
                 }
 
                 $totalLocal = (float)$c->amount_local;
                 $paidLocal = (float)$c->paid_local;
 
                 // ---------- STEP 1: VOID OLD PAYMENT ----------
-                // old apply = pay - change
+                // Old apply = pay - change
                 $oldReceived = (float)$p->pay_amount;
                 $oldChange   = (float)($p->change_amount ?? 0);
                 $oldApplied  = $oldReceived - $oldChange;
@@ -104,7 +134,7 @@ class PaymentCorrectController extends Controller
                 $p->forceFill([
                     'voided_at' => $enteredAt,
                     'voided_by' => (int)$user->id,
-                    'void_reason' => $reason !== '' ? $reason : 'Corrected',
+                    'void_reason' => $reason !== '' ? $reason : __('validations/validations.payment_correct.corrected_default_reason'),
                 ])->save();
 
                 $c->forceFill([
@@ -118,17 +148,21 @@ class PaymentCorrectController extends Controller
                 $remaining = $totalLocal - $paidAfterVoid;
                 if ($remaining < 0) $remaining = 0;
 
-                // ✅ Same rules as store()
+                // Same rules as store()
                 $remaining = round($remaining, 2);
                 $received  = round($received, 2);
 
                 if ($remaining <= 0.01) {
-                    throw new \RuntimeException('Debt is already closed. You cannot enter a new received amount in correct. Use VOID only.');
+                    throw new \RuntimeException(__('validations/validations.payment_correct.debt_closed_use_void_only'));
                 }
 
                 $maxExtra = 100; // same as store
                 if ($received > $remaining + $maxExtra) {
-                    throw new \RuntimeException('Overpayment is too high. Max change allowed: ' . number_format($maxExtra, 2));
+                    throw new \RuntimeException(
+                        __('validations/validations.payment_correct.overpayment_too_high', [
+                            'max' => number_format($maxExtra, 2),
+                        ])
+                    );
                 }
 
                 $apply = min($received, $remaining);
@@ -199,15 +233,15 @@ class PaymentCorrectController extends Controller
                     'created_at' => $now,
 
                     // optional: link
-                    'corrected_from_payment_id' => $p->id, // eğer kolon eklediysen
+                    'corrected_from_payment_id' => $p->id,
                 ]);
             });
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : 'Correction failed.';
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_correct.correction_failed');
             return back()->with('warning', $msg)->withInput();
         }
 
-        return back()->with('success', 'Payment corrected successfully.');
+        return back()->with('success', __('validations/validations.payment_correct.corrected_success'));
     }
 
     private function toMoney($v): float

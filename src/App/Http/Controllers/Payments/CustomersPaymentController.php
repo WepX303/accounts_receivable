@@ -12,6 +12,7 @@ use Carbon\Carbon;
 
 class CustomersPaymentController extends Controller
 {
+    // INDEX
     public function __invoke(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
@@ -26,7 +27,7 @@ class CustomersPaymentController extends Controller
             $q = '';
         }
 
-        // ✅ ids modunda, gelen id ids içinde değilse ilk elemana düş
+        // In ids mode, if the incoming id is not in ids, drop it to the first element
         if (count($ids) > 0 && $id !== null && ! in_array($id, $ids, true)) {
             $id = $ids[0] ?? null;
         }
@@ -65,7 +66,7 @@ class CustomersPaymentController extends Controller
             }
             if (count($ids) > 0) {
                 $appends['ids'] = $ids;
-            } // ids[] olarak gider
+            }
             if ($id !== null) {
                 $appends['id'] = $id;
             }
@@ -111,29 +112,30 @@ class CustomersPaymentController extends Controller
         ]);
     }
 
+    // STORE
     public function store(Request $request)
     {
 
         $user = Auth::user();
         if (! $user) {
-            return back()->with('warning', 'Ödeme kaydetmek için giriş yapmalısınız.');
+            return back()->with('warning', __('validations/validations.payments.auth_required'));
         }
         $userId = (int) $user->id;
 
         $customerId = $this->sanitizeId($request->input('customer_id'));
         if ($customerId === null) {
-            return back()->with('warning', 'Customer seçilmedi.');
+            return back()->with('warning', __('validations/validations.payments.customer_not_selected'));
         }
 
         $method = (string) $request->input('payment_method', 'cash');
         if (! in_array($method, ['cash', 'card', 'mixed', 'phone'], true)) {
-            return back()->with('warning', 'Payment method geçersiz.');
+            return back()->with('warning', __('validations/validations.payments.method_invalid'));
         }
 
-        // ✅ Pay Amount = müşterinin verdiği para (RECEIVED)
+        // Payment Amount = the money given by the customer (RECEIVED)
         $received = $this->toMoney($request->input('pay_amount', '0'));
         if ($received <= 0) {
-            return back()->with('warning', 'Pay Amount 0 olamaz.')->withInput();
+            return back()->with('warning', __('validations/validations.payments.pay_amount_zero'))->withInput();
         }
 
         $note = trim((string) $request->input('note', ''));
@@ -142,7 +144,7 @@ class CustomersPaymentController extends Controller
         $cashTotal = $this->toMoney($request->input('cash_total', '0'));
         $cardTotal = $this->toMoney($request->input('card_total', '0'));
 
-        // ✅ cash/card/mixed toplamları "received" ile eşleşmeli
+        // Cash/card/mixed totals must match ‘received’
         if ($method === 'cash') {
             $cashTotal = $received;
             $cardTotal = 0.0;
@@ -154,44 +156,36 @@ class CustomersPaymentController extends Controller
             $cardTotal = $received;
         } else {
             if ($cashTotal < 0 || $cardTotal < 0) {
-                return back()->with('warning', 'Mixed: Cash/Card negatif olamaz.')->withInput();
+                return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
             }
             if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
-                return back()->with('warning', 'Mixed: Cash + Card toplamı Pay Amount ile eşit olmalı.')->withInput();
+                return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
             }
         }
 
-        // $now = now();
-        // Payment date (backdate support)
         $paymentAtRaw = (string) $request->input('payment_at', '');
         $paymentAtRaw = trim($paymentAtRaw);
 
-        $enteredAt = now(); // sistemin gerçek zamanı (kayıt anı)
+        $enteredAt = now();
         $paymentAtProvided = ($paymentAtRaw !== '');
 
         if ($paymentAtProvided) {
             try {
                 $now = Carbon::createFromFormat('Y-m-d\TH:i', $paymentAtRaw);
             } catch (\Throwable $e) {
-                return back()->with('warning', 'Invalid payment date.')->withInput();
+                return back()->with('warning', __('validations/validations.payments.invalid_payment_date'))->withInput();
             }
         } else {
             $now = $enteredAt;
         }
-
         // Future date not allowed
         if ($now->isFuture()) {
-            return back()->with('warning', 'Future payment date is not allowed.')->withInput();
+            return back()->with('warning', __('validations/validations.payments.future_payment_date_not_allowed'))->withInput();
         }
 
-        // backdated flag (payment date is in the past compared to entered time)
-        // $backdated = $paymentAtProvided && $now->lt($enteredAt);
-
-        //fix
         $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
         try {
 
-            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $method, $cashTotal, $cardTotal, $note) {
             DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $note) {
 
                 /** @var \App\Models\Credit $c */
@@ -200,17 +194,17 @@ class CustomersPaymentController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                // ✅ SADECE LOCAL
+                // ONLY LOCAL
                 if ($c->amount_local === null || $c->paid_local === null) {
-                    throw new \RuntimeException('Local borç verisi eksik (amount_local / paid_local NULL). Ödeme alınamaz.');
+                    throw new \RuntimeException(__('validations/validations.payments.local_debt_missing'));
                 }
 
-                $totalLocal = (float) $c->amount_local; // TOTAL BORÇ
-                $paidLocal = (float) $c->paid_local;  // TOPLAM ÖDENEN
+                $totalLocal = (float) $c->amount_local; // TOTAL DEBT
+                $paidLocal = (float) $c->paid_local;  // TOTAL PAID
 
-                // ✅ kapanmışsa ödeme alma (eşik dahil)
+                // If closed, receive payment (including threshold)
                 if ($paidLocal >= $totalLocal - 0.01) {
-                    throw new \RuntimeException('Bu müşterinin borcu kapanmış (paid_local >= amount_local). Ödeme alınamaz.');
+                    throw new \RuntimeException(__('validations/validations.payments.debt_closed_paid_ge_total'));
                 }
 
                 $remaining = $totalLocal - $paidLocal;
@@ -219,25 +213,25 @@ class CustomersPaymentController extends Controller
                 }
 
                 if ($remaining <= 0.01) {
-                    throw new \RuntimeException('Bu müşterinin borcu kapanmış (kalan 0). Ödeme alınamaz.');
+                    throw new \RuntimeException(__('validations/validations.payments.debt_closed_remaining_zero'));
                 }
 
-                // ✅ Para üstü limiti (overpayment guard)
-                $maxExtra = 100; // izin verilen max para üstü
+                // Overpayment limit (overpayment guard)
+                $maxExtra = 100;  // maximum permitted change
                 if ($received > $remaining + $maxExtra) {
                     throw new \RuntimeException(
-                        'Fazla ödeme çok yüksek. Maksimum para üstü: ' . number_format($maxExtra, 2)
+                        __('validations/validations.payments.overpayment_too_high') . number_format($maxExtra, 2)
                     );
                 }
 
-                // ✅ Para üstü: borca uygulanacak miktar remaining kadar
+                // Change: the amount to be applied to the debt remaining
                 $apply = min($received, $remaining);
                 $change = $received - $apply;
 
-                // mixed için transaction içi garanti
+                // Mixed transaction-internal guarantee
                 if ($method === 'mixed') {
                     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
-                        throw new \RuntimeException('Mixed: Cash + Card toplamı Pay Amount ile eşit olmalı.');
+                        throw new \RuntimeException(__('validations/validations.payments.mixed_sum_must_equal_tx'));
                     }
                 }
 
@@ -251,7 +245,7 @@ class CustomersPaymentController extends Controller
                     $newRemaining = 0;
                 }
 
-                // audit note
+                // Audit note
                 $detail = [
 
                     'backdated=' . ($backdated ? 'yes' : 'no'),
@@ -281,7 +275,7 @@ class CustomersPaymentController extends Controller
                     $finalNote .= ' | note=' . $note;
                 }
 
-                // ✅ sadece paid_local artar
+                // Only paid_local increases
                 $c->forceFill([
                     'paid_local' => $this->fmtMoney($newPaidLocal),
                     'paid_updated_by' => $userId,
@@ -289,20 +283,20 @@ class CustomersPaymentController extends Controller
                     'paid_note' => $finalNote,
                 ])->save();
 
-                // history:
+                // History:
                 // pay_amount = received, change_amount = change
                 // old_amount_local/new_amount_local = remaining (log)
                 CreditPayment::create([
                     'credit_logicalref' => (int) $c->logicalref,
 
-                    // ✅ SNAPSHOT (kime ait olduğu ödeme kaydından anlaşılsın)
+                    // SNAPSHOT (the owner should be clear from the payment record)
                     'customer_name' => mb_substr((string) $c->name, 0, 255),
                     'customer_phone' => mb_substr((string) $c->phone, 0, 50),
                     'customer_passport' => mb_substr((string) $c->passport, 0, 50),
                     'customer_contract' => mb_substr((string) $c->contract, 0, 50),
                     'branch' => mb_substr((string) $c->branch, 0, 50),
 
-                    // ✅ user snapshot
+                    // User snapshot
                     'created_by' => $userId,
                     'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
                     'created_by_email' => mb_substr((string) $user->email, 0, 255),
@@ -326,14 +320,14 @@ class CustomersPaymentController extends Controller
                 ]);
             });
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : 'Payment kaydedilemedi.';
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payments.payment_save_failed');
 
             return back()->with('warning', $msg)->withInput();
         }
 
         $redirectUrl = route('payments', array_merge($request->query(), ['id' => (string) $customerId]));
 
-        return redirect($redirectUrl)->with('success', 'Payment saved successfully.');
+        return redirect($redirectUrl)->with('success', __('validations/validations.payments.payment_saved'));
     }
 
     private function sanitizeId($id): ?int
