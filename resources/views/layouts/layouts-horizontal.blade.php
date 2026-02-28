@@ -9,8 +9,6 @@
     <meta content="Accounts Receivable" name="description" />
 
     <meta content="Themesbrand" name="author" />
-    <!-- App favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('build/images/favicon/budget.ico') }}?v=2">
     @include('layouts.head-css')
 
     <style>
