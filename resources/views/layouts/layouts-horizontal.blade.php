@@ -108,7 +108,7 @@
         });
     </script>
 
-
+@include('partials.flash-modal')
 
 </body>
 

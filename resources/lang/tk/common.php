@@ -8,4 +8,11 @@ return [
     'search' => 'Gözle',
     'actions' => 'Hereketler',
     'status' => 'Ýagdaý',
+
+    'validation_title' => 'Ýalňyşlyk',
+    'warning_title' => 'Duýduryş',
+    'success_title' => 'Üstünlikli',
+    'info_title' => 'Maglumat',
+    'message_title' => 'Habar',
+    'close' => 'Ýap',
 ];

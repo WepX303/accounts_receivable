@@ -1,26 +1,7 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <div class="fw-semibold mb-2">{{ __('pages/payments.validation_fix') }}</div>
-            <ul class="mb-0">
-                @foreach ($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    @if (session('warning'))
-        <div class="alert alert-warning">{{ session('warning') }}</div>
-    @endif
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
     <div class="row">
-
         {{-- LEFT: LIST --}}
         <div class="col-xxl-8">
             <div class="card">
