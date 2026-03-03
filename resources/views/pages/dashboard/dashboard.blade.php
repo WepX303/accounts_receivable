@@ -318,6 +318,7 @@
                                     <th class="text-end">{{ __('admin_dashboard.th_net_collection') }}</th>
                                     <th class="text-end">{{ __('admin_dashboard.th_cash') }}</th>
                                     <th class="text-end">{{ __('admin_dashboard.th_card') }}</th>
+                                    <th class="text-end">{{ __('admin_dashboard.th_phone') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -329,12 +330,12 @@
                                                 class="text-muted">{{ __('admin_dashboard.currency') }}</small></td>
                                         <td class="text-end">{{ number_format((float) $r->total_cash, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) $r->total_card, 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) $r->total_phone, 2) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            {{ __('admin_dashboard.no_cashier_tx') }}
-                                        </td>
+                                        {{ __('admin_dashboard.no_cashier_tx') }}
+                                        <td colspan="6" class="text-center text-muted py-4"></td>
                                     </tr>
                                 @endforelse
                             </tbody>

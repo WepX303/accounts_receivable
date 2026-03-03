@@ -174,13 +174,39 @@ class DashboardController extends Controller
             // =========================
             // byCashier (top 12)
             // =========================
+            //     $byCashier = (clone $base)
+            //         ->selectRaw("
+            //     created_by as cashier_id,
+            //     COALESCE(created_by_name, 'N/A') as cashier_name,
+            //     COUNT(*) as tx_count,
+            //     COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net
+            // ")
+            //         ->groupBy('cashier_id', 'cashier_name')
+            //         ->orderByDesc('total_net')
+            //         ->limit(12)
+            //         ->get();
+
+            // =========================
+            // byCashier (top 12)
+            // =========================
             $byCashier = (clone $base)
                 ->selectRaw("
-            created_by as cashier_id,
-            COALESCE(created_by_name, 'N/A') as cashier_name,
-            COUNT(*) as tx_count,
-            COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net
-        ")
+        created_by as cashier_id,
+        COALESCE(created_by_name, 'N/A') as cashier_name,
+        COUNT(*) as tx_count,
+        COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+
+        COALESCE(SUM(COALESCE(cash_amount,0)),0) as total_cash,
+        COALESCE(SUM(COALESCE(card_amount,0)),0) as total_card,
+
+        COALESCE(SUM(
+            CASE 
+                WHEN method='phone' 
+                THEN (pay_amount - COALESCE(change_amount,0)) 
+                ELSE 0 
+            END
+        ),0) as total_phone
+    ")
                 ->groupBy('cashier_id', 'cashier_name')
                 ->orderByDesc('total_net')
                 ->limit(12)
