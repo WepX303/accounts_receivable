@@ -537,7 +537,7 @@
                                     <th>{{ __('admin_dashboard.th_date') }}</th>
                                     <th>{{ __('admin_dashboard.th_branch') }}</th>
                                     <th>{{ __('admin_dashboard.th_cashier') }}</th>
-                                    <th>Corrected By</th>
+                                    <th>{{ __('admin_dashboard.th_corrected_by') }}</th>
                                     <th>{{ __('admin_dashboard.th_customer') }}</th>
                                     <th>{{ __('admin_dashboard.th_contract') }}</th>
                                     <th>{{ __('admin_dashboard.th_method') }}</th>

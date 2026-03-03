@@ -60,6 +60,7 @@ return [
     'recent_transactions' => 'Recent Transactions',
     'th_date' => 'Date',
     'th_customer' => 'Customer',
+    'th_corrected_by' => 'Corrected By',
     'th_contract' => 'Contract',
     'th_method' => 'Method',
     'th_net' => 'Net',

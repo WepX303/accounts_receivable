@@ -60,6 +60,7 @@ return [
     'recent_transactions' => 'Soňky amallar',
     'th_date' => 'Sene',
     'th_customer' => 'Müşderi',
+    'th_corrected_by' => 'Düzediji',
     'th_contract' => 'Şertnama',
     'th_method' => 'Usul',
     'th_net' => 'Jemi',

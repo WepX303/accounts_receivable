@@ -14,14 +14,30 @@ class CustomersController extends Controller
     public function __invoke(Request $request)
     {
 
+        // $request->validate([
+        //     'q' => 'nullable|string|max:100',
+        //     'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+        // ], [
+        //     'q.string' => __('validations/validations.customers.q_string'),
+        //     'q.max' => __('validations/validations.customers.q_max'),
+        //     'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+        // ]);
+
         $request->validate([
             'q' => 'nullable|string|max:100',
             'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
         ], [
             'q.string' => __('validations/validations.customers.q_string'),
             'q.max' => __('validations/validations.customers.q_max'),
             'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+
+            'date_from.date' => __('validations/validations.customers.date_from_date'),
+            'date_to.date' => __('validations/validations.customers.date_to_date'),
+            'date_to.after_or_equal' => __('validations/validations.customers.date_to_after_or_equal'),
         ]);
+
         // Search
         $q = trim((string) ($request->get('q') ?? ''));
         if ($q === 'null') {
@@ -29,10 +45,34 @@ class CustomersController extends Controller
         }
 
         // Quick Filter
+        // $quick = (string) $request->get('quick_filter', 'all');
+
+        // // Date ranges (payment-based)
+        // [$from, $to] = match ($quick) {
+        //     'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+        //     'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
+        //     'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
+        //     'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
+        //     'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
+        //     'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
+        //     'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
+        //     'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
+        //     'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
+        //     default => [null, null],
+        // };
+
+        // Quick Filter
         $quick = (string) $request->get('quick_filter', 'all');
 
-        // Date ranges (payment-based)
-        [$from, $to] = match ($quick) {
+        // Manual date range (payment date range)
+        $dateFromInput = $request->get('date_from');
+        $dateToInput   = $request->get('date_to');
+
+        $dateFrom = $dateFromInput ? Carbon::parse($dateFromInput)->startOfDay() : null;
+        $dateTo   = $dateToInput   ? Carbon::parse($dateToInput)->endOfDay() : null;
+
+        // Quick filter ranges (payment-based)
+        [$quickFrom, $quickTo] = match ($quick) {
             'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
             'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
             'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
@@ -44,6 +84,33 @@ class CustomersController extends Controller
             'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
             default => [null, null],
         };
+
+        // Priority: manual date range > quick filter
+        $from = ($dateFrom && $dateTo) ? $dateFrom : $quickFrom;
+        $to   = ($dateFrom && $dateTo) ? $dateTo   : $quickTo;
+
+        // Period column range (same as $from/$to, default today)
+        [$periodFrom, $periodTo] = ($from && $to)
+            ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
+            : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+
+        // Table header label
+        if ($dateFrom && $dateTo) {
+            $periodLabel = $dateFrom->format('Y-m-d') . ' → ' . $dateTo->format('Y-m-d');
+        } else {
+            $periodLabel = match ($quick) {
+                'paid_today' => __('pages/customers_index.today_paid'),
+                'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
+                'paid_7d' => __('pages/customers_index.paid_last_7_days'),
+                'paid_14d' => __('pages/customers_index.paid_last_14_days'),
+                'paid_1m' => __('pages/customers_index.paid_last_1_month'),
+                'paid_3m' => __('pages/customers_index.paid_last_3_months'),
+                'paid_6m' => __('pages/customers_index.paid_last_6_months'),
+                'paid_9m' => __('pages/customers_index.paid_last_9_months'),
+                'paid_12m' => __('pages/customers_index.paid_last_12_months'),
+                default => __('pages/customers_index.today_paid'),
+            };
+        }
 
         // Dynamic date range for the ‘Today Paid’ column in the table
         // If the payment-based filter is selected (where $from/$to are populated), use that range;

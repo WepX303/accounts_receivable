@@ -60,6 +60,7 @@ return [
     'recent_transactions' => 'Последние операции',
     'th_date' => 'Дата',
     'th_customer' => 'Клиент',
+    'th_corrected_by' => 'Исправил',
     'th_contract' => 'Договор',
     'th_method' => 'Метод',
     'th_net' => 'Чистое',

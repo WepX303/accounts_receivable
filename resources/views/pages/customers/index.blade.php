@@ -118,16 +118,34 @@
                         <div class="row g-3 align-items-end">
 
                             {{-- Search --}}
-                            <div class="col-xxl-6 col-sm-6">
+                            <div class="col-xxl-4 col-sm-4">
                                 <div class="search-box">
                                     <input type="text" class="form-control" name="q" value="{{ request('q') }}"
                                         placeholder="{{ __('pages/customers_index.search_placeholder') }}">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
+                            {{-- Date From --}}
+                            {{-- <div class="col-xxl-2 col-sm-3">
+                                <input type="date" class="form-control" name="date_from"
+                                    value="{{ request('date_from') }}">
+                            </div> --}}
+                            <div class="col-auto">
+                                <input type="date" class="form-control" name="date_from"
+                                    value="{{ request('date_from') }}">
+                            </div>
 
+                           
+                            {{-- Date To --}}
+                            {{-- <div class="col-xxl-2 col-sm-3">
+                                <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
+                            </div> --}}
+
+                             <div class="col-auto">
+                                <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
+                            </div>
                             {{-- ONE Quick Filters Dropdown --}}
-                            <div class="col-xxl-4 col-sm-4">
+                            <div class="col-xxl-3 col-sm-4">
                                 <select name="quick_filter" class="form-select" onchange="this.form.submit()">
                                     <option value="all">
                                         {{ __('pages/customers_index.quick_all') }}
@@ -192,7 +210,28 @@
                             </div>
 
                             {{-- Buttons --}}
-                            <div class="col-xxl-2 col-sm-2 d-flex gap-2">
+                            {{-- <div class="col-xxl-2 col-sm-2 d-flex gap-2">
+                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
+                                    href="{{ route('customers') }}">
+                                    <i class="ri-refresh-line"></i>
+                                    {{ __('pages/customers_index.reset') }}
+                                </a>
+
+                                <a class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-1"
+                                    href="{{ route('customers.export', array_merge(request()->query(), ['lang' => app()->getLocale()])) }}">
+                                    <i class="ri-file-excel-2-line"></i>
+                                    Export
+                                </a>
+                            </div> --}}
+
+                            {{-- Buttons --}}
+                            <div class="col-xxl-2 col-sm-3 d-flex gap-2">
+                                <button type="submit"
+                                    class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-1">
+                                    <i class="ri-filter-3-line"></i>
+                                    {{ __('pages/customers_index.filter') }}
+                                </button>
+
                                 <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
                                     href="{{ route('customers') }}">
                                     <i class="ri-refresh-line"></i>

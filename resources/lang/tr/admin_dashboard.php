@@ -60,6 +60,7 @@ return [
     'recent_transactions' => 'Son İşlemler',
     'th_date' => 'Tarih',
     'th_customer' => 'Müşteri',
+    'th_corrected_by' => 'Düzelten',
     'th_contract' => 'Contract',
     'th_method' => 'Method',
     'th_net' => 'Net',
