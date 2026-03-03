@@ -159,7 +159,6 @@
 
                             $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
 
-                            // kapanma kuralı: paid_local >= amount_local
                             $isClosed = $hasLocal ? $paidLocal >= $totalLocal - 0.01 || $remain <= 0.00001 : true;
 
                             $lastUser = $selected->paidUpdatedByUser
@@ -172,7 +171,6 @@
                             $remainingJs =
                                 $hasLocal && $remain !== null ? number_format((float) $remain, 2, '.', '') : '0.00';
 
-                            // old inputlar (form korunması)
                             $oldReceived = old('pay_amount', '');
                             $oldMethod = old('payment_method', 'cash');
                             $oldCash = old('cash_total', '0.00');
@@ -271,11 +269,11 @@
                                     $transKey = "pages/payments.detail_keys.$k";
                                     $label = __($transKey);
 
-if ($label === $transKey) {
-    $label = ucfirst(str_replace('_', ' ', $k));
-}
-if ($k === 'method') {
-    $mvKey = 'pages/payments.method_values.' . strtolower(trim((string) $value));
+                                    if ($label === $transKey) {
+                                        $label = ucfirst(str_replace('_', ' ', $k));
+                                    }
+                                    if ($k === 'method') {
+                                        $mvKey = 'pages/payments.method_values.' . strtolower(trim((string) $value));
                                         $mv = __($mvKey);
 
                                         if ($mv !== $mvKey) {
@@ -283,6 +281,14 @@ if ($k === 'method') {
                                         }
                                     }
                                 @endphp
+                                @if (in_array($k, ['corrected', 'backdated'], true))
+                                    @php
+                                        $vv = strtolower(trim((string) $value));
+                                        if (in_array($vv, ['yes', 'no'], true)) {
+                                            $value = __('pages/payments.bool.' . $vv);
+                                        }
+                                    @endphp
+                                @endif
 
                                 <div class="d-flex justify-content-between border-bottom py-1">
                                     <span class="text-muted">{{ $label }}</span>
@@ -317,7 +323,7 @@ if ($k === 'method') {
                                         $mTxt = __($mKey);
 
                                         $isVoided = !empty($h->voided_at);
-                                        $isAdmin = auth()->user() && auth()->user()->role->value === 'Admin';
+                                        // $isAdmin = auth()->user() && auth()->user()->role->value === 'Admin';
                                     @endphp
 
                                     @php
@@ -335,22 +341,43 @@ if ($k === 'method') {
                                             data-cash="{{ (float) $h->cash_amount }}"
                                             data-card="{{ (float) $h->card_amount }}"
                                             data-note="{{ (string) ($h->note ?? '') }}">
-                                            Correct
-                                        </button>
+                                            {{ __('pages/payments.actions.correct') }} </button>
                                     @endif
 
-                                    <div class="list-group-item">
+                                    {{-- <div class="list-group-item"> --}}
+
+                                    {{-- <div class="list-group-item {{ $isVoided ? 'bg-danger-subtle border border-danger text-danger' : '' }}"> --}}
+
+                                    <div
+                                        class="list-group-item {{ $isVoided
+                                            ? 'bg-danger-subtle border-danger'
+                                            : (!empty($h->corrected_by)
+                                                ? 'bg-warning-subtle border-warning'
+                                                : '') }}">
+
                                         {{-- TOP LINE --}}
                                         <div class="d-flex justify-content-between">
-                                            <div class="fw-semibold">
-                                                {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
+                                            <div>
+                                                <div class="fw-semibold">
 
-                                                <span class="badge bg-primary-subtle text-primary ms-1">
-                                                    {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
-                                                </span>
+                                                    {{ __('pages/payments.received') }}: {{ number_format($received, 2) }}
+                                                    <span class="badge bg-primary-subtle text-primary ms-1">
+                                                        {{ $mTxt !== $mKey ? $mTxt : strtoupper((string) $h->method) }}
+                                                    </span>
 
-                                                @if ($isVoided)
-                                                    <span class="badge bg-danger-subtle text-danger ms-1">VOIDED</span>
+                                                    @if ($isVoided)
+                                                        <span class="badge bg-danger-subtle text-danger ms-1">
+                                                            {{ __('pages/payments.badges.voided') }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+
+                                                @if ($h->voided_at)
+                                                    <div class="text-muted small" style="font-weight:400;">
+                                                        {{ __('pages/payments.voided_by') }}:
+                                                        {{ optional($h->voidedByUser)->full_name ?? '-' }}
+                                                        | {{ $h->voided_at->format('Y-m-d H:i') }}
+                                                    </div>
                                                 @endif
                                             </div>
 
@@ -361,16 +388,9 @@ if ($k === 'method') {
                                                     <button type="button" class="btn btn-sm btn-outline-danger"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#voidModal{{ $h->id }}">
-                                                        Void
-                                                    </button>
+                                                        {{ __('pages/payments.actions.void') }} </button>
                                                 @endif
                                             </div>
-                                        </div>
-
-                                        {{-- DETAILS --}}
-                                        <div class="text-muted small mt-1">
-                                            {{ __('pages/payments.applied') }}: {{ number_format($applied, 2) }} |
-                                            {{ __('pages/payments.change') }}: {{ number_format($change, 2) }}
                                         </div>
 
                                         <div class="text-muted small">
@@ -382,6 +402,31 @@ if ($k === 'method') {
 
                                         <div class="text-muted small">{{ __('pages/payments.by') }}: {{ $u }}
                                         </div>
+
+                                        @if (!empty($h->corrected_by))
+                                            @php
+                                                $correctedUser = $h->correctedByUser
+                                                    ? $h->correctedByUser->firstname .
+                                                        ' ' .
+                                                        $h->correctedByUser->lastname
+                                                    : 'N/A';
+
+                                                $correctedAt = $h->corrected_at
+                                                    ? \Carbon\Carbon::parse($h->corrected_at)->format('Y-m-d H:i')
+                                                    : null;
+                                            @endphp
+
+                                            <div class="text-muted small">
+                                                {{ __('pages/payments.corrected_by') }}: {{ $correctedUser }}
+                                                @if ($correctedAt)
+                                                    | {{ $correctedAt }}
+                                                @endif
+                                                @if (!empty($h->correct_reason))
+                                                    <div class="small" style="white-space: pre-wrap;">
+                                                        {{ $h->correct_reason }}</div>
+                                                @endif
+                                            </div>
+                                        @endif
 
                                         <div class="text-muted small">
                                             {{ __('pages/payments.remaining') }}:
@@ -405,27 +450,33 @@ if ($k === 'method') {
                                                             @csrf
 
                                                             <div class="modal-header">
-                                                                <h5 class="modal-title">Void Payment #{{ $h->id }}
+
+                                                                <h5 class="modal-title">
+                                                                    {{ __('pages/payments.modals.void.title', ['id' => $h->id]) }}
                                                                 </h5>
                                                                 <button type="button" class="btn-close"
                                                                     data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
 
                                                             <div class="modal-body">
-                                                                <div class="mb-2 small text-muted">
-                                                                    This will reverse the applied amount from the customer
-                                                                    debt and mark the payment as voided.
-                                                                </div>
 
-                                                                <label class="form-label">Reason (required)</label>
+                                                                <div class="mb-2 small text-muted">
+                                                                    {{ __('pages/payments.modals.void.desc') }}
+                                                                </div>
+                                                                <label
+                                                                    class="form-label">{{ __('pages/payments.modals.void.reason_label') }}</label>
+
                                                                 <textarea name="void_reason" class="form-control" rows="3" required></textarea>
                                                             </div>
 
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-light"
-                                                                    data-bs-dismiss="modal">Cancel</button>
-                                                                <button type="submit" class="btn btn-danger">Void
-                                                                    Payment</button>
+                                                                    data-bs-dismiss="modal">
+                                                                    {{ __('pages/payments.common.cancel') }}
+                                                                </button>
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    {{ __('pages/payments.modals.void.confirm') }}
+                                                                </button>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -444,12 +495,13 @@ if ($k === 'method') {
                             @csrf
                             {{-- Payment Date (Backdate allowed) --}}
                             <div class="mb-3">
-                                <label class="form-label">Payment Date</label>
+                                <label class="form-label">{{ __('pages/payments.form.payment_date') }}</label>
                                 <input type="datetime-local" name="payment_at" class="form-control"
                                     value="{{ old('payment_at', now()->format('Y-m-d\TH:i')) }}"
                                     {{ $isClosed ? 'disabled' : '' }}>
+
                                 <div class="small text-muted mt-1">
-                                    You can enter any past date. Future dates are not allowed.
+                                    {{ __('pages/payments.form.payment_date_help') }}
                                 </div>
                             </div>
                             <input type="hidden" name="customer_id" value="{{ (string) $selected->logicalref }}">
@@ -578,45 +630,53 @@ if ($k === 'method') {
             <form method="POST" action="#" id="correctForm" class="modal-content">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title">Correct Payment</h5>
+                    <h5 class="modal-title">{{ __('pages/payments.modals.correct.title') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Payment Date</label>
+                        <label class="form-label">{{ __('pages/payments.form.payment_date') }}</label>
                         <input type="datetime-local" name="payment_at" id="c_payment_at" class="form-control" required>
-                        <div class="small text-muted mt-1">Past dates allowed. Future not allowed.</div>
+                        <div class="small text-muted mt-1">{{ __('pages/payments.modals.correct.payment_date_help') }}
+                        </div>
+
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Received Amount</label>
+                        <label class="form-label">{{ __('pages/payments.modals.correct.received_amount') }}</label>
+
                         <input type="number" min="0" step="0.01" name="pay_amount" id="c_pay_amount"
                             class="form-control text-end" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Payment Method</label>
+                        <label class="form-label">{{ __('pages/payments.modals.correct.payment_method') }}</label>
                         <div class="d-flex gap-2 flex-wrap">
                             <div class="form-check">
                                 <input class="form-check-input c-method" type="radio" name="payment_method"
                                     value="cash" id="c_mCash">
-                                <label class="form-check-label" for="c_mCash">Cash</label>
+                                <label class="form-check-label"
+                                    for="c_mCash">{{ __('pages/payments.form.method_cash') }}</label>
+
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input c-method" type="radio" name="payment_method"
                                     value="card" id="c_mCard">
-                                <label class="form-check-label" for="c_mCard">Card</label>
+                                <label class="form-check-label"
+                                    for="c_mCard">{{ __('pages/payments.form.method_card') }}</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input c-method" type="radio" name="payment_method"
                                     value="mixed" id="c_mMixed">
-                                <label class="form-check-label" for="c_mMixed">Mixed</label>
+                                <label class="form-check-label"
+                                    for="c_mMixed">{{ __('pages/payments.form.method_mixed') }}</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input c-method" type="radio" name="payment_method"
                                     value="phone" id="c_mPhone">
-                                <label class="form-check-label" for="c_mPhone">Phone</label>
+                                <label class="form-check-label"
+                                    for="c_mPhone">{{ __('pages/payments.form.method_phone') }}</label>
                             </div>
                         </div>
                     </div>
@@ -624,38 +684,42 @@ if ($k === 'method') {
                     <div class="border rounded p-2 mb-3 d-none" id="c_mixedBox">
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="form-label mb-1">Cash</label>
+                                <label class="form-label mb-1">{{ __('pages/payments.form.method_cash') }}</label>
                                 <input type="number" min="0" step="0.01" class="form-control text-end"
                                     name="cash_total" id="c_cash_total" value="0.00">
                             </div>
                             <div class="col-6">
-                                <label class="form-label mb-1">Card</label>
+                                <label class="form-label mb-1">{{ __('pages/payments.form.method_card') }}</label>
                                 <input type="number" min="0" step="0.01" class="form-control text-end"
                                     name="card_total" id="c_card_total" value="0.00">
                             </div>
                         </div>
-                        <div class="small text-muted mt-2">Mixed rule: Cash + Card must equal Pay Amount.</div>
+                        <div class="small text-muted mt-2">{{ __('pages/payments.form.mixed_rule_pay_amount') }}</div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Note</label>
+                        <label class="form-label">{{ __('pages/payments.modals.correct.note') }}</label>
                         <input type="text" name="note" id="c_note" class="form-control">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Reason (why correcting)</label>
+                        <label class="form-label">{{ __('pages/payments.modals.correct.reason_label') }}</label>
                         <input type="text" name="reason" id="c_reason" class="form-control"
-                            placeholder="Example: wrong amount/date/method">
+                            placeholder="{{ __('pages/payments.modals.correct.reason_placeholder') }}">
                     </div>
 
                     <div class="alert alert-warning mb-0">
-                        This will <b>void the old payment</b> and create a <b>new payment</b>.
+                        {!! __('pages/payments.modals.correct.warning') !!}
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" type="submit">Save Correction</button>
+                    <button class="btn btn-light" type="button" data-bs-dismiss="modal">
+                        {{ __('pages/payments.common.cancel') }}
+                    </button>
+                    <button class="btn btn-primary" type="submit">
+                        {{ __('pages/payments.modals.correct.confirm') }}
+                    </button>
                 </div>
             </form>
         </div>

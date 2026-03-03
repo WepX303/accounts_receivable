@@ -38,7 +38,8 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 @foreach ($periodItems as $key => $label)
-                                    <a class="dropdown-item" href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
+                                    <a class="dropdown-item"
+                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -59,7 +60,8 @@
 
                     <div class="mt-4 pt-1">
                         <h4 class="fs-22 fw-semibold ff-secondary mb-0">
-                            {{ number_format($kpi['total_net'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                            {{ number_format($kpi['total_net'] ?? 0, 2) }} <small
+                                class="text-muted">{{ __('admin_dashboard.currency') }}</small>
                         </h4>
                         <p class="mt-4 mb-0 text-muted">
                             <span class="badge bg-info-subtle text-info mb-0 me-1">
@@ -84,7 +86,8 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 @foreach ($periodItems as $key => $label)
-                                    <a class="dropdown-item" href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
+                                    <a class="dropdown-item"
+                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -129,7 +132,8 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 @foreach ($periodItems as $key => $label)
-                                    <a class="dropdown-item" href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
+                                    <a class="dropdown-item"
+                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -148,7 +152,8 @@
 
                     <div class="mt-4 pt-1">
                         <h4 class="fs-22 fw-semibold ff-secondary mb-0">
-                            {{ number_format($kpi['avg_net'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                            {{ number_format($kpi['avg_net'] ?? 0, 2) }} <small
+                                class="text-muted">{{ __('admin_dashboard.currency') }}</small>
                         </h4>
                         <p class="mt-4 mb-0 text-muted">
                             <span class="badge bg-warning-subtle text-warning mb-0 me-1">
@@ -172,7 +177,8 @@
                             </span>
                         </div>
                         <div class="flex-grow-1 ps-3">
-                            <h5 class="text-muted text-uppercase fs-13 mb-0">{{ __('admin_dashboard.last_collection') }}</h5>
+                            <h5 class="text-muted text-uppercase fs-13 mb-0">{{ __('admin_dashboard.last_collection') }}
+                            </h5>
                         </div>
                     </div>
 
@@ -319,7 +325,8 @@
                                     <tr>
                                         <td>{{ $r->cashier_name }}</td>
                                         <td class="text-end">{{ number_format((int) $r->tx_count) }}</td>
-                                        <td class="text-end">{{ number_format((float) $r->total_net, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small></td>
+                                        <td class="text-end">{{ number_format((float) $r->total_net, 2) }} <small
+                                                class="text-muted">{{ __('admin_dashboard.currency') }}</small></td>
                                         <td class="text-end">{{ number_format((float) $r->total_cash, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) $r->total_card, 2) }}</td>
                                     </tr>
@@ -371,7 +378,8 @@
                                     <tr>
                                         <td>{{ $r->branch }}</td>
                                         <td class="text-end">{{ number_format((int) $r->tx_count) }}</td>
-                                        <td class="text-end">{{ number_format((float) $r->total_net, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small></td>
+                                        <td class="text-end">{{ number_format((float) $r->total_net, 2) }} <small
+                                                class="text-muted">{{ __('admin_dashboard.currency') }}</small></td>
                                         <td class="text-end">{{ number_format((float) $r->total_cash, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) $r->total_card, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) $r->total_phone, 2) }}</td>
@@ -417,7 +425,8 @@
                         <div class="dropdown card-header-dropdown">
                             <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false">
-                                <span class="fw-semibold text-uppercase fs-12">{{ __('admin_dashboard.period_label') }}: </span>
+                                <span class="fw-semibold text-uppercase fs-12">{{ __('admin_dashboard.period_label') }}:
+                                </span>
                                 <span class="text-muted">
                                     {{ $periodText }}
                                     <i class="mdi mdi-chevron-down ms-1"></i>
@@ -425,7 +434,8 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end">
                                 @foreach ($periodItems as $key => $label)
-                                    <a class="dropdown-item" href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
+                                    <a class="dropdown-item"
+                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -449,7 +459,8 @@
                         <div class="dropdown card-header-dropdown">
                             <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false">
-                                <span class="fw-semibold text-uppercase fs-12">{{ __('admin_dashboard.period_label') }}: </span>
+                                <span class="fw-semibold text-uppercase fs-12">{{ __('admin_dashboard.period_label') }}:
+                                </span>
                                 <span class="text-muted">
                                     {{ $periodText }}
                                     <i class="mdi mdi-chevron-down ms-1"></i>
@@ -469,26 +480,34 @@
                     <ul class="list-inline main-chart text-center mb-0">
                         <li class="list-inline-item chart-border-left me-0 border-0">
                             <h4 class="text-success">
-                                {{ number_format($kpi['total_cash'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.cash') }}</span>
+                                {{ number_format($kpi['total_cash'] ?? 0, 2) }} <small
+                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span
+                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.cash') }}</span>
                             </h4>
                         </li>
                         <li class="list-inline-item chart-border-left me-0">
                             <h4>
-                                {{ number_format($kpi['total_card'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.card') }}</span>
+                                {{ number_format($kpi['total_card'] ?? 0, 2) }} <small
+                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span
+                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.card') }}</span>
                             </h4>
                         </li>
                         <li class="list-inline-item chart-border-left me-0">
                             <h4>
-                                {{ number_format($kpi['total_phone'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.phone') }}</span>
+                                {{ number_format($kpi['total_phone'] ?? 0, 2) }} <small
+                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span
+                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.phone') }}</span>
                             </h4>
                         </li>
                         <li class="list-inline-item chart-border-left me-0">
                             <h4>
-                                {{ number_format($kpi['total_mixed'] ?? 0, 2) }} <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.mixed') }}</span>
+                                {{ number_format($kpi['total_mixed'] ?? 0, 2) }} <small
+                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span
+                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.mixed') }}</span>
                             </h4>
                         </li>
                     </ul>
@@ -517,6 +536,7 @@
                                     <th>{{ __('admin_dashboard.th_date') }}</th>
                                     <th>{{ __('admin_dashboard.th_branch') }}</th>
                                     <th>{{ __('admin_dashboard.th_cashier') }}</th>
+                                    <th>Corrected By</th>
                                     <th>{{ __('admin_dashboard.th_customer') }}</th>
                                     <th>{{ __('admin_dashboard.th_contract') }}</th>
                                     <th>{{ __('admin_dashboard.th_method') }}</th>
@@ -533,12 +553,31 @@
                                         <td>{{ \Carbon\Carbon::parse($p->created_at)->format('d.m.Y H:i') }}</td>
                                         <td>{{ $p->branch }}</td>
                                         <td>{{ $p->created_by_name ?? 'N/A' }}</td>
+                                        <td>
+                                            @if ($p->corrected_by)
+                                                <div class="fw-medium">
+                                                    {{ optional($p->correctedByUser)->full_name ?? 'N/A' }}
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @if ($p->corrected_at)
+                                                        {{ \Carbon\Carbon::parse($p->corrected_at)->format('d.m.Y H:i') }}
+                                                    @endif
+                                                    @if (!empty($p->correct_reason))
+                                                        <span class="d-block">{{ $p->correct_reason }}</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td>{{ $p->customer_name }}</td>
                                         <td>{{ $p->customer_contract }}</td>
 
                                         <td>
                                             @php
-                                                $mKey = 'pages/payments.method_values.' . strtolower(trim((string) $p->method));
+                                                $mKey =
+                                                    'pages/payments.method_values.' .
+                                                    strtolower(trim((string) $p->method));
                                                 $mTxt = __($mKey);
                                             @endphp
 
@@ -550,11 +589,12 @@
                                         <td class="text-end">{{ number_format((float) $p->net_amount, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->cash_amount ?? 0), 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->card_amount ?? 0), 2) }}</td>
-                                        <td class="text-end">{{ number_format((float) ($p->change_amount ?? 0), 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) ($p->change_amount ?? 0), 2) }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="11" class="text-center text-muted py-4">
+                                        <td colspan="12" class="text-center text-muted py-4">
                                             {{ __('admin_dashboard.no_records') }}
                                         </td>
                                     </tr>

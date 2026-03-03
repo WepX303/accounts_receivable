@@ -44,6 +44,10 @@ class CreditPayment extends Model
         'note',
         'created_by',
         'created_at',
+
+        'corrected_by',
+        'corrected_at',
+        'correct_reason',
     ];
 
     protected $casts = [
@@ -63,7 +67,11 @@ class CreditPayment extends Model
         'old_paid_local' => 'decimal:2',
         'new_paid_local' => 'decimal:2',
 
+        'voided_by' => 'integer',
         'voided_at' => 'datetime',
+
+        'corrected_by' => 'integer',
+        'corrected_at' => 'datetime',
     ];
 
     public function credit()
@@ -104,10 +112,18 @@ class CreditPayment extends Model
         return $this->voided_at !== null;
     }
 
+    public function voidedByUser()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
+    }
+    public function correctedByUser()
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
+    }
 
     protected static function booted()
     {
- 
+
         $bump = function () {
             if (!Cache::has('admin_dashboard:v')) {
                 Cache::forever('admin_dashboard:v', 1);

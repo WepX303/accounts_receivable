@@ -96,7 +96,11 @@ class CustomersPaymentController extends Controller
 
         if ($selected) {
             $history = CreditPayment::query()
-                ->with('createdByUser')
+                ->with([
+                    'createdByUser:id,firstname,lastname',
+                    'correctedByUser:id,firstname,lastname',
+                    'voidedByUser:id,firstname,lastname',
+                ])
                 ->where('credit_logicalref', (int) $selected->logicalref)
                 ->orderByDesc('id')
                 ->limit(10)

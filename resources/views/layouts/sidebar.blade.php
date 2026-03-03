@@ -19,15 +19,6 @@
                     </a>
                 </li>
 
-                <!-- ADMIN ONLY: customers list -->
-                {{-- @if ($role === 'Admin')
-                    <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('customers') }}" role="button">
-                            <i class="ri-user-line"></i> <span>{{ __('menu.customers') }}</span>
-                        </a>
-                    </li>
-                @endif --}}
-
                 {{-- Customers (Admin + Manager + Analyst + Operator) --}}
                 @if (in_array($role, ['Admin', 'Manager', 'Analyst', 'Operator'], true))
                     <li class="nav-item">
@@ -36,16 +27,6 @@
                         </a>
                     </li>
                 @endif
-
-                <!-- CASHIER + ADMIN: payments -->
-                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
-                    <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('payments') }}" role="button">
-                            <i class="ri-money-dollar-box-line"></i>
-                            <span>{{ __('menu.payments') }}</span>
-                        </a>
-                    </li>
-                @endif --}}
 
                 {{-- Payments (Admin + Cashier + Operator) --}}
                 @if (in_array($role, ['Admin', 'Cashier', 'Operator'], true))
@@ -57,16 +38,6 @@
                     </li>
                 @endif
 
-                <!-- CASHIER + ADMIN: customer info -->
-                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
-                    <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('customers.info') }}" role="button">
-                            <i class="ri-contacts-line"></i>
-                            <span>{{ __('menu.customer_info') }}</span>
-                        </a>
-                    </li>
-                @endif --}}
-
                 {{-- Customer Info (Admin + Cashier + Operator) --}}
                 @if (in_array($role, ['Admin', 'Cashier', 'Operator'], true))
                     <li class="nav-item">
@@ -76,16 +47,6 @@
                         </a>
                     </li>
                 @endif
-
-                <!-- CASHIER + ADMIN: report -->
-                {{-- @if (in_array($role, ['Admin', 'Cashier'], true))
-                    <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('report') }}" role="button">
-                            <i class="ri-folder-chart-line"></i>
-                            <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
-                        </a>
-                    </li>
-                @endif --}}
 
                 {{-- Report (Admin + Cashier + Analyst + Operator) --}}
                 @if (in_array($role, ['Admin', 'Cashier', 'Analyst', 'Operator'], true))
@@ -116,11 +77,9 @@
                         </div>
                     </li>
                 @endif
-
             </ul>
         </div>
     </div>
-
     <div class="sidebar-background"></div>
 </div>
 <div class="vertical-overlay"></div>

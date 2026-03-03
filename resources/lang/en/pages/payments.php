@@ -67,6 +67,12 @@ return [
         'note' => 'Note',
         'note_placeholder' => 'Optional...',
         'save_payment' => 'Save Payment',
+
+        'payment_date' => 'Payment Date',
+        'payment_date_help' => 'You can enter any past date. Future dates are not allowed.',
+        'mixed_rule_pay_amount' => 'Mixed rule: Cash + Card must equal Pay Amount.',
+
+
     ],
 
     'detail_keys' => [
@@ -82,6 +88,17 @@ return [
         'old_remaining' => 'Old Remaining',
         'new_remaining' => 'New Remaining',
         'note' => 'Note',
+
+        'corrected' => 'Corrected',
+        'corrected_from_payment_id' => 'Corrected from payment id',
+        'payment_at' => 'Payment at',
+        'entered_at' => 'Entered at',
+        'backdated' => 'Backdated',
+    ],
+
+    'bool' => [
+        'yes' => 'Yes',
+        'no' => 'No',
     ],
 
     'method_values' => [
@@ -90,4 +107,41 @@ return [
         'mixed' => 'Mixed',
         'phone' => 'Phone',
     ],
+
+    'actions' => [
+        'correct' => 'Correct',
+        'void' => 'Void',
+    ],
+    'badges' => [
+        'voided' => 'Voided',
+
+    ],
+    'voided_by' => 'Voided by',
+    'corrected_by' => 'Corrected by',
+
+    'common' => [
+        'cancel' => 'Cancel',
+    ],
+
+    'modals' => [
+        'void' => [
+            'title' => 'Void Payment #:id',
+            'desc' => 'This will reverse the applied amount from the customer debt and mark the payment as voided.',
+            'reason_label' => 'Reason (required)',
+            'confirm' => 'Void Payment',
+        ],
+        'correct' => [
+            'title' => 'Correct Payment',
+            'payment_date_help' => 'Past dates allowed. Future not allowed.',
+            'received_amount' => 'Received Amount',
+            'payment_method' => 'Payment Method',
+            'note' => 'Note',
+            'reason_label' => 'Reason (why correcting)',
+            'reason_placeholder' => 'Example: wrong amount/date/method',
+            'warning' => 'This will void the old payment and create a new payment.',
+            'confirm' => 'Save Correction',
+        ],
+    ],
+
+
 ];

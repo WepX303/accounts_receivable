@@ -26,16 +26,6 @@ class PaymentCorrectController extends Controller
             return back()->with('warning', __('validations/validations.payment_correct.already_voided'));
         }
 
-        // $data = $request->validate([
-        //     'payment_at' => ['nullable', 'date'],
-        //     'payment_method' => ['required', 'in:cash,card,mixed,phone'],
-        //     'pay_amount' => ['required', 'numeric', 'min:0.01'],
-        //     'cash_total' => ['nullable', 'numeric', 'min:0'],
-        //     'card_total' => ['nullable', 'numeric', 'min:0'],
-        //     'note' => ['nullable', 'string', 'max:500'],
-        //     'reason' => ['nullable', 'string', 'max:300'],
-        // ]);
-
         $data = $request->validate([
             'payment_at' => ['nullable', 'date'],
             'payment_method' => ['required', 'in:cash,card,mixed,phone'],
@@ -211,10 +201,11 @@ class PaymentCorrectController extends Controller
                     'customer_contract' => mb_substr((string)$c->contract, 0, 50),
                     'branch' => mb_substr((string)$c->branch, 0, 50),
 
-                    'created_by' => (int)$user->id,
-                    'created_by_name' => mb_substr((string)$user->full_name, 0, 255),
-                    'created_by_email' => mb_substr((string)$user->email, 0, 255),
-                    'created_by_phone' => mb_substr((string)$user->phonenumber, 0, 50),
+                    // PAYMENT RECEIVED BY: ORIGINAL CASHIER TO REMAIN
+                    'created_by' => (int) ($p->created_by ?? 0),
+                    'created_by_name' => mb_substr((string) ($p->created_by_name ?? 'N/A'), 0, 255),
+                    'created_by_email' => mb_substr((string) ($p->created_by_email ?? ''), 0, 255),
+                    'created_by_phone' => mb_substr((string) ($p->created_by_phone ?? ''), 0, 50),
 
                     'pay_amount' => $this->fmtMoney($received),
                     'change_amount' => $this->fmtMoney($change),
@@ -232,7 +223,11 @@ class PaymentCorrectController extends Controller
                     'note' => $note !== '' ? $note : null,
                     'created_at' => $now,
 
-                    // optional: link
+                    // EDITED BY: ADMIN/OPERATOR
+                    'corrected_by' => (int) $user->id,
+                    'corrected_at' => $enteredAt,
+                    'correct_reason' => $reason !== '' ? $reason : null,
+
                     'corrected_from_payment_id' => $p->id,
                 ]);
             });

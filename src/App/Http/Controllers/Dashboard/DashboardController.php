@@ -77,7 +77,7 @@ class DashboardController extends Controller
             'end.after_or_equal' => __('validations/validations.dashboard.end_before_start'),
         ]);
 
-        
+
         $period = $request->get('period', 'today');
 
         $start = now()->startOfDay();
@@ -208,7 +208,9 @@ class DashboardController extends Controller
             // =========================
             // Recent Payments (last 20)
             // =========================
+
             $recentAdminPayments = (clone $base)
+                ->with(['correctedByUser:id,firstname,lastname'])
                 ->orderByDesc('id')
                 ->limit(20)
                 ->get([
@@ -223,6 +225,10 @@ class DashboardController extends Controller
                     'cash_amount',
                     'card_amount',
                     'created_at',
+
+                    'corrected_by',
+                    'corrected_at',
+                    'correct_reason',
                 ])
                 ->map(function ($p) {
                     $p->net_amount = (float)$p->pay_amount - (float)($p->change_amount ?? 0);

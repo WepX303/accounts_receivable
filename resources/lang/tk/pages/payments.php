@@ -67,6 +67,12 @@ return [
         'note' => 'Bellik',
         'note_placeholder' => 'Islege görä...',
         'save_payment' => 'Tölegi ýaz',
+
+        'payment_date' => 'Töleg senesi',
+        'payment_date_help' => 'Islendik geçen senäni girizip bolýar. Geljek seneler bolmaýar.',
+        'mixed_rule_pay_amount' => 'Garyşyk düzgün: Nagt + Kard, töleg möçberine deň bolmaly.',
+
+
     ],
 
     'detail_keys' => [
@@ -82,6 +88,17 @@ return [
         'old_remaining' => 'Öňki Galyndy',
         'new_remaining' => 'Täze Galyndy',
         'note' => 'Bellik',
+
+        'corrected' => 'Düzedildi',
+        'corrected_from_payment_id' => 'Haýsy tölegden düzedildi (ID)',
+        'payment_at' => 'Töleg senesi',
+        'entered_at' => 'Girizilen wagty',
+        'backdated' => 'Soňkyra ýazylan (backdate)',
+    ],
+
+    'bool' => [
+        'yes' => 'Hawa',
+        'no' => 'Ýok',
     ],
 
     'method_values' => [
@@ -90,4 +107,40 @@ return [
         'mixed' => 'Garyşyk',
         'phone' => 'Telefon',
     ],
+
+    'actions' => [
+        'correct' => 'Düzelt',
+        'void' => 'Ýatyr',
+    ],
+    'badges' => [
+        'voided' => 'Ýatyrylan',
+    ],
+    'voided_by' => 'Ýatyran',
+    'corrected_by' => 'Düzeten',
+
+    'common' => [
+        'cancel' => 'Ýatyr',
+    ],
+
+    'modals' => [
+        'void' => [
+            'title' => 'Tölegi ýatyr # :id',
+            'desc' => 'Bu amal müşderiniň bergisinden düşen möçberi yzyna alar we tölegi ýatyr hökmünde bellär.',
+            'reason_label' => 'Sebäp (hökmany)',
+            'confirm' => 'Tölegi ýatyr',
+        ],
+        'correct' => [
+            'title' => 'Tölegi düzet',
+            'payment_date_help' => 'Geçen seneler bolýar. Geljek seneler bolmaýar.',
+            'received_amount' => 'Alnan möçber',
+            'payment_method' => 'Töleg görnüşi',
+            'note' => 'Bellik',
+            'reason_label' => 'Sebäp (näme üçin düzedilýär)',
+            'reason_placeholder' => 'Mysal: nädogry möçber/sene/görnüş',
+            'warning' => 'Köne töleg ýatyrylar we täze töleg dörediler.',
+            'confirm' => 'Düzedişi ýaz',
+        ],
+    ],
+
+
 ];

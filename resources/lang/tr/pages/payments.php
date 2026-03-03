@@ -67,6 +67,11 @@ return [
         'note' => 'Not',
         'note_placeholder' => 'İsteğe bağlı...',
         'save_payment' => 'Ödemeyi Kaydet',
+
+        'payment_date' => 'Ödeme Tarihi',
+        'payment_date_help' => 'Herhangi bir geçmiş tarih girebilirsiniz. Gelecek tarihe izin verilmez.',
+        'mixed_rule_pay_amount' => 'Karma kural: Nakit + Kart, Ödeme Tutarına eşit olmalı.',
+
     ],
 
     'detail_keys' => [
@@ -82,6 +87,17 @@ return [
         'old_remaining' => 'Eski Kalan',
         'new_remaining' => 'Yeni Kalan',
         'note' => 'Not',
+
+        'corrected' => 'Düzeltildi',
+        'corrected_from_payment_id' => 'Hangi ödemeden düzeltildi (ID)',
+        'payment_at' => 'Ödeme tarihi',
+        'entered_at' => 'Girildiği tarih',
+        'backdated' => 'Geri tarihli',
+    ],
+
+    'bool' => [
+        'yes' => 'Evet',
+        'no' => 'Hayır',
     ],
 
     'method_values' => [
@@ -90,4 +106,39 @@ return [
         'mixed' => 'Karışık',
         'phone' => 'Telefon',
     ],
+
+    'actions' => [
+        'correct' => 'Düzelt',
+        'void' => 'İptal',
+    ],
+    'badges' => [
+        'voided' => 'İptal Edildi',
+    ],
+    'voided_by' => 'İptal eden',
+    'corrected_by' => 'Düzelten',
+
+    'common' => [
+        'cancel' => 'Vazgeç',
+    ],
+
+    'modals' => [
+        'void' => [
+            'title' => 'Ödemeyi İptal Et #:id',
+            'desc' => 'Bu işlem, müşterinin borcundan düşülen tutarı geri alır ve ödemeyi iptal olarak işaretler.',
+            'reason_label' => 'Sebep (zorunlu)',
+            'confirm' => 'Ödemeyi İptal Et',
+        ],
+        'correct' => [
+            'title' => 'Ödemeyi Düzelt',
+            'payment_date_help' => 'Geçmiş tarih girilebilir. Gelecek tarih girilemez.',
+            'received_amount' => 'Alınan Tutar',
+            'payment_method' => 'Ödeme Yöntemi',
+            'note' => 'Not',
+            'reason_label' => 'Sebep (neden düzeltiliyor)',
+            'reason_placeholder' => 'Örn: yanlış tutar/tarih/yöntem',
+            'warning' => 'Bu işlem eski ödemeyi iptal eder ve yeni bir ödeme oluşturur.',
+            'confirm' => 'Düzeltmeyi Kaydet',
+        ],
+    ],
+
 ];
