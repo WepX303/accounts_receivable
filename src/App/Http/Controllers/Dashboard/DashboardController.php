@@ -196,22 +196,23 @@ class DashboardController extends Controller
         COUNT(*) as tx_count,
         COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
 
-        COALESCE(SUM(COALESCE(cash_amount,0)),0) as total_cash,
-        COALESCE(SUM(COALESCE(card_amount,0)),0) as total_card,
+        COALESCE(SUM(
+            CASE WHEN method IN ('cash','mixed') THEN COALESCE(cash_amount,0) ELSE 0 END
+        ),0) as total_cash,
 
         COALESCE(SUM(
-            CASE 
-                WHEN method='phone' 
-                THEN (pay_amount - COALESCE(change_amount,0)) 
-                ELSE 0 
-            END
+            CASE WHEN method IN ('card','mixed') THEN COALESCE(card_amount,0) ELSE 0 END
+        ),0) as total_card,
+
+        COALESCE(SUM(
+            CASE WHEN method='phone' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END
         ),0) as total_phone
     ")
                 ->groupBy('cashier_id', 'cashier_name')
                 ->orderByDesc('total_net')
                 ->limit(12)
                 ->get();
-
+                
             $topCashier = $byCashier->first();
 
             // =========================
