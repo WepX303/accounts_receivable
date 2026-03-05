@@ -135,13 +135,13 @@
                                     value="{{ request('date_from') }}">
                             </div>
 
-                           
+
                             {{-- Date To --}}
                             {{-- <div class="col-xxl-2 col-sm-3">
                                 <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
                             </div> --}}
 
-                             <div class="col-auto">
+                            <div class="col-auto">
                                 <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
                             </div>
                             {{-- ONE Quick Filters Dropdown --}}
@@ -322,8 +322,23 @@
                                                 {{ $c->phone ?? '-' }}
                                             </td>
                                             {{-- Branch | Contract --}}
-                                            <td class="branch_contract">
+                                            {{-- <td class="branch_contract">
                                                 <div class="fw-medium">{{ $c->branch }} / {{ $c->contract }}</div>
+                                            </td> --}}
+                                            <td class="branch_contract">
+                                                <div class="fw-medium">
+                                                    {{ $c->branch }} /
+
+                                                    @if (auth()->check() && in_array(auth()->user()->role?->value, ['Admin', 'Cashier', 'Operator']))
+                                                        <a href="{{ route('payments', ['id' => (string) $c->logicalref]) }}"
+                                                            class="text-decoration-underline text-primary">
+                                                            {{ $c->contract }}
+                                                        </a>
+                                                    @else
+                                                        {{ $c->contract }}
+                                                    @endif
+
+                                                </div>
                                             </td>
                                             {{-- Amount --}}
                                             <td>
