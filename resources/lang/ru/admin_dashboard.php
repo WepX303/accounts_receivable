@@ -36,6 +36,9 @@ return [
     'mixed' => 'Смешанный',
     'phone' => 'Телефон',
 
+    'all_total' => 'Общий сбор',
+    'mixed_tx_count' => 'Количество смешанных платежей',
+
     'cashier_performance' => 'Эффективность кассира',
     'branch_performance' => 'Эффективность филиала',
     'top' => 'Топ',

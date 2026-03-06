@@ -36,6 +36,9 @@ return [
     'mixed' => 'Garyşyk',
     'phone' => 'Telefon',
 
+    'all_total' => 'Jemi Töleg',
+    'mixed_tx_count' => 'Garyşyk Töleg Sany',
+
     'cashier_performance' => 'Kasiyer öndürijiligi',
     'branch_performance' => 'Şahamça öndürijiligi',
     'top' => 'Top',

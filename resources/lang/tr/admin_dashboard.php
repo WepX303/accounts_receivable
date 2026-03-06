@@ -36,6 +36,9 @@ return [
     'mixed' => 'Karışık',
     'phone' => 'Telefon',
 
+    'all_total' => 'Toplam Tahsilat',
+    'mixed_tx_count' => 'Karışık İşlem Sayısı',
+
     'cashier_performance' => 'Kasiyer Performansı',
     'branch_performance' => 'Şube Performansı',
     'top' => 'Top',

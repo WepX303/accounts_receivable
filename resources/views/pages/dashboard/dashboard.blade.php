@@ -238,7 +238,7 @@
                             </div>
                         </div>
 
-                        <div class="col">
+                        {{-- <div class="col">
                             <div class="mt-3 mt-md-0 py-4 px-3">
                                 <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.mixed_net') }}</h5>
                                 <div class="d-flex align-items-center">
@@ -253,14 +253,15 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
+
 
                         <div class="col">
                             <div class="mt-3 mt-md-0 py-4 px-3">
                                 <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.phone_total') }}</h5>
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
-                                        <i class="ri-exchange-dollar-line display-6 text-muted"></i>
+                                        <i class="ri-sim-card-2-line display-6 text-muted"></i>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h2 class="mb-0">
@@ -273,6 +274,23 @@
                         </div>
 
                         <div class="col">
+                            <div class="mt-3 mt-md-0 py-4 px-3">
+                                <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.all_total') }}</h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="ri-wallet-3-line display-6 text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h2 class="mb-0">
+                                            {{ number_format($kpi['all_total'] ?? 0, 2) }}
+                                            <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                        </h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- <div class="col">
                             <div class="mt-3 mt-lg-0 py-4 px-3">
                                 <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.avg_payment') }}</h5>
                                 <div class="d-flex align-items-center">
@@ -283,6 +301,22 @@
                                         <h2 class="mb-0">
                                             {{ number_format($kpi['avg_net'] ?? 0, 2) }}
                                             <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                        </h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> --}}
+                        <div class="col">
+                            <div class="mt-3 mt-lg-0 py-4 px-3">
+                                <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.mixed_tx_count') }}
+                                </h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="ri-shuffle-line display-6 text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h2 class="mb-0">
+                                            {{ number_format($kpi['mixed_tx_count'] ?? 0) }}
                                         </h2>
                                     </div>
                                 </div>
@@ -477,10 +511,10 @@
                     </div>
                 </div>
 
-                <div class="card-body px-0">
+                {{-- <div class="card-body px-0">
                     <ul class="list-inline main-chart text-center mb-0">
                         <li class="list-inline-item chart-border-left me-0 border-0">
-                            <h4 class="text-success">
+                            <h4>
                                 {{ number_format($kpi['total_cash'] ?? 0, 2) }} <small
                                     class="text-muted">{{ __('admin_dashboard.currency') }}</small>
                                 <span
@@ -512,8 +546,45 @@
                             </h4>
                         </li>
                     </ul>
-                    <div id="revenue-expenses-charts" data-colors='["--vz-success", "--vz-danger"]' class="apex-charts"
-                        dir="ltr"></div>
+                    <div id="revenue-expenses-charts" data-colors='["--vz-success","--vz-primary","--vz-warning"]'
+                        class="apex-charts" dir="ltr">
+                    </div>
+                </div> --}}
+
+                <div class="card-body px-0">
+                    <ul class="list-inline main-chart text-center mb-0">
+                        <li class="list-inline-item chart-border-left me-0 border-0">
+                            <h4 class="text-success">
+                                {{ number_format($kpi['total_cash'] ?? 0, 2) }}
+                                <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">
+                                    {{ __('admin_dashboard.cash') }}
+                                </span>
+                            </h4>
+                        </li>
+
+                        <li class="list-inline-item chart-border-left me-0">
+                            <h4 style="color:#0d6efd">
+                                {{ number_format($kpi['total_card'] ?? 0, 2) }}
+                                <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">
+                                    {{ __('admin_dashboard.card') }}
+                                </span>
+                            </h4>
+                        </li>
+
+                        <li class="list-inline-item chart-border-left me-0">
+                            <h4 class="text-warning">
+                                {{ number_format($kpi['total_phone'] ?? 0, 2) }}
+                                <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
+                                <span class="text-muted d-inline-block fs-13 align-middle ms-2">
+                                    {{ __('admin_dashboard.phone') }}
+                                </span>
+                            </h4>
+                        </li>
+                    </ul>
+
+                    <div id="revenue-expenses-charts" class="apex-charts" dir="ltr"></div>
                 </div>
             </div>
         </div>
@@ -614,10 +685,15 @@
     <script>
         window.ADMIN_DASHBOARD = {!! json_encode([
             'daily' => $chartDaily ?? ['labels' => [], 'series' => []],
+            // 'payMethods' => [
+            //     'cash' => $kpi['total_cash'] ?? 0,
+            //     'card' => $kpi['total_card'] ?? 0,
+            //     'mixed' => $kpi['total_mixed'] ?? 0,
+            //     'phone' => $kpi['total_phone'] ?? 0,
+            // ],
             'payMethods' => [
                 'cash' => $kpi['total_cash'] ?? 0,
                 'card' => $kpi['total_card'] ?? 0,
-                'mixed' => $kpi['total_mixed'] ?? 0,
                 'phone' => $kpi['total_phone'] ?? 0,
             ],
         ]) !!};

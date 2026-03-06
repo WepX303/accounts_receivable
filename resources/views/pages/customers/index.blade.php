@@ -109,7 +109,6 @@
         </div>
     </div>
 
-
     <div class="row">
         <div class="col-lg-12">
             <div class="card" id="orderList">
@@ -125,22 +124,10 @@
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
-                            {{-- Date From --}}
-                            {{-- <div class="col-xxl-2 col-sm-3">
-                                <input type="date" class="form-control" name="date_from"
-                                    value="{{ request('date_from') }}">
-                            </div> --}}
                             <div class="col-auto">
                                 <input type="date" class="form-control" name="date_from"
                                     value="{{ request('date_from') }}">
                             </div>
-
-
-                            {{-- Date To --}}
-                            {{-- <div class="col-xxl-2 col-sm-3">
-                                <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
-                            </div> --}}
-
                             <div class="col-auto">
                                 <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
                             </div>
@@ -210,21 +197,6 @@
                             </div>
 
                             {{-- Buttons --}}
-                            {{-- <div class="col-xxl-2 col-sm-2 d-flex gap-2">
-                                <a class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
-                                    href="{{ route('customers') }}">
-                                    <i class="ri-refresh-line"></i>
-                                    {{ __('pages/customers_index.reset') }}
-                                </a>
-
-                                <a class="btn btn-success w-100 d-flex align-items-center justify-content-center gap-1"
-                                    href="{{ route('customers.export', array_merge(request()->query(), ['lang' => app()->getLocale()])) }}">
-                                    <i class="ri-file-excel-2-line"></i>
-                                    Export
-                                </a>
-                            </div> --}}
-
-                            {{-- Buttons --}}
                             <div class="col-xxl-2 col-sm-3 d-flex gap-2">
                                 <button type="submit"
                                     class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-1">
@@ -269,8 +241,10 @@
                                         <th>{{ __('pages/customers_index.note') }}</th>
                                     </tr>
                                 </thead>
+                                {{-- <tbody class="list form-check-all">
+                                    @foreach ($credit_users as $c) --}}
                                 <tbody class="list form-check-all">
-                                    @foreach ($credit_users as $c)
+                                    @forelse ($credit_users as $c)
                                         @php
                                             $hasLocalPaid = $c->paid_local !== null;
 
@@ -322,9 +296,6 @@
                                                 {{ $c->phone ?? '-' }}
                                             </td>
                                             {{-- Branch | Contract --}}
-                                            {{-- <td class="branch_contract">
-                                                <div class="fw-medium">{{ $c->branch }} / {{ $c->contract }}</div>
-                                            </td> --}}
                                             <td class="branch_contract">
                                                 <div class="fw-medium">
                                                     {{ $c->branch }} /
@@ -368,12 +339,7 @@
                                                     </div>
                                                 @endif
                                             </td>
-                                            {{-- <td>
-                                                <div class="fw-medium text-success">
-                                                    {{ number_format((float) ($c->period_paid_sum ?? 0), 2) }}
-                                                </div>
-                                            </td> --}}
-
+                                            
                                             <td>
                                                 @php
                                                     $net =
@@ -414,21 +380,23 @@
                                             </td>
                                             {{-- Status --}}
                                             <td>
-                                                {{-- <div class="badge bg-secondary-subtle text-secondary">
-                                                    {{ $c->status ?? __('pages/customers_index.unknown') }}
-                                                </div> --}}
                                                 <div class="badge bg-secondary-subtle text-secondary">
                                                     {{ isset($c->status) && trim($c->status) !== '' ? $c->status : __('pages/customers_index.status_missing') }}
                                                 </div>
-
                                             </td>
-
                                             {{-- Note --}}
                                             <td>
                                                 {{ $c->note ?? '-' }}
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="11" class="text-center text-muted py-4">
+                                                {{ __('pages/monthly_report.no_records') }}
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                    {{-- @endforeach --}}
                                 </tbody>
                             </table>
                         </div>

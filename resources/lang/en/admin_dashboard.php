@@ -36,6 +36,9 @@ return [
     'mixed' => 'Mixed',
     'phone' => 'Phone',
 
+    'all_total' => 'Total Collection',
+    'mixed_tx_count' => 'Mixed Transaction Count',
+
     'cashier_performance' => 'Cashier Performance',
     'branch_performance' => 'Branch Performance',
     'top' => 'Top',
