@@ -2,6 +2,12 @@
     <div class="layout-width">
         <div class="navbar-header">
             <div class="d-flex">
+                {{-- MOBILE MENU BUTTON --}}
+                <button type="button" class="btn btn-sm px-3 fs-16 header-item d-lg-none" data-bs-toggle="collapse"
+                    data-bs-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <i class="bx bx-menu fs-22"></i>
+                </button>
                 <!-- LOGO -->
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="{{ route('dashboard') }}" class="logo logo-dark">
@@ -90,7 +96,7 @@
                 </div>
                 {{-- 🌍 Language Switcher --}}
 
-                
+
                 <div class="dropdown ms-sm-3 header-item topbar-user">
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">

@@ -50,7 +50,7 @@ return [
     'th_net_collection' => 'Arassa ýygnalan',
     'th_cash' => 'Nagt',
     'th_card' => 'Kart',
-    'th_phone' => 'Phone',
+    'th_phone' => 'Telefon',
 
     'no_cashier_tx' => 'Bu döwür üçin kasiyer amaly ýok',
     'no_branch_tx' => 'Bu döwür üçin şahamça amaly ýok',
