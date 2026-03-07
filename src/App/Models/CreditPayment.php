@@ -34,6 +34,7 @@ class CreditPayment extends Model
         'method',
         'cash_amount',
         'card_amount',
+        'phone_amount',
 
         'old_amount_local',
         'new_amount_local',
@@ -60,6 +61,7 @@ class CreditPayment extends Model
 
         'cash_amount' => 'decimal:2',
         'card_amount' => 'decimal:2',
+        'phone_amount' => 'decimal:2',
 
         'old_amount_local' => 'decimal:2',
         'new_amount_local' => 'decimal:2',

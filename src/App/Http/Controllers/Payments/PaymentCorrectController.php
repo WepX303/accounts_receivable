@@ -63,19 +63,45 @@ class PaymentCorrectController extends Controller
             return back()->with('warning', __('validations/validations.payment_correct.future_payment_date_not_allowed'))->withInput();
         }
 
+        // $method = $data['payment_method'];
+        // $received = $this->toMoney($data['pay_amount']);
+        // $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
+        // $cardTotal = $this->toMoney($data['card_total'] ?? 0);
+
+        // // Normalize totals by method
+        // if ($method === 'cash') {
+        //     $cashTotal = $received;
+        //     $cardTotal = 0.0;
+        // } elseif ($method === 'card' || $method === 'phone') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } else {
+        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+        //         return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
+        //     }
+        // }
         $method = $data['payment_method'];
         $received = $this->toMoney($data['pay_amount']);
         $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
         $cardTotal = $this->toMoney($data['card_total'] ?? 0);
+        $phoneTotal = 0.0;
 
         // Normalize totals by method
         if ($method === 'cash') {
             $cashTotal = $received;
             $cardTotal = 0.0;
-        } elseif ($method === 'card' || $method === 'phone') {
+            $phoneTotal = 0.0;
+        } elseif ($method === 'card') {
             $cashTotal = 0.0;
             $cardTotal = $received;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'phone') {
+            $cashTotal = 0.0;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
         } else {
+            $phoneTotal = 0.0;
+
             if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
                 return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
             }
@@ -88,8 +114,8 @@ class PaymentCorrectController extends Controller
         $reason = preg_replace('/\s+/', ' ', $reason);
 
         try {
-            DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $note, $reason) {
-
+            // DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $note, $reason) {
+            DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason) {
                 // lock payment row
                 $p = CreditPayment::query()->lockForUpdate()->findOrFail($payment->id);
 
@@ -173,6 +199,7 @@ class PaymentCorrectController extends Controller
                     'change=' . $this->fmtMoney($change),
                     'cash=' . $this->fmtMoney($cashTotal),
                     'card=' . $this->fmtMoney($cardTotal),
+                    'phone=' . $this->fmtMoney($phoneTotal),
                     'total_local=' . $this->fmtMoney($totalLocal),
                     'old_paid_local=' . $this->fmtMoney($paidAfterVoid),
                     'new_paid_local=' . $this->fmtMoney($newPaidLocal),
@@ -213,6 +240,7 @@ class PaymentCorrectController extends Controller
                     'method' => $method,
                     'cash_amount' => $this->fmtMoney($cashTotal),
                     'card_amount' => $this->fmtMoney($cardTotal),
+                    'phone_amount' => $this->fmtMoney($phoneTotal),
 
                     'old_amount_local' => $this->fmtMoney($remaining),
                     'new_amount_local' => $this->fmtMoney($newRemaining),

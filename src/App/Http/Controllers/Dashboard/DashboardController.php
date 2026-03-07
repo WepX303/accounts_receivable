@@ -149,42 +149,17 @@ class DashboardController extends Controller
             // =========================
             // KPI
             // =========================
-            // $row = (clone $base)
-            //     ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
-            //     ->selectRaw('COUNT(*) as total_count')
-            //     ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount,0)),0) as avg_net')
-            //     ->selectRaw("COALESCE(SUM(CASE WHEN method = 'cash' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_cash")
-            //     ->selectRaw("COALESCE(SUM(CASE WHEN method = 'card' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_card")
-            //     ->selectRaw("COALESCE(SUM(CASE WHEN method = 'mixed' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_mixed")
-            //     ->selectRaw("COALESCE(SUM(CASE WHEN method = 'phone' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_phone")
-            //     ->selectRaw('MAX(created_at) as last_payment_at')
-            //     ->first();
+
             $row = (clone $base)
                 ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
                 ->selectRaw('COUNT(*) as total_count')
                 ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount,0)),0) as avg_net')
-
-                ->selectRaw("COALESCE(SUM(CASE WHEN method = 'cash' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_cash")
-
-                ->selectRaw("COALESCE(SUM(CASE WHEN method = 'card' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_card")
-
-                ->selectRaw("COALESCE(SUM(CASE WHEN method = 'phone' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_phone")
-
+                ->selectRaw("COALESCE(SUM(cash_amount), 0) as total_cash")
+                ->selectRaw("COALESCE(SUM(card_amount), 0) as total_card")
+                ->selectRaw("COALESCE(SUM(phone_amount), 0) as total_phone")
                 ->selectRaw("COUNT(CASE WHEN method = 'mixed' THEN 1 END) as mixed_tx_count")
-
                 ->selectRaw('MAX(created_at) as last_payment_at')
                 ->first();
-
-            // $kpi = [
-            //     'total_net' => (float)($row->total_net ?? 0),
-            //     'total_count' => (int)($row->total_count ?? 0),
-            //     'avg_net' => (float)($row->avg_net ?? 0),
-            //     'total_cash' => (float)($row->total_cash ?? 0),
-            //     'total_card' => (float)($row->total_card ?? 0),
-            //     'total_mixed' => (float)($row->total_mixed ?? 0),
-            //     'total_phone' => (float)($row->total_phone ?? 0),
-            //     'last_payment_at' => $row->last_payment_at ?? null,
-            // ];
 
             $kpi = [
                 'total_net' => (float)($row->total_net ?? 0),
@@ -211,28 +186,18 @@ class DashboardController extends Controller
             // =========================
             $byCashier = (clone $base)
                 ->selectRaw("
-        created_by as cashier_id,
-        COALESCE(created_by_name, 'N/A') as cashier_name,
-        COUNT(*) as tx_count,
-        COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
-
-        COALESCE(SUM(
-            CASE WHEN method IN ('cash','mixed') THEN COALESCE(cash_amount,0) ELSE 0 END
-        ),0) as total_cash,
-
-        COALESCE(SUM(
-            CASE WHEN method IN ('card','mixed') THEN COALESCE(card_amount,0) ELSE 0 END
-        ),0) as total_card,
-
-        COALESCE(SUM(
-            CASE WHEN method='phone' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END
-        ),0) as total_phone
-    ")
+                    created_by as cashier_id,
+                    COALESCE(created_by_name, 'N/A') as cashier_name,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
                 ->groupBy('cashier_id', 'cashier_name')
                 ->orderByDesc('total_net')
                 ->limit(12)
                 ->get();
-
             $topCashier = $byCashier->first();
 
             // =========================
@@ -240,13 +205,13 @@ class DashboardController extends Controller
             // =========================
             $byBranch = (clone $base)
                 ->selectRaw("
-            COALESCE(branch, 'N/A') as branch,
-            COUNT(*) as tx_count,
-            COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
-            COALESCE(SUM(CASE WHEN method = 'cash' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_cash,
-            COALESCE(SUM(CASE WHEN method = 'card' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_card,
-            COALESCE(SUM(CASE WHEN method = 'phone' THEN (pay_amount - COALESCE(change_amount,0)) ELSE 0 END),0) as total_phone
-        ")
+                    COALESCE(branch, 'N/A') as branch,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
                 ->groupBy('branch')
                 ->orderByDesc('total_net')
                 ->limit(20)
@@ -271,8 +236,8 @@ class DashboardController extends Controller
                     'change_amount',
                     'cash_amount',
                     'card_amount',
+                    'phone_amount',
                     'created_at',
-
                     'corrected_by',
                     'corrected_at',
                     'correct_reason',

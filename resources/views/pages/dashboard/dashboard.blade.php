@@ -615,6 +615,7 @@
                                     <th class="text-end">{{ __('admin_dashboard.th_net') }}</th>
                                     <th class="text-end">{{ __('admin_dashboard.th_cash') }}</th>
                                     <th class="text-end">{{ __('admin_dashboard.th_card') }}</th>
+                                    <th class="text-end">{{ __('admin_dashboard.th_phone') }}</th>
                                     <th class="text-end">{{ __('admin_dashboard.th_change') }}</th>
                                 </tr>
                             </thead>
@@ -661,6 +662,7 @@
                                         <td class="text-end">{{ number_format((float) $p->net_amount, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->cash_amount ?? 0), 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->card_amount ?? 0), 2) }}</td>
+                                        <td class="text-end">{{ number_format((float) ($p->phone_amount ?? 0), 2) }}</td>
                                         <td class="text-end">{{ number_format((float) ($p->change_amount ?? 0), 2) }}
                                         </td>
                                     </tr>

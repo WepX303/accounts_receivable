@@ -145,23 +145,52 @@ class CustomersPaymentController extends Controller
         $note = trim((string) $request->input('note', ''));
         $note = preg_replace('/\s+/', ' ', $note);
 
+        // $cashTotal = $this->toMoney($request->input('cash_total', '0'));
+        // $cardTotal = $this->toMoney($request->input('card_total', '0'));
+
+        // // Cash/card/mixed totals must match ‘received’
+        // if ($method === 'cash') {
+        //     $cashTotal = $received;
+        //     $cardTotal = 0.0;
+        // } elseif ($method === 'card') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } elseif ($method === 'phone') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } else {
+        //     if ($cashTotal < 0 || $cardTotal < 0) {
+        //         return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
+        //     }
+        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+        //         return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
+        //     }
+        // }
+
         $cashTotal = $this->toMoney($request->input('cash_total', '0'));
         $cardTotal = $this->toMoney($request->input('card_total', '0'));
+        $phoneTotal = 0.0;
 
-        // Cash/card/mixed totals must match ‘received’
+        // Cash/card/mixed/phone totals must match received
         if ($method === 'cash') {
             $cashTotal = $received;
             $cardTotal = 0.0;
+            $phoneTotal = 0.0;
         } elseif ($method === 'card') {
             $cashTotal = 0.0;
             $cardTotal = $received;
+            $phoneTotal = 0.0;
         } elseif ($method === 'phone') {
             $cashTotal = 0.0;
-            $cardTotal = $received;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
         } else {
+            $phoneTotal = 0.0;
+
             if ($cashTotal < 0 || $cardTotal < 0) {
                 return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
             }
+
             if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
                 return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
             }
@@ -190,8 +219,8 @@ class CustomersPaymentController extends Controller
         $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
         try {
 
-            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $note) {
-
+            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal,  $note) {
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note) {
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
                     ->where('logicalref', $customerId)
@@ -264,6 +293,7 @@ class CustomersPaymentController extends Controller
 
                     'cash=' . $this->fmtMoney($cashTotal),
                     'card=' . $this->fmtMoney($cardTotal),
+                    'phone=' . $this->fmtMoney($phoneTotal),
 
                     'total_local=' . $this->fmtMoney($totalLocal),
 
@@ -312,6 +342,7 @@ class CustomersPaymentController extends Controller
                     'method' => $method,
                     'cash_amount' => $this->fmtMoney($cashTotal),
                     'card_amount' => $this->fmtMoney($cardTotal),
+                    'phone_amount' => $this->fmtMoney($phoneTotal),
 
                     'old_amount_local' => $this->fmtMoney($oldRemaining),
                     'new_amount_local' => $this->fmtMoney($newRemaining),
