@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\AuditLogger;
 
 class CustomersPaymentController extends Controller
 {
@@ -124,6 +125,9 @@ class CustomersPaymentController extends Controller
         if (! $user) {
             return back()->with('warning', __('validations/validations.payments.auth_required'));
         }
+
+        $audit = app(AuditLogger::class);
+        $auditData = [];
         $userId = (int) $user->id;
 
         $customerId = $this->sanitizeId($request->input('customer_id'));
@@ -219,8 +223,8 @@ class CustomersPaymentController extends Controller
         $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
         try {
 
-            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal,  $note) {
-            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note) {
+            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note) {
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, &$auditData) {
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
                     ->where('logicalref', $customerId)
@@ -353,11 +357,99 @@ class CustomersPaymentController extends Controller
                     'note' => $note !== '' ? $note : null,
                     'created_at' => $now,
                 ]);
+
+                $auditData = [
+                    'credit' => $c,
+                    'old_values' => [
+                        'paid_local' => $oldPaidLocal,
+                        'remaining' => $oldRemaining,
+                    ],
+                    'new_values' => [
+                        'paid_local' => $newPaidLocal,
+                        'remaining' => $newRemaining,
+                    ],
+                    'extra' => [
+                        'credit_logicalref' => (int) $c->logicalref,
+                        'customer_name' => $c->name,
+                        'customer_contract' => $c->contract,
+                        'method' => $method,
+                        'received' => $received,
+                        'applied' => $apply,
+                        'change' => $change,
+                        'cash_amount' => $cashTotal,
+                        'card_amount' => $cardTotal,
+                        'phone_amount' => $phoneTotal,
+                        'payment_at' => $now->format('Y-m-d H:i:s'),
+                        'entered_at' => $enteredAt->format('Y-m-d H:i:s'),
+                        'backdated' => $backdated,
+                    ],
+                ];
             });
+            // } catch (\Throwable $e) {
+            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payments.payment_save_failed');
+
+            //     return back()->with('warning', $msg)->withInput();
+            // }
+
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payments.payment_save_failed');
+            $msg = $e instanceof \RuntimeException
+                ? $e->getMessage()
+                : __('validations/validations.payments.payment_save_failed');
+
+            $audit->log(
+                action: 'payment_create_failed',
+                category: 'payment',
+                subject: null,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'customer_id' => $customerId,
+                    'payment_method' => $method,
+                    'pay_amount' => $received,
+                    'payment_at' => $paymentAtRaw ?: null,
+                    'error' => $msg,
+                ],
+                message: 'Customer payment create failed',
+                isSuccess: false,
+                severity: 'warning',
+                isSuspicious: true
+            );
 
             return back()->with('warning', $msg)->withInput();
+        }
+
+        
+        if (!empty($auditData)) {
+            $audit->log(
+                action: 'payment_created',
+                category: 'payment',
+                subject: $auditData['credit'],
+                oldValues: $auditData['old_values'],
+                newValues: $auditData['new_values'],
+                extra: $auditData['extra'],
+                message: 'Customer payment created',
+                isSuccess: true,
+                severity: !empty($auditData['extra']['backdated']) ? 'warning' : 'info',
+                isSuspicious: !empty($auditData['extra']['backdated'])
+            );
+
+            if (!empty($auditData['extra']['backdated'])) {
+                $audit->alert(
+                    alertType: 'backdated_payment',
+                    riskLevel: 'high',
+                    message: 'Backdated payment recorded',
+                    meta: $auditData['extra']
+                );
+            }
+
+            if (((float) ($auditData['extra']['received'] ?? 0)) >= 5000) {
+                $audit->alert(
+                    alertType: 'high_amount_payment',
+                    riskLevel: 'medium',
+                    message: 'High amount payment detected',
+                    meta: $auditData['extra']
+                );
+            }
         }
 
         $redirectUrl = route('payments', array_merge($request->query(), ['id' => (string) $customerId]));

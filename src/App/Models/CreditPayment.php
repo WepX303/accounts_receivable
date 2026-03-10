@@ -49,6 +49,7 @@ class CreditPayment extends Model
         'corrected_by',
         'corrected_at',
         'correct_reason',
+        'corrected_from_payment_id',
     ];
 
     protected $casts = [
@@ -74,6 +75,7 @@ class CreditPayment extends Model
 
         'corrected_by' => 'integer',
         'corrected_at' => 'datetime',
+        'corrected_from_payment_id' => 'integer',
     ];
 
     public function credit()

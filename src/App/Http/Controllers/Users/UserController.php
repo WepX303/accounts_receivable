@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Enum;
+use App\Services\AuditLogger;
 
 class UserController extends Controller
 {
@@ -23,15 +24,7 @@ class UserController extends Controller
     // STORE
     public function store(Request $request)
     {
-        // $request->validate([
-        //     'firstname' => 'required|string|max:255',
-        //     'lastname' => 'required|string|max:255',
-        //     'email' => 'required|email|unique:users,email',
-        //     'phonenumber' => 'required|unique:users,phonenumber',
-        //     'password' => 'required|min:6',
-        //     'role' => ['required', new Enum(UserRoleEnum::class)],
-        //     'status' => 'required|boolean',
-        // ]);
+
         $request->validate([
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
@@ -66,7 +59,10 @@ class UserController extends Controller
             'status.boolean'  => __('validations/validations.users.status_boolean'),
         ]);
 
-        User::create([
+        $audit = app(AuditLogger::class);
+
+        // User::create([
+        $user = User::create([
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'email' => $request->email,
@@ -77,20 +73,34 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $audit->log(
+            action: 'user_created',
+            category: 'user',
+            subject: $user,
+            oldValues: null,
+            newValues: [
+                'firstname' => $user->firstname,
+                'lastname' => $user->lastname,
+                'email' => $user->email,
+                'phonenumber' => $user->phonenumber,
+                'position' => $user->position,
+                'role' => $user->role?->value ?? $user->role,
+                'status' => $user->status,
+            ],
+            extra: null,
+            message: 'New user created',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
+
         return redirect()->route('users.index')->with('success', __('validations/validations.users.created'));
     }
 
     // UPDATE
     public function update(Request $request, User $user)
     {
-        // $request->validate([
-        //     'firstname' => 'required|string|max:255',
-        //     'lastname' => 'required|string|max:255',
-        //     'email' => 'required|email|unique:users,email,' . $user->id,
-        //     'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
-        //     'role' => ['required', new Enum(UserRoleEnum::class)],
-        //     'status' => 'required|boolean',
-        // ]);
+
 
         $request->validate([
             'firstname' => 'required|string|max:255',
@@ -122,6 +132,21 @@ class UserController extends Controller
             'status.boolean'  => __('validations/validations.users.status_boolean'),
         ]);
 
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'role',
+            'status',
+        ]);
+
+        $oldRoleValue = $user->role?->value ?? $user->role;
+        $old['role'] = $oldRoleValue;
+
         $data = $request->only([
             'firstname',
             'lastname',
@@ -138,13 +163,100 @@ class UserController extends Controller
 
         $user->update($data);
 
+        $freshUser = $user->fresh();
+
+        $new = $freshUser->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'status',
+        ]);
+
+        $new['role'] = $freshUser->role?->value ?? $freshUser->role;
+
+        $audit->log(
+            action: 'user_updated',
+            category: 'user',
+            subject: $user,
+            oldValues: $old,
+            newValues: $new,
+            extra: null,
+            message: 'User updated',
+            isSuccess: true,
+            severity: 'warning',
+            isSuspicious: ($old['role'] !== $new['role']) || ((bool) $old['status'] !== (bool) $new['status'])
+        );
+
+        if ($old['role'] !== $new['role']) {
+            $audit->alert(
+                alertType: 'user_role_changed',
+                riskLevel: 'high',
+                message: 'A user role was changed',
+                meta: [
+                    'user_id' => $user->id,
+                    'old_role' => $old['role'],
+                    'new_role' => $new['role'],
+                ]
+            );
+        }
+
+        if ((bool) $old['status'] !== (bool) $new['status']) {
+            $audit->alert(
+                alertType: 'user_status_changed',
+                riskLevel: 'high',
+                message: 'A user status was changed',
+                meta: [
+                    'user_id' => $user->id,
+                    'old_status' => $old['status'],
+                    'new_status' => $new['status'],
+                ]
+            );
+        }
+
         return redirect()->route('users.index')->with('success', __('validations/validations.users.updated'));
     }
 
     // DELETE
     public function destroy(User $user)
     {
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'id',
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'role',
+            'status',
+        ]);
+
         $user->delete();
+
+        $audit->log(
+            action: 'user_deleted',
+            category: 'user',
+            subject: null,
+            oldValues: $old,
+            newValues: null,
+            extra: [
+                'deleted_user_id' => $old['id'],
+            ],
+            message: 'User deleted',
+            isSuccess: true,
+            severity: 'critical',
+            isSuspicious: true
+        );
+
+        $audit->alert(
+            alertType: 'user_deleted',
+            riskLevel: 'critical',
+            message: 'A user account was deleted',
+            meta: $old
+        );
 
         return redirect()->route('users.index')->with('success', __('validations/validations.users.deleted'));
     }

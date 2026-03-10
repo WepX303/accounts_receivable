@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Enums\UserRoleEnum;
+use App\Services\AuditLogger;
 
 
 class PaymentVoidController extends Controller
@@ -18,9 +19,13 @@ class PaymentVoidController extends Controller
         // Admin only
         $user = Auth::user();
 
+
         if (!$user || $user->role !== UserRoleEnum::ADMIN) {
             return back()->with('warning', __('validations/validations.payment_void.admin_only'));
         }
+
+        $audit = app(AuditLogger::class);
+        $auditData = [];
 
         $reason = trim((string) $request->input('void_reason', ''));
         $reason = preg_replace('/\s+/', ' ', $reason);
@@ -30,7 +35,8 @@ class PaymentVoidController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($payment, $reason, $user) {
+            // DB::transaction(function () use ($payment, $reason, $user) {
+            DB::transaction(function () use ($payment, $reason, $user, &$auditData) {
 
                 /** @var CreditPayment $p */
                 $p = CreditPayment::query()
@@ -77,6 +83,28 @@ class PaymentVoidController extends Controller
                         . ' | voided_at=' . now()->format('Y-m-d H:i:s'),
                 ])->save();
 
+                $auditData = [
+                    'payment' => $p,
+                    'credit' => $c,
+                    'old_values' => [
+                        'payment_id' => $p->id,
+                        'voided_at' => null,
+                        'paid_local_before' => $paidLocal,
+                    ],
+                    'new_values' => [
+                        'voided_at' => now()->format('Y-m-d H:i:s'),
+                        'voided_by' => $user->id,
+                        'paid_local_after' => $newPaidLocal,
+                    ],
+                    'extra' => [
+                        'credit_logicalref' => (int) $c->logicalref,
+                        'applied' => $applied,
+                        'void_reason' => $reason,
+                        'customer_name' => $c->name,
+                        'customer_contract' => $c->contract,
+                    ],
+                ];
+
                 // Payment void flag
                 $p->forceFill([
                     'voided_at' => now(),
@@ -84,9 +112,57 @@ class PaymentVoidController extends Controller
                     'void_reason' => $reason,
                 ])->save();
             });
+            // } catch (\Throwable $e) {
+            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_void.void_failed');
+            //     return back()->with('warning', $msg);
+            // }
+
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_void.void_failed');
+            $msg = $e instanceof \RuntimeException
+                ? $e->getMessage()
+                : __('validations/validations.payment_void.void_failed');
+
+            $audit->log(
+                action: 'payment_void_failed',
+                category: 'payment',
+                subject: $payment ?? null,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'payment_id' => $payment->id ?? null,
+                    'void_reason' => $reason,
+                    'error' => $msg,
+                ],
+                message: 'Payment void failed',
+                isSuccess: false,
+                severity: 'critical',
+                isSuspicious: true
+            );
+
             return back()->with('warning', $msg);
+        }
+
+
+        if (!empty($auditData)) {
+            $audit->log(
+                action: 'payment_voided',
+                category: 'payment',
+                subject: $auditData['payment'],
+                oldValues: $auditData['old_values'],
+                newValues: $auditData['new_values'],
+                extra: $auditData['extra'],
+                message: 'Payment voided',
+                isSuccess: true,
+                severity: 'critical',
+                isSuspicious: true
+            );
+
+            $audit->alert(
+                alertType: 'payment_voided',
+                riskLevel: 'critical',
+                message: 'A payment was voided',
+                meta: $auditData['extra']
+            );
         }
 
         return back()->with('success', __('validations/validations.payment_void.void_success'));

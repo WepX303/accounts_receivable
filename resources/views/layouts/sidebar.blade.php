@@ -82,6 +82,17 @@
                             </div>
                         </li>
                     @endif --}}
+
+                    {{-- Logs (Admin ) --}}
+                    @if (in_array($role, ['Admin'], true))
+                        <li class="nav-item">
+                            <a href="{{ route('logs') }}" class="nav-link">
+                                <i class="ri-file-list-3-line"></i>
+                                <span>Logs</span>
+                            </a>
+                        </li>
+                    @endif
+
                     @if ($role === 'Admin')
                         <li class="nav-item dropdown">
                             <a class="nav-link menu-link dropdown-toggle" href="#" id="settingsDropdown"

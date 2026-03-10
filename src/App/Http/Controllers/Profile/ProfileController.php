@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Services\AuditLogger;
 
 class ProfileController extends Controller
 {
@@ -28,14 +29,14 @@ class ProfileController extends Controller
             return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
         }
 
-        // $validated = $request->validate([
-        //     'firstname' => 'required|string|max:255',
-        //     'lastname'  => 'required|string|max:255',
-        //     'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
-        //     'phonenumber' => 'required|string|max:50|unique:users,phonenumber,' . $user->id,
-        //     'old_password' => 'nullable|string',
-        //     'new_password' => 'nullable|string|confirmed|min:6',
-        // ]);
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+        ]);
 
         $validated = $request->validate([
             'firstname'    => 'required|string|max:255',
@@ -107,11 +108,46 @@ class ProfileController extends Controller
 
         $user->save();
 
+        $new = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+        ]);
+
+        $audit->log(
+            action: 'profile_updated',
+            category: 'profile',
+            subject: $user,
+            oldValues: $old,
+            newValues: $new,
+            extra: [
+                'password_changed' => $passwordChanged,
+            ],
+            message: 'Profile updated',
+            isSuccess: true,
+            severity: $passwordChanged ? 'warning' : 'info',
+            isSuspicious: $passwordChanged
+        );
+
+        if ($passwordChanged) {
+            $audit->alert(
+                alertType: 'password_changed',
+                riskLevel: 'medium',
+                message: 'User password changed',
+                meta: [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ]
+            );
+        }
+
         if ($passwordChanged && ! $otherChanged) {
             return back()->with('success', __('validations/validations.profile.password_updated'));
         }
 
         return back()->with('success', __('validations/validations.profile.profile_updated'));
+
     }
 
     // Helper function that returns the user logging in via token

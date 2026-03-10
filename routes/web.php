@@ -12,6 +12,8 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Logs\LogsController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +94,12 @@ Route::middleware(['auth.token'])->group(function () {
         Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
         Route::post('/payments/{payment}/correct', PaymentCorrectController::class)->name('payments.correct');
     });
+
+    Route::middleware(['role:Admin'])->group(function () {
+
+        Route::get('/logs', LogsController::class)->name('logs');
+    });
+
 
     /**
      * SETTINGS (USERS MANAGEMENT) - Admin only

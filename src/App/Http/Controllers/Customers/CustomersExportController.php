@@ -6,6 +6,7 @@ use App\Exports\CustomersExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\AuditLogger;
 
 class CustomersExportController extends Controller
 {
@@ -19,6 +20,24 @@ class CustomersExportController extends Controller
             'q.max' => __('validations/validations.customers.q_max'),
             'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
         ]);
+
+        $audit = app(AuditLogger::class);
+
+        $audit->log(
+            action: 'customers_exported',
+            category: 'export',
+            subject: null,
+            oldValues: null,
+            newValues: null,
+            extra: [
+                'q' => $request->get('q'),
+                'quick_filter' => $request->get('quick_filter'),
+            ],
+            message: 'Customers export downloaded',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
 
         @ini_set('max_execution_time', '0');
         @ini_set('memory_limit', '1024M');

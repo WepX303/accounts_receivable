@@ -112,25 +112,22 @@ class CustomersController extends Controller
             };
         }
 
-        // Dynamic date range for the ‘Today Paid’ column in the table
-        // If the payment-based filter is selected (where $from/$to are populated), use that range;
-        // otherwise, use today by default.
-        [$periodFrom, $periodTo] = ($from && $to)
-            ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
-            : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+        // [$periodFrom, $periodTo] = ($from && $to)
+        //     ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
+        //     : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
 
-        $periodLabel = match ($quick) {
-            'paid_today' => __('pages/customers_index.today_paid'),
-            'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
-            'paid_7d' => __('pages/customers_index.paid_last_7_days'),
-            'paid_14d' => __('pages/customers_index.paid_last_14_days'),
-            'paid_1m' => __('pages/customers_index.paid_last_1_month'),
-            'paid_3m' => __('pages/customers_index.paid_last_3_months'),
-            'paid_6m' => __('pages/customers_index.paid_last_6_months'),
-            'paid_9m' => __('pages/customers_index.paid_last_9_months'),
-            'paid_12m' => __('pages/customers_index.paid_last_12_months'),
-            default => __('pages/customers_index.today_paid'),
-        };
+        // $periodLabel = match ($quick) {
+        //     'paid_today' => __('pages/customers_index.today_paid'),
+        //     'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
+        //     'paid_7d' => __('pages/customers_index.paid_last_7_days'),
+        //     'paid_14d' => __('pages/customers_index.paid_last_14_days'),
+        //     'paid_1m' => __('pages/customers_index.paid_last_1_month'),
+        //     'paid_3m' => __('pages/customers_index.paid_last_3_months'),
+        //     'paid_6m' => __('pages/customers_index.paid_last_6_months'),
+        //     'paid_9m' => __('pages/customers_index.paid_last_9_months'),
+        //     'paid_12m' => __('pages/customers_index.paid_last_12_months'),
+        //     default => __('pages/customers_index.today_paid'),
+        // };
 
         /**
          * =========================

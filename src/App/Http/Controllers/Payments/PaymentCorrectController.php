@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuditLogger;
 
 class PaymentCorrectController extends Controller
 {
@@ -20,6 +21,8 @@ class PaymentCorrectController extends Controller
         if (!$user || $user->role !== UserRoleEnum::ADMIN) {
             return back()->with('warning', __('validations/validations.payment_correct.admin_only'));
         }
+        $audit = app(AuditLogger::class);
+        $auditData = [];
 
         // Cannot correct already voided
         if ($payment->voided_at) {
@@ -63,23 +66,6 @@ class PaymentCorrectController extends Controller
             return back()->with('warning', __('validations/validations.payment_correct.future_payment_date_not_allowed'))->withInput();
         }
 
-        // $method = $data['payment_method'];
-        // $received = $this->toMoney($data['pay_amount']);
-        // $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
-        // $cardTotal = $this->toMoney($data['card_total'] ?? 0);
-
-        // // Normalize totals by method
-        // if ($method === 'cash') {
-        //     $cashTotal = $received;
-        //     $cardTotal = 0.0;
-        // } elseif ($method === 'card' || $method === 'phone') {
-        //     $cashTotal = 0.0;
-        //     $cardTotal = $received;
-        // } else {
-        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
-        //         return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
-        //     }
-        // }
         $method = $data['payment_method'];
         $received = $this->toMoney($data['pay_amount']);
         $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
@@ -114,8 +100,9 @@ class PaymentCorrectController extends Controller
         $reason = preg_replace('/\s+/', ' ', $reason);
 
         try {
-            // DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $note, $reason) {
-            DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason) {
+            // DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason) {
+            DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason, &$auditData) {
+
                 // lock payment row
                 $p = CreditPayment::query()->lockForUpdate()->findOrFail($payment->id);
 
@@ -219,7 +206,9 @@ class PaymentCorrectController extends Controller
                     'paid_note' => $finalNote,
                 ])->save();
 
-                CreditPayment::create([
+                // CreditPayment::create([
+                $newPayment = CreditPayment::create([
+
                     'credit_logicalref' => (int)$c->logicalref,
 
                     'customer_name' => mb_substr((string)$c->name, 0, 255),
@@ -229,7 +218,8 @@ class PaymentCorrectController extends Controller
                     'branch' => mb_substr((string)$c->branch, 0, 50),
 
                     // PAYMENT RECEIVED BY: ORIGINAL CASHIER TO REMAIN
-                    'created_by' => (int) ($p->created_by ?? 0),
+                    // 'created_by' => (int) ($p->created_by ?? 0),
+                    'created_by' => $p->created_by,
                     'created_by_name' => mb_substr((string) ($p->created_by_name ?? 'N/A'), 0, 255),
                     'created_by_email' => mb_substr((string) ($p->created_by_email ?? ''), 0, 255),
                     'created_by_phone' => mb_substr((string) ($p->created_by_phone ?? ''), 0, 50),
@@ -258,10 +248,89 @@ class PaymentCorrectController extends Controller
 
                     'corrected_from_payment_id' => $p->id,
                 ]);
+
+                $auditData = [
+                    'payment' => $newPayment,
+                    'old_values' => [
+                        'old_payment_id' => $p->id,
+                        'old_pay_amount' => $oldReceived,
+                        'old_change_amount' => $oldChange,
+                        'old_applied' => $oldApplied,
+                        'paid_local_before' => $paidLocal,
+                    ],
+                    'new_values' => [
+                        'new_payment_id' => $newPayment->id,
+                        'new_pay_amount' => $received,
+                        'new_change_amount' => $change,
+                        'new_applied' => $apply,
+                        'paid_local_after' => $newPaidLocal,
+                    ],
+                    'extra' => [
+                        'credit_logicalref' => (int) $c->logicalref,
+                        'method' => $method,
+                        'cash_amount' => $cashTotal,
+                        'card_amount' => $cardTotal,
+                        'phone_amount' => $phoneTotal,
+                        'reason' => $reason,
+                        'customer_name' => $c->name,
+                        'customer_contract' => $c->contract,
+                        'corrected_from_payment_id' => $p->id,
+                    ],
+                ];
             });
+            // } catch (\Throwable $e) {
+            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_correct.correction_failed');
+            //     return back()->with('warning', $msg)->withInput();
+            // }
+
         } catch (\Throwable $e) {
-            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_correct.correction_failed');
+            $msg = $e instanceof \RuntimeException
+                ? $e->getMessage()
+                : __('validations/validations.payment_correct.correction_failed');
+
+            $audit->log(
+                action: 'payment_correct_failed',
+                category: 'payment',
+                subject: $payment ?? null,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'payment_id' => $payment->id ?? null,
+                    'payment_method' => $method ?? null,
+                    'pay_amount' => $received ?? null,
+                    'reason' => $reason ?? null,
+                    'error' => $msg,
+                ],
+                message: 'Payment correction failed',
+                isSuccess: false,
+                severity: 'critical',
+                isSuspicious: true
+            );
+
             return back()->with('warning', $msg)->withInput();
+        }
+
+
+        if (!empty($auditData)) {
+            $audit->log(
+                action: 'payment_corrected',
+                category: 'payment',
+                subject: $auditData['payment'],
+                oldValues: $auditData['old_values'],
+                newValues: $auditData['new_values'],
+                extra: $auditData['extra'],
+                message: 'Payment corrected',
+                isSuccess: true,
+                severity: 'critical',
+                isSuspicious: true
+            );
+
+            $audit->alert(
+                alertType: 'payment_corrected',
+                riskLevel: 'critical',
+                message: 'A payment was corrected',
+                meta: $auditData['extra']
+            );
         }
 
         return back()->with('success', __('validations/validations.payment_correct.corrected_success'));
