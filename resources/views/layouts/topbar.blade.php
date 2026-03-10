@@ -108,7 +108,7 @@
                                     {{ $user->fullname ?? __('menu.guest') }}
                                 </span>
                                 <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">
-                                    {{ $user->role ?? '-' }}
+                                    {{ $user->role?->label() ?? '-' }}
                                 </span>
                             </span>
                         </span>

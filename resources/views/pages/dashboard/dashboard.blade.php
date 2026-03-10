@@ -237,25 +237,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        {{-- <div class="col">
-                            <div class="mt-3 mt-md-0 py-4 px-3">
-                                <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.mixed_net') }}</h5>
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0">
-                                        <i class="ri-exchange-dollar-line display-6 text-muted"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h2 class="mb-0">
-                                            {{ number_format($kpi['total_mixed'] ?? 0, 2) }}
-                                            <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                        </h2>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
-
-
                         <div class="col">
                             <div class="mt-3 mt-md-0 py-4 px-3">
                                 <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.phone_total') }}</h5>
@@ -289,23 +270,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        {{-- <div class="col">
-                            <div class="mt-3 mt-lg-0 py-4 px-3">
-                                <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.avg_payment') }}</h5>
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0">
-                                        <i class="ri-line-chart-line display-6 text-muted"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h2 class="mb-0">
-                                            {{ number_format($kpi['avg_net'] ?? 0, 2) }}
-                                            <small class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                        </h2>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
                         <div class="col">
                             <div class="mt-3 mt-lg-0 py-4 px-3">
                                 <h5 class="text-muted text-uppercase fs-13">{{ __('admin_dashboard.mixed_tx_count') }}
@@ -439,6 +403,66 @@
     <div class="row">
         <div class="col-xxl-12">
             <div class="card">
+                <div class="card-header d-flex flex-column flex-xl-row align-items-start align-items-xl-center gap-3">
+
+                    <h4 class="card-title mb-0 flex-grow-1 w-100">
+                        {{ __('admin_dashboard.collection') }} ({{ $periodText }})
+                    </h4>
+
+                    <form class="w-100 w-xl-auto" method="GET" action="{{ route('dashboard') }}">
+                        <input type="hidden" name="period" value="custom">
+
+                        <div class="row g-2">
+                            <div class="col-12 col-md">
+                                <input type="date" name="start" class="form-control"
+                                    value="{{ request('start') ?? \Carbon\Carbon::parse($start)->format('Y-m-d') }}">
+                            </div>
+
+                            <div class="col-12 col-md">
+                                <input type="date" name="end" class="form-control"
+                                    value="{{ request('end') ?? \Carbon\Carbon::parse($end)->format('Y-m-d') }}">
+                            </div>
+
+                            <div class="col-12 col-md-auto">
+                                <button class="btn btn-primary w-100" type="submit">
+                                    {{ __('admin_dashboard.apply') }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="w-100 w-xl-auto">
+                        <div class="dropdown card-header-dropdown">
+                            <a class="text-reset dropdown-btn d-inline-block" href="#" data-bs-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                                <span class="fw-semibold text-uppercase fs-12">
+                                    {{ __('admin_dashboard.period_label') }}:
+                                </span>
+                                <span class="text-muted">
+                                    {{ $periodText }}
+                                    <i class="mdi mdi-chevron-down ms-1"></i>
+                                </span>
+                            </a>
+
+                            <div class="dropdown-menu dropdown-menu-end">
+                                @foreach ($periodItems as $key => $label)
+                                    <a class="dropdown-item"
+                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-body pb-0">
+                    <div id="sales-forecast-chart" data-colors='["--vz-primary", "--vz-success", "--vz-warning"]'
+                        class="apex-charts" dir="ltr"></div>
+                </div>
+            </div>
+        </div>
+        {{-- <div class="col-xxl-12">
+            <div class="card">
                 <div class="card-header align-items-center d-flex">
                     <h4 class="card-title mb-0 flex-grow-1">
                         {{ __('admin_dashboard.collection') }} ({{ $periodText }})
@@ -482,7 +506,7 @@
                         class="apex-charts" dir="ltr"></div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="col-xxl-12">
             <div class="card card-height-100">
@@ -510,46 +534,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- <div class="card-body px-0">
-                    <ul class="list-inline main-chart text-center mb-0">
-                        <li class="list-inline-item chart-border-left me-0 border-0">
-                            <h4>
-                                {{ number_format($kpi['total_cash'] ?? 0, 2) }} <small
-                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span
-                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.cash') }}</span>
-                            </h4>
-                        </li>
-                        <li class="list-inline-item chart-border-left me-0">
-                            <h4>
-                                {{ number_format($kpi['total_card'] ?? 0, 2) }} <small
-                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span
-                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.card') }}</span>
-                            </h4>
-                        </li>
-                        <li class="list-inline-item chart-border-left me-0">
-                            <h4>
-                                {{ number_format($kpi['total_phone'] ?? 0, 2) }} <small
-                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span
-                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.phone') }}</span>
-                            </h4>
-                        </li>
-                        <li class="list-inline-item chart-border-left me-0">
-                            <h4>
-                                {{ number_format($kpi['total_mixed'] ?? 0, 2) }} <small
-                                    class="text-muted">{{ __('admin_dashboard.currency') }}</small>
-                                <span
-                                    class="text-muted d-inline-block fs-13 align-middle ms-2">{{ __('admin_dashboard.mixed') }}</span>
-                            </h4>
-                        </li>
-                    </ul>
-                    <div id="revenue-expenses-charts" data-colors='["--vz-success","--vz-primary","--vz-warning"]'
-                        class="apex-charts" dir="ltr">
-                    </div>
-                </div> --}}
 
                 <div class="card-body px-0">
                     <ul class="list-inline main-chart text-center mb-0">

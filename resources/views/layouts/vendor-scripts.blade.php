@@ -5,7 +5,7 @@
 <script src="{{ URL::asset('build/js/pages/plugins/lord-icon-2.1.0.js') }}"></script>
 <script src="{{ URL::asset('build/js/plugins.js') }}"></script>
 
-{{-- Velzon core (navbar, menu, icon replace vs) --}}
+{{-- core (navbar, menu, icon replace vs) --}}
 <script src="{{ asset('build/js/velzon-core-custom.js') }}"></script>
 
 {{-- Senin fullscreen + theme --}}
