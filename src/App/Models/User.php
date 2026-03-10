@@ -30,6 +30,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'token',
+
     ];
 
     protected $casts = [
@@ -40,5 +42,55 @@ class User extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return trim("{$this->firstname} {$this->lastname}");
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRoleEnum::SUPER_ADMIN;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRoleEnum::ADMIN;
+    }
+
+    public function isAdminLike(): bool
+    {
+        return in_array($this->role, [
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+        ], true);
+    }
+
+    public function hasRole(UserRoleEnum ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN
+        );
+    }
+
+    public function canVoidPayments(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+            // UserRoleEnum::OPERATOR
+
+        );
+    }
+
+    public function canCorrectPayments(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+            // UserRoleEnum::OPERATOR
+        );
     }
 }

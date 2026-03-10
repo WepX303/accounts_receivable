@@ -13,10 +13,37 @@ use App\Services\AuditLogger;
 class UserController extends Controller
 {
     // INDEX
+    // public function __invoke(Request $request)
+    // {
+    //     $users = User::orderBy('id', 'asc')->paginate(10);
+    //     $roles = array_map(fn($role) => $role->value, UserRoleEnum::cases());
+
+    //     return view('pages.users.index', compact('users', 'roles'));
+    // }
     public function __invoke(Request $request)
     {
-        $users = User::orderBy('id', 'asc')->paginate(10);
-        $roles = array_map(fn($role) => $role->value, UserRoleEnum::cases());
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        $query = User::orderBy('id', 'asc');
+
+        if (!$currentUser?->isSuperAdmin()) {
+            $query->where('role', '!=', UserRoleEnum::SUPER_ADMIN->value);
+        }
+
+        $users = $query->paginate(10);
+
+        $roles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser?->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => $role->value)
+            ->values()
+            ->all();
 
         return view('pages.users.index', compact('users', 'roles'));
     }
@@ -25,13 +52,33 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return back()->with('warning', 'You do not have permission to create users.')->withInput();
+        }
+
+        $allowedRoles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => $role->value)
+            ->values()
+            ->all();
+
         $request->validate([
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phonenumber' => 'required|unique:users,phonenumber',
             'password' => 'required|min:6',
-            'role' => ['required', new Enum(UserRoleEnum::class)],
+            // 'role' => ['required', new Enum(UserRoleEnum::class)],
+            'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -58,6 +105,20 @@ class UserController extends Controller
             'status.required' => __('validations/validations.users.status_required'),
             'status.boolean'  => __('validations/validations.users.status_boolean'),
         ]);
+
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        if (
+            $request->role === UserRoleEnum::SUPER_ADMIN->value &&
+            (!$currentUser || !$currentUser->isSuperAdmin())
+        ) {
+            return back()->with('warning', 'Only Super Admin can create Super Admin user.')->withInput();
+        }
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return back()->with('warning', 'You do not have permission to create users.')->withInput();
+        }
 
         $audit = app(AuditLogger::class);
 
@@ -101,13 +162,39 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
 
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return back()->with('warning', 'You do not have permission to update users.')->withInput();
+        }
+
+        if (
+            $user->role === UserRoleEnum::SUPER_ADMIN &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return back()->with('warning', 'You cannot modify Super Admin user.')->withInput();
+        }
+
+        $allowedRoles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => $role->value)
+            ->values()
+            ->all();
 
         $request->validate([
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
-            'role' => ['required', new Enum(UserRoleEnum::class)],
+            // 'role' => ['required', new Enum(UserRoleEnum::class)],
+            'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -131,6 +218,27 @@ class UserController extends Controller
             'status.required' => __('validations/validations.users.status_required'),
             'status.boolean'  => __('validations/validations.users.status_boolean'),
         ]);
+
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return back()->with('warning', 'You do not have permission to update users.')->withInput();
+        }
+
+        if (
+            $user->role === UserRoleEnum::SUPER_ADMIN &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return back()->with('warning', 'You cannot modify Super Admin user.')->withInput();
+        }
+
+        if (
+            $request->role === UserRoleEnum::SUPER_ADMIN->value &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return back()->with('warning', 'Only Super Admin can assign Super Admin role.')->withInput();
+        }
 
         $audit = app(AuditLogger::class);
 
@@ -221,6 +329,25 @@ class UserController extends Controller
     // DELETE
     public function destroy(User $user)
     {
+
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = auth()->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return back()->with('warning', 'You do not have permission to delete users.');
+        }
+
+        if (
+            $user->role === UserRoleEnum::SUPER_ADMIN &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return back()->with('warning', 'You cannot delete Super Admin user.');
+        }
+
+        if ($currentUser->id === $user->id) {
+            return back()->with('warning', 'You cannot delete your own account.');
+        }
+
         $audit = app(AuditLogger::class);
 
         $old = $user->only([

@@ -17,10 +17,15 @@ class PaymentVoidController extends Controller
     public function __invoke(Request $request, CreditPayment $payment)
     {
         // Admin only
+        // $user = Auth::user();
+        // if (!$user || $user->role !== UserRoleEnum::ADMIN) {
+        //     return back()->with('warning', __('validations/validations.payment_void.admin_only'));
+        // }
+
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-
-        if (!$user || $user->role !== UserRoleEnum::ADMIN) {
+        if (!$user || !$user->canVoidPayments()) {
             return back()->with('warning', __('validations/validations.payment_void.admin_only'));
         }
 

@@ -58,18 +58,18 @@ Route::middleware(['auth.token'])->group(function () {
      */
 
     // Customer info: Admin, Cashier, Operator
-    Route::middleware(['role:Admin,Cashier,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin,Cashier,Operator'])->group(function () {
         Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
     });
 
     // Payments (ödeme al): Admin, Cashier, Operator
-    Route::middleware(['role:Admin,Cashier,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin,Cashier,Operator'])->group(function () {
         Route::get('/payments', CustomersPaymentController::class)->name('payments');
         Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
     });
 
     // Report: Admin, Cashier, Analyst, Operator
-    Route::middleware(['role:Admin,Cashier,Analyst,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin,Cashier,Analyst,Operator'])->group(function () {
         Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
     });
 
@@ -77,12 +77,12 @@ Route::middleware(['auth.token'])->group(function () {
      * CUSTOMERS LIST + EXPORT
      * Manager/Analyst/Operator/Admin
      */
-    Route::middleware(['role:Admin,Manager,Analyst,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers', CustomersController::class)->name('customers');
     });
 
     // Export: Admin + Operator + Manager + Analyst
-    Route::middleware(['role:Admin,Manager,Analyst,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
     });
 
@@ -90,21 +90,22 @@ Route::middleware(['auth.token'])->group(function () {
      * PAYMENT EDIT ACTIONS (void/correct)
      * Admin + Operator
      */
-    Route::middleware(['role:Admin,Operator'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
         Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
         Route::post('/payments/{payment}/correct', PaymentCorrectController::class)->name('payments.correct');
     });
 
-    Route::middleware(['role:Admin'])->group(function () {
-
+    /**
+     * LOGS (ONLY SUPERADMIN )
+     */
+    Route::middleware(['role:SuperAdmin'])->group(function () {
         Route::get('/logs', LogsController::class)->name('logs');
     });
 
-
     /**
-     * SETTINGS (USERS MANAGEMENT) - Admin only
+     * SETTINGS (USERS MANAGEMENT) - SuperAdmin + Admin   
      */
-    Route::middleware(['role:Admin'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', UserController::class)->name('index');
             Route::post('/', [UserController::class, 'store'])->name('store');

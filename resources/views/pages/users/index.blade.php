@@ -67,7 +67,7 @@
                                             </td>
                                             <td>
                                                 <ul class="list-inline hstack gap-2 mb-0">
-                                                    <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                    {{-- <li class="list-inline-item" data-bs-toggle="tooltip"
                                                         data-bs-trigger="hover" data-bs-placement="top"
                                                         title="{{ __('pages/users.edit') }}">
                                                         <a href="#showModal" data-bs-toggle="modal"
@@ -77,14 +77,32 @@
                                                             data-lastname="{{ $user->lastname }}"
                                                             data-email="{{ $user->email }}"
                                                             data-phonenumber="{{ $user->phonenumber }}"
-                                                            data-position="{{ $user->position }}" {{-- data-role="{{ $user->role }}" --}}
+                                                            data-position="{{ $user->position }}" 
                                                             data-role="{{ $user->role?->value }}"
                                                             data-status="{{ $user->status }}">
                                                             <i class="ri-pencil-fill fs-16"></i>
                                                         </a>
-                                                    </li>
+                                                    </li> --}}
+                                                    @if (auth()->user()->isSuperAdmin() || $user->role !== \App\Enums\UserRoleEnum::SUPER_ADMIN)
+                                                        <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                            data-bs-trigger="hover" data-bs-placement="top"
+                                                            title="{{ __('pages/users.edit') }}">
+                                                            <a href="#showModal" data-bs-toggle="modal"
+                                                                class="text-primary d-inline-block edit-item-btn"
+                                                                data-id="{{ $user->id }}"
+                                                                data-firstname="{{ $user->firstname }}"
+                                                                data-lastname="{{ $user->lastname }}"
+                                                                data-email="{{ $user->email }}"
+                                                                data-phonenumber="{{ $user->phonenumber }}"
+                                                                data-position="{{ $user->position }}"
+                                                                data-role="{{ $user->role?->value }}"
+                                                                data-status="{{ $user->status }}">
+                                                                <i class="ri-pencil-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                    @endif
 
-                                                    <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                    {{-- <li class="list-inline-item" data-bs-toggle="tooltip"
                                                         data-bs-trigger="hover" data-bs-placement="top"
                                                         title="{{ __('pages/users.remove') }}">
                                                         <button type="button"
@@ -92,7 +110,18 @@
                                                             data-id="{{ $user->id }}">
                                                             <i class="ri-delete-bin-5-fill fs-16"></i>
                                                         </button>
-                                                    </li>
+                                                    </li> --}}
+                                                    @if (auth()->user()->isSuperAdmin() || $user->role !== \App\Enums\UserRoleEnum::SUPER_ADMIN)
+                                                        <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                            data-bs-trigger="hover" data-bs-placement="top"
+                                                            title="{{ __('pages/users.remove') }}">
+                                                            <button type="button"
+                                                                class="text-danger d-inline-block border-0 bg-transparent p-0 delete-btn"
+                                                                data-id="{{ $user->id }}">
+                                                                <i class="ri-delete-bin-5-fill fs-16"></i>
+                                                            </button>
+                                                        </li>
+                                                    @endif
                                                 </ul>
                                             </td>
                                         </tr>
@@ -180,9 +209,28 @@
                                             <select name="role"
                                                 class="form-control @error('role') is-invalid @enderror" required>
                                                 <option value="">{{ __('pages/users.select_role') }}</option>
-                                                @foreach (\App\Enums\UserRoleEnum::cases() as $role)
+                                                {{-- @foreach (\App\Enums\UserRoleEnum::cases() as $role)
                                                     <option value="{{ $role->value }}"
                                                         {{ old('role', $user->role?->value ?? '') == $role->value ? 'selected' : '' }}>
+                                                        {{ $role->label() }}
+                                                    </option>
+                                                @endforeach --}}
+                                                @php
+                                                    $authUser = auth()->user();
+                                                    $availableRoles = collect(\App\Enums\UserRoleEnum::cases())->filter(
+                                                        function ($role) use ($authUser) {
+                                                            if ($authUser?->isSuperAdmin()) {
+                                                                return true;
+                                                            }
+
+                                                            return $role !== \App\Enums\UserRoleEnum::SUPER_ADMIN;
+                                                        },
+                                                    );
+                                                @endphp
+
+                                                @foreach ($availableRoles as $role)
+                                                    <option value="{{ $role->value }}"
+                                                        {{ old('role') == $role->value ? 'selected' : '' }}>
                                                         {{ $role->label() }}
                                                     </option>
                                                 @endforeach

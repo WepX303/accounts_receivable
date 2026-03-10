@@ -300,7 +300,7 @@
                                                 <div class="fw-medium">
                                                     {{ $c->branch }} /
 
-                                                    @if (auth()->check() && in_array(auth()->user()->role?->value, ['Admin', 'Cashier', 'Operator']))
+                                                    @if (auth()->check() && in_array(auth()->user()->role?->value, ['SuperAdmin','Admin', 'Cashier', 'Operator']))
                                                         <a href="{{ route('payments', ['id' => (string) $c->logicalref]) }}"
                                                             class="text-decoration-underline text-primary">
                                                             {{ $c->contract }}

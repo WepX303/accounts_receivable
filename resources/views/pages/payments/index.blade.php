@@ -326,9 +326,12 @@
                                         // $isAdmin = auth()->user() && auth()->user()->role->value === 'Admin';
                                     @endphp
 
-                                    @php
+                                    {{-- @php
                                         $isAdmin =
                                             auth()->check() && auth()->user()->role === \App\Enums\UserRoleEnum::ADMIN;
+                                    @endphp --}}
+                                    @php
+                                        $isAdmin = auth()->check() && auth()->user()->isAdminLike();
                                     @endphp
 
                                     @if ($isAdmin && empty($h->voided_at))
