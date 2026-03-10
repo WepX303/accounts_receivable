@@ -410,7 +410,7 @@
 
     {{-- Charts --}}
     <div class="row">
-        <div class="col-xxl-12">
+        {{-- <div class="col-xxl-12">
             <div class="card">
                 <div class="card-header d-flex flex-column flex-xl-row align-items-start align-items-xl-center gap-3">
 
@@ -469,7 +469,97 @@
                         class="apex-charts" dir="ltr"></div>
                 </div>
             </div>
+        </div> --}}
+
+        <div class="col-xxl-12">
+    <div class="card">
+        <div class="card-header">
+            <div class="row g-3 align-items-xl-center justify-content-between">
+
+                {{-- Sol taraf --}}
+                <div class="col-12 col-xl">
+                    <h4 class="card-title mb-0">
+                        {{ __('admin_dashboard.collection') }} ({{ $periodText }})
+                    </h4>
+                </div>
+
+                {{-- Sağ taraf --}}
+                <div class="col-12 col-xl-auto">
+                    <div class="row g-2 justify-content-xl-end align-items-stretch">
+
+                        {{-- Tarih aralığı formu --}}
+                        <div class="col-12 col-lg-auto">
+                            <form method="GET" action="{{ route('dashboard') }}">
+                                <input type="hidden" name="period" value="custom">
+
+                                <div class="row g-2">
+                                    <div class="col-12 col-sm-6 col-lg-auto">
+                                        <input
+                                            type="date"
+                                            name="start"
+                                            class="form-control"
+                                            value="{{ request('start') ?? \Carbon\Carbon::parse($start)->format('Y-m-d') }}">
+                                    </div>
+
+                                    <div class="col-12 col-sm-6 col-lg-auto">
+                                        <input
+                                            type="date"
+                                            name="end"
+                                            class="form-control"
+                                            value="{{ request('end') ?? \Carbon\Carbon::parse($end)->format('Y-m-d') }}">
+                                    </div>
+
+                                    <div class="col-12 col-sm-12 col-lg-auto">
+                                        <button class="btn btn-primary w-100" type="submit">
+                                            {{ __('admin_dashboard.apply') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        {{-- Period dropdown --}}
+                        <div class="col-12 col-lg-auto">
+                            <div class="dropdown">
+                                <a class="btn btn-light border w-100 d-flex align-items-center justify-content-between"
+                                   href="#"
+                                   data-bs-toggle="dropdown"
+                                   aria-haspopup="true"
+                                   aria-expanded="false">
+                                    <span class="text-start">
+                                        <span class="fw-semibold text-uppercase fs-12">
+                                            {{ __('admin_dashboard.period_label') }}:
+                                        </span>
+                                        <span class="text-muted ms-1">{{ $periodText }}</span>
+                                    </span>
+                                    <i class="mdi mdi-chevron-down ms-2 flex-shrink-0"></i>
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end w-100">
+                                    @foreach ($periodItems as $key => $label)
+                                        <a class="dropdown-item {{ ($period ?? 'today') == $key ? 'active' : '' }}"
+                                           href="{{ route('dashboard', ['period' => $key]) }}">
+                                            {{ $label }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
+
+        <div class="card-body pb-0">
+            <div id="sales-forecast-chart"
+                 data-colors='["--vz-primary", "--vz-success", "--vz-warning"]'
+                 class="apex-charts"
+                 dir="ltr"></div>
+        </div>
+    </div>
+</div>
 
         <div class="col-xxl-12">
             <div class="card card-height-100">

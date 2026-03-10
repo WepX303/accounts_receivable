@@ -1,0 +1,2091 @@
+================ CONTROLLERS ================
+
+===== FILE: src/App/Http/Controllers/Auth/AuthController.php =====
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AuthController extends Controller
+{
+    // Login form
+    public function showLoginForm(Request $request)
+    {
+        $token = $request->cookie('auth_token');
+
+        if ($token) {
+            $user = User::where('token', $token)
+                ->where('token_expires_at', '>', now())
+                ->first();
+
+            if ($user) {
+                return redirect()->route('dashboard');
+            } else {
+                // If there is an invalid token, delete the cookie
+                return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
+            }
+        }
+
+        return view('auth.login');
+    }
+
+    // Login
+    public function login(Request $request)
+    {
+        $request->validate([
+            'login' => 'required',
+            'password' => 'required',
+        ], [
+            'login.required' => __('validations/validations.auth.login_required'),
+            'password.required' => __('validations/validations.auth.password_required'),
+        ]);
+
+        $login = $request->login;
+
+        $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[0-9\+\-\s]{6,20}$/', $login);
+
+        $user = User::where('email', $login)
+            ->orWhere('phonenumber', $login)
+            ->first();
+
+        if (! $user) {
+            $errorMessage = $isEmail
+                ? __('validations/validations.auth.email_not_found')
+                : ($isPhone ? __('validations/validations.auth.phone_not_found') : __('validations/validations.auth.invalid_login'));
+
+            return back()->withErrors(['login' => $errorMessage])->withInput();
+        }
+
+        // Status control
+        if (! $user->status) {
+            return back()->withErrors(['login' => __('validations/validations.auth.account_inactive')])->withInput();
+        }
+
+        if (! Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => __('validations/validations.auth.wrong_password')])->withInput();
+        }
+
+        // Create new token
+        $token = bin2hex(random_bytes(32));
+        $user->token = $token;
+        $user->token_expires_at = now()->addDay();
+        $user->save();
+
+        // Create a cookie and redirect
+        return redirect()->route('dashboard')->withCookie(
+            cookie(
+                'auth_token',
+                $token,
+                60 * 24,    // 1 day
+                '/',          // valid for all paths
+                null,
+                false,
+                true    // httpOnly
+            )
+        );
+    }
+
+    // Logout
+    public function logout(Request $request)
+    {
+        $token = $request->cookie('auth_token');
+
+        if ($token) {
+            $user = User::where('token', $token)->first();
+            if ($user) {
+                $user->token = null;
+                $user->token_expires_at = null;
+                $user->save();
+            }
+        }
+
+        // Delete the cookie for all paths and domains and add a cache control header.
+        $cookie = cookie()->forget('auth_token');
+
+        return redirect()->route('login')
+            ->withCookie($cookie)
+            ->withHeaders([
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Controller.php =====
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
+
+class Controller extends BaseController
+{
+    use AuthorizesRequests, ValidatesRequests;
+}
+
+===== FILE: src/App/Http/Controllers/Customers/CustomersController.php =====
+<?php
+
+namespace App\Http\Controllers\Customers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Credit;
+use App\Models\CreditPayment;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class CustomersController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+
+        // $request->validate([
+        //     'q' => 'nullable|string|max:100',
+        //     'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+        // ], [
+        //     'q.string' => __('validations/validations.customers.q_string'),
+        //     'q.max' => __('validations/validations.customers.q_max'),
+        //     'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+        // ]);
+
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ], [
+            'q.string' => __('validations/validations.customers.q_string'),
+            'q.max' => __('validations/validations.customers.q_max'),
+            'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+
+            'date_from.date' => __('validations/validations.customers.date_from_date'),
+            'date_to.date' => __('validations/validations.customers.date_to_date'),
+            'date_to.after_or_equal' => __('validations/validations.customers.date_to_after_or_equal'),
+        ]);
+
+        // Search
+        $q = trim((string) ($request->get('q') ?? ''));
+        if ($q === 'null') {
+            $q = '';
+        }
+
+        // Quick Filter
+        // $quick = (string) $request->get('quick_filter', 'all');
+
+        // // Date ranges (payment-based)
+        // [$from, $to] = match ($quick) {
+        //     'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+        //     'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
+        //     'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
+        //     'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
+        //     'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
+        //     'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
+        //     'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
+        //     'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
+        //     'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
+        //     default => [null, null],
+        // };
+
+        // Quick Filter
+        $quick = (string) $request->get('quick_filter', 'all');
+
+        // Manual date range (payment date range)
+        $dateFromInput = $request->get('date_from');
+        $dateToInput   = $request->get('date_to');
+
+        $dateFrom = $dateFromInput ? Carbon::parse($dateFromInput)->startOfDay() : null;
+        $dateTo   = $dateToInput   ? Carbon::parse($dateToInput)->endOfDay() : null;
+
+        // Quick filter ranges (payment-based)
+        [$quickFrom, $quickTo] = match ($quick) {
+            'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
+            'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
+            'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
+            'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
+            'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
+            'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
+            'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
+            'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
+            'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
+            default => [null, null],
+        };
+
+        // Priority: manual date range > quick filter
+        $from = ($dateFrom && $dateTo) ? $dateFrom : $quickFrom;
+        $to   = ($dateFrom && $dateTo) ? $dateTo   : $quickTo;
+
+        // Period column range (same as $from/$to, default today)
+        [$periodFrom, $periodTo] = ($from && $to)
+            ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
+            : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+
+        // Table header label
+        if ($dateFrom && $dateTo) {
+            $periodLabel = $dateFrom->format('Y-m-d') . ' → ' . $dateTo->format('Y-m-d');
+        } else {
+            $periodLabel = match ($quick) {
+                'paid_today' => __('pages/customers_index.today_paid'),
+                'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
+                'paid_7d' => __('pages/customers_index.paid_last_7_days'),
+                'paid_14d' => __('pages/customers_index.paid_last_14_days'),
+                'paid_1m' => __('pages/customers_index.paid_last_1_month'),
+                'paid_3m' => __('pages/customers_index.paid_last_3_months'),
+                'paid_6m' => __('pages/customers_index.paid_last_6_months'),
+                'paid_9m' => __('pages/customers_index.paid_last_9_months'),
+                'paid_12m' => __('pages/customers_index.paid_last_12_months'),
+                default => __('pages/customers_index.today_paid'),
+            };
+        }
+
+        // Dynamic date range for the ‘Today Paid’ column in the table
+        // If the payment-based filter is selected (where $from/$to are populated), use that range;
+        // otherwise, use today by default.
+        [$periodFrom, $periodTo] = ($from && $to)
+            ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
+            : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
+
+        $periodLabel = match ($quick) {
+            'paid_today' => __('pages/customers_index.today_paid'),
+            'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
+            'paid_7d' => __('pages/customers_index.paid_last_7_days'),
+            'paid_14d' => __('pages/customers_index.paid_last_14_days'),
+            'paid_1m' => __('pages/customers_index.paid_last_1_month'),
+            'paid_3m' => __('pages/customers_index.paid_last_3_months'),
+            'paid_6m' => __('pages/customers_index.paid_last_6_months'),
+            'paid_9m' => __('pages/customers_index.paid_last_9_months'),
+            'paid_12m' => __('pages/customers_index.paid_last_12_months'),
+            default => __('pages/customers_index.today_paid'),
+        };
+
+        /**
+         * =========================
+         *  DASHBOARD CARDS (STATS)
+         * =========================
+         */
+        $todayFrom = Carbon::today()->startOfDay();
+        $todayTo = Carbon::today()->endOfDay();
+
+        $yFrom = Carbon::yesterday()->startOfDay();
+        $yTo = Carbon::yesterday()->endOfDay();
+
+        $stats = [
+            // today's collection
+            'paid_today_sum' => (float) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
+                ->sum(DB::raw('pay_amount - COALESCE(change_amount,0)')),
+
+            'paid_today_cnt' => (int) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$todayFrom, $todayTo])
+                ->count(),
+
+            'paid_y_sum' => (float) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$yFrom, $yTo])
+                ->sum(DB::raw('pay_amount - COALESCE(change_amount,0)')),
+
+            'paid_y_cnt' => (int) CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$yFrom, $yTo])
+                ->count(),
+
+            // number of customers in debt (CENTRAL amount/paid)
+            'has_debt_cnt' => (int) Credit::query()
+                ->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)')
+                ->count(),
+
+            // local != remote paid rows (the ones we coloured red in the table)
+            'paid_mismatch_cnt' => (int) Credit::query()
+                ->whereNotNull('paid_local')
+                ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)')
+                ->count(),
+
+        ];
+
+        /**
+         * =========================
+         *  MAIN LIST QUERY
+         * =========================
+         */
+        $credit_users = Credit::query()
+
+            /* SEARCH */
+            ->when($q !== '', function ($query) use ($q) {
+                $like = '%' . $q . '%';
+                $query->where(function ($qq) use ($like) {
+                    $qq->where('name', 'ilike', $like)
+                        ->orWhere('phone', 'ilike', $like)
+                        ->orWhere('passport', 'ilike', $like)
+                        ->orWhere('contract', 'ilike', $like)
+                        ->orWhere('clientref', 'ilike', $like)
+                        ->orWhere('assurance', 'ilike', $like);
+                });
+            })
+
+            /* BY PAYMENT DATE (via credit_payments) */
+            ->when($from && $to, function ($query) use ($from, $to) {
+                $table = $query->getModel()->getTable();
+
+                $query->whereExists(function ($sub) use ($from, $to, $table) {
+                    $sub->selectRaw('1')
+                        ->from('credit_payments')
+                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereNull('credit_payments.voided_at')
+                        ->whereBetween('credit_payments.created_at', [$from, $to]);
+                });
+            })
+
+            /* OUTSTANDING DEBTS (CENTRE: amount/paid) */
+            ->when($quick === 'has_debt', function ($query) {
+                $query->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)');
+            })
+
+            /* THOSE WITHOUT DEBT (CENTRE: amount/paid) */
+            ->when($quick === 'no_debt', function ($query) {
+                $query->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)');
+            })
+
+            /* THOSE WHO HAVE NEVER MADE A PAYMENT */
+            ->when($quick === 'no_payment', function ($query) {
+                $table = $query->getModel()->getTable();
+
+                $query->whereNotExists(function ($sub) use ($table) {
+                    $sub->selectRaw('1')
+                        ->from('credit_payments')
+                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereNull('credit_payments.voided_at');
+                });
+            })
+
+            /* THOSE WHO ARE BLOCKED */
+            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
+
+            /* ACTIVE MEMBERS */
+            ->when($quick === 'active', fn($q) => $q->where('active', true))
+
+            /* STATUS = IN PROGRESS */
+            ->when($quick === 'bermejek', function ($q) {
+                $q->whereNotNull('status')
+                    ->where('status', '!=', '')
+                    ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
+            })
+
+            /* PAID MISMATCH (LOCAL ≠ REMOTE) */
+            ->when($quick === 'paid_mismatch', function ($query) {
+                $query->whereNotNull('paid_local')
+                    ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
+            })
+
+            /* WITHOUT VOID */
+            ->withSum(['payments as period_pay_sum' => function ($q) use ($periodFrom, $periodTo) {
+                $q->whereNull('voided_at')
+                    ->whereBetween('created_at', [$periodFrom, $periodTo]);
+            }], 'pay_amount')
+
+            ->withSum(['payments as period_change_sum' => function ($q) use ($periodFrom, $periodTo) {
+                $q->whereNull('voided_at')
+                    ->whereBetween('created_at', [$periodFrom, $periodTo]);
+            }], 'change_amount')
+
+            ->orderByDesc('rv_bigint')
+            ->paginate(25)
+            ->appends($request->query());
+
+        return view('pages.customers.index', compact('credit_users', 'quick', 'stats', 'periodLabel'));
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Customers/CustomersExportController.php =====
+<?php
+
+namespace App\Http\Controllers\Customers;
+
+use App\Exports\CustomersExport;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+
+class CustomersExportController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+        ], [
+            'q.string' => __('validations/validations.customers.q_string'),
+            'q.max' => __('validations/validations.customers.q_max'),
+            'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
+        ]);
+
+        @ini_set('max_execution_time', '0');
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(0);
+
+        return Excel::download(
+            new CustomersExport($request),
+            'customers.xlsx'
+        );
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Customers/CustomersInfoController.php =====
+<?php
+
+namespace App\Http\Controllers\Customers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Credit;
+use Illuminate\Http\Request;
+
+class CustomersInfoController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'id' => 'nullable|integer|min:1',
+        ], [
+            'q.string' => __('validations/validations.customers_info.q_string'),
+            'q.max' => __('validations/validations.customers_info.q_max'),
+            'id.integer' => __('validations/validations.customers_info.id_integer'),
+            'id.min' => __('validations/validations.customers_info.id_min'),
+        ]);
+
+        $q = trim((string) $request->get('q', ''));
+        // $id = $request->get('id');
+        $id = $request->integer('id'); // null or int
+
+        $credit_users_info = Credit::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $like = '%' . $q . '%';
+                $query->where(function ($qq) use ($like) {
+                    $qq->where('name', 'ilike', $like)
+                        ->orWhere('phone', 'ilike', $like)
+                        ->orWhere('passport', 'ilike', $like)
+                        ->orWhere('contract', 'ilike', $like)
+                        ->orWhere('clientref', 'ilike', $like)
+                        ->orWhere('assurance', 'ilike', $like);
+                });
+            })
+            ->orderByDesc('rv_bigint')
+            ->paginate(16)
+            ->appends($request->query());
+
+        // Create a collection of the records on the page
+        $pageItems = collect($credit_users_info->items());
+
+        // Selected record in the right panel
+        $selected = null;
+
+        if (! empty($id)) {
+            // first find it within this page
+            $selected = $pageItems->firstWhere('logicalref', (int) $id);
+            // otherwise fetch from the database (if the id is on another page)
+            if (! $selected) {
+                $selected = Credit::query()->where('logicalref', (int) $id)->first();
+            }
+        }
+        // If there is no ID, select the first record
+        if (! $selected) {
+            $selected = $pageItems->first();
+        }
+
+        return view('pages.customers.info', compact('credit_users_info', 'selected', 'q'));
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Dashboard/DashboardController.php =====
+<?php
+
+namespace App\Http\Controllers\Dashboard;
+
+use App\Enums\UserRoleEnum;
+use App\Http\Controllers\Controller;
+use App\Models\CreditPayment;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+
+
+class DashboardController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+        $role = auth()->user()->role;
+
+        // =========================
+        // CASHIER (cashier.blade.php)
+        // =========================
+        if ($role === UserRoleEnum::CASHIER) {
+
+            $start = now()->startOfDay();
+            $end   = now()->endOfDay();
+
+
+            $base = CreditPayment::query()
+                ->notVoided()
+                ->forCashier(auth()->id());
+
+            $today = (clone $base)
+                ->whereBetween('created_at', [$start, $end])
+                ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as today_total')
+                ->selectRaw('COUNT(*) as today_count')
+                ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount, 0)), 0) as avg_payment')
+                ->selectRaw('MAX(created_at) as last_payment_at')
+                ->first();
+
+            $stats = [
+                'today_total' => (float) ($today->today_total ?? 0),
+                'today_count' => (int) ($today->today_count ?? 0),
+                'avg_payment' => (float) ($today->avg_payment ?? 0),
+                'last_payment_at' => $today->last_payment_at ?? null,
+            ];
+
+            $recentPayments = (clone $base)
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get([
+                    'pay_amount',
+                    'change_amount',
+                    'created_at',
+                    'customer_name',
+                    'customer_phone',
+                ])
+                ->map(function ($p) {
+                    $p->amount = $p->applied_amount;
+                    return $p;
+                });
+
+            return view('pages.dashboard.cashier', compact('stats', 'recentPayments'));
+        }
+
+        // =========================
+        // ADMIN (dashboard.blade.php)
+        // =========================
+
+        $request->validate([
+            'period' => 'nullable|in:today,yesterday,week,month,last7,last30,custom,all',
+            'start'  => 'nullable|date',
+            'end'    => 'nullable|date|after_or_equal:start',
+        ], [
+            'period.in' => __('validations/validations.dashboard.period_invalid'),
+            'start.date' => __('validations/validations.dashboard.start_date_invalid'),
+            'end.date' => __('validations/validations.dashboard.end_date_invalid'),
+            'end.after_or_equal' => __('validations/validations.dashboard.end_before_start'),
+        ]);
+
+
+        $period = $request->get('period', 'today');
+
+        $start = now()->startOfDay();
+        $end   = now()->endOfDay();
+
+        switch ($period) {
+            case 'today': // today
+                $start = now()->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+
+            case 'yesterday': // yesterday
+                $start = now()->subDay()->startOfDay();
+                $end   = now()->subDay()->endOfDay();
+                break;
+
+            case 'week': // this week (Monday to today)
+                $start = now()->startOfWeek()->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+
+            case 'month': // this month (1st of the month -> today)
+                $start = now()->startOfMonth()->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+
+            case 'last7': // last 7 days
+                $start = now()->subDays(6)->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+
+            case 'last30': // last 30 days
+                $start = now()->subDays(29)->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+
+            case 'custom': // custom
+                if ($request->filled('start')) {
+                    $start = Carbon::parse($request->start)->startOfDay();
+                }
+                if ($request->filled('end')) {
+                    $end = Carbon::parse($request->end)->endOfDay();
+                }
+                break;
+            case 'all':
+                $firstPaymentDate = CreditPayment::query()
+                    ->notVoided()
+                    ->min('created_at');
+
+                $start = $firstPaymentDate
+                    ? Carbon::parse($firstPaymentDate)->startOfDay()
+                    : now()->startOfDay();
+
+                $end = now()->endOfDay();
+                break;
+
+            default: // default period today
+                $period = 'today';
+                $start = now()->startOfDay();
+                $end   = now()->endOfDay();
+                break;
+        }
+
+        $dashV = (int) Cache::get('admin_dashboard:v', 1);
+
+        $cacheKey = 'admin_dashboard:' . md5(json_encode([
+            'v' => $dashV,
+            'period' => $period,
+            'start' => $start->toDateString(),
+            'end' => $end->toDateString(),
+        ]));
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($start, $end, $period) {
+
+
+            $base = CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$start, $end]);
+
+            // =========================
+            // KPI
+            // =========================
+
+            $row = (clone $base)
+                ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->selectRaw('COUNT(*) as total_count')
+                ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount,0)),0) as avg_net')
+                ->selectRaw("COALESCE(SUM(cash_amount), 0) as total_cash")
+                ->selectRaw("COALESCE(SUM(card_amount), 0) as total_card")
+                ->selectRaw("COALESCE(SUM(phone_amount), 0) as total_phone")
+                ->selectRaw("COUNT(CASE WHEN method = 'mixed' THEN 1 END) as mixed_tx_count")
+                ->selectRaw('MAX(created_at) as last_payment_at')
+                ->first();
+
+            $kpi = [
+                'total_net' => (float)($row->total_net ?? 0),
+                'total_count' => (int)($row->total_count ?? 0),
+                'avg_net' => (float)($row->avg_net ?? 0),
+
+                'total_cash' => (float)($row->total_cash ?? 0),
+                'total_card' => (float)($row->total_card ?? 0),
+                'total_phone' => (float)($row->total_phone ?? 0),
+
+                'all_total' => (float)(
+                    ($row->total_cash ?? 0) +
+                    ($row->total_card ?? 0) +
+                    ($row->total_phone ?? 0)
+                ),
+
+                'mixed_tx_count' => (int)($row->mixed_tx_count ?? 0),
+
+                'last_payment_at' => $row->last_payment_at ?? null,
+            ];
+
+            // =========================
+            // byCashier (top 12)
+            // =========================
+            $byCashier = (clone $base)
+                ->selectRaw("
+                    created_by as cashier_id,
+                    COALESCE(created_by_name, 'N/A') as cashier_name,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
+                ->groupBy('cashier_id', 'cashier_name')
+                ->orderByDesc('total_net')
+                ->limit(12)
+                ->get();
+            $topCashier = $byCashier->first();
+
+            // =========================
+            // byBranch (top 20)
+            // =========================
+            $byBranch = (clone $base)
+                ->selectRaw("
+                    COALESCE(branch, 'N/A') as branch,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
+                ->groupBy('branch')
+                ->orderByDesc('total_net')
+                ->limit(20)
+                ->get();
+
+            // =========================
+            // Recent Payments (last 20)
+            // =========================
+
+            $recentAdminPayments = (clone $base)
+                ->with(['correctedByUser:id,firstname,lastname'])
+                ->orderByDesc('id')
+                ->limit(20)
+                ->get([
+                    'id',
+                    'branch',
+                    'created_by_name',
+                    'customer_name',
+                    'customer_contract',
+                    'method',
+                    'pay_amount',
+                    'change_amount',
+                    'cash_amount',
+                    'card_amount',
+                    'phone_amount',
+                    'created_at',
+                    'corrected_by',
+                    'corrected_at',
+                    'correct_reason',
+                ])
+                ->map(function ($p) {
+                    $p->net_amount = (float)$p->pay_amount - (float)($p->change_amount ?? 0);
+                    return $p;
+                });
+
+            // =========================
+            // CHART (by period)
+            // =========================
+            $chartDaily = ['labels' => [], 'series' => []];
+
+            if ($period === 'today' || $period === 'yesterday') {
+                $hours = collect(range(0, 23));
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$start, $end])
+                    ->selectRaw("EXTRACT(HOUR FROM created_at) as h, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('h')
+                    ->pluck('total_net', 'h');
+
+                $chartDaily = [
+                    'labels' => $hours->map(fn($h) => str_pad((string)$h, 2, '0', STR_PAD_LEFT) . ':00')->values(),
+                    'series' => $hours->map(fn($h) => (float)($rows[$h] ?? 0))->values(),
+                ];
+            }
+            // elseif (in_array($period, ['week', 'last7'], true)) {
+            //     $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
+
+            //     $rows = CreditPayment::query()
+            //         ->notVoided()
+            //         ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            //         ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+            //         ->groupBy('d')
+            //         ->pluck('total_net', 'd');
+
+            //     $chartDaily = [
+            //         'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+            //         'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+            //     ];
+            // } 
+
+            elseif ($period === 'week') {
+                $weekStart = now()->startOfWeek()->startOfDay();
+                $weekEnd = now()->endOfDay();
+
+                $days = collect();
+                $cursor = $weekStart->copy();
+
+                while ($cursor <= $weekEnd) {
+                    $days->push($cursor->copy());
+                    $cursor->addDay();
+                }
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$weekStart, $weekEnd])
+                    ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('d')
+                    ->pluck('total_net', 'd');
+
+                $chartDaily = [
+                    'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+                    'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+                ];
+            } elseif ($period === 'last7') {
+                $last7Start = now()->subDays(6)->startOfDay();
+                $last7End = now()->endOfDay();
+
+                $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$last7Start, $last7End])
+                    ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('d')
+                    ->pluck('total_net', 'd');
+
+                $chartDaily = [
+                    'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+                    'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+                ];
+            } elseif ($period === 'month') {
+                $daysInMonth = now()->day;
+                $days = collect(range(1, $daysInMonth));
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$start, $end])
+                    ->selectRaw("EXTRACT(DAY FROM created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('d')
+                    ->pluck('total_net', 'd');
+
+                $chartDaily = [
+                    'labels' => $days->map(fn($d) => str_pad((string)$d, 2, '0', STR_PAD_LEFT))->values(),
+                    'series' => $days->map(fn($d) => (float)($rows[$d] ?? 0))->values(),
+                ];
+            } elseif ($period === 'last30') {
+                $days = collect(range(29, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()])
+                    ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('d')
+                    ->pluck('total_net', 'd');
+
+                $chartDaily = [
+                    'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+                    'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+                ];
+            } elseif ($period === 'all') {
+                $firstPaymentDate = CreditPayment::query()
+                    ->notVoided()
+                    ->min('created_at');
+
+                if ($firstPaymentDate) {
+                    $firstMonth = Carbon::parse($firstPaymentDate)->startOfMonth();
+                    $lastMonth = now()->startOfMonth();
+
+                    $months = collect();
+                    $cursor = $firstMonth->copy();
+
+                    while ($cursor <= $lastMonth) {
+                        $months->push($cursor->copy());
+                        $cursor->addMonth();
+                    }
+
+                    $rows = CreditPayment::query()
+                        ->notVoided()
+                        ->whereBetween('created_at', [$firstMonth->copy()->startOfDay(), now()->endOfDay()])
+                        ->selectRaw("
+                TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') as month_key,
+                COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net
+            ")
+                        ->groupBy('month_key')
+                        ->orderBy('month_key')
+                        ->pluck('total_net', 'month_key');
+
+                    $chartDaily = [
+                        'labels' => $months->map(fn($m) => $m->format('m.Y'))->values()->all(),
+                        'series' => $months->map(fn($m) => (float) ($rows[$m->format('Y-m')] ?? 0))->values()->all(),
+                    ];
+                }
+            }
+
+            return compact('kpi', 'byCashier', 'topCashier', 'byBranch', 'recentAdminPayments', 'chartDaily');
+        });
+
+        $kpi = $data['kpi'];
+        $byCashier = $data['byCashier'];
+        $topCashier = $data['topCashier'];
+        $byBranch = $data['byBranch'];
+        $recentAdminPayments = $data['recentAdminPayments'];
+        $chartDaily = $data['chartDaily'];
+
+
+        return view('pages.dashboard.dashboard', compact(
+            'kpi',
+            'chartDaily',
+            'period',
+            'start',
+            'end',
+            'byCashier',
+            'topCashier',
+            'byBranch',
+            'recentAdminPayments',
+
+        ));
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Payments/CustomersPaymentController.php =====
+<?php
+
+namespace App\Http\Controllers\Payments;
+
+use App\Http\Controllers\Controller;
+use App\Models\Credit;
+use App\Models\CreditPayment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class CustomersPaymentController extends Controller
+{
+    // INDEX
+    public function __invoke(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        $id = $this->sanitizeId($request->get('id'));
+        $ids = $this->sanitizeIds($request->input('ids', []));
+
+        if ($q !== '') {
+            $ids = [];
+        } elseif (count($ids) > 0) {
+            $q = '';
+        } elseif ($id !== null) {
+            $q = '';
+        }
+
+        // In ids mode, if the incoming id is not in ids, drop it to the first element
+        if (count($ids) > 0 && $id !== null && ! in_array($id, $ids, true)) {
+            $id = $ids[0] ?? null;
+        }
+
+        if (count($ids) === 0 && $id !== null) {
+            $ids = [$id];
+        }
+
+        $shouldFetchList = (count($ids) > 0) || ($q !== '');
+
+        $customers = collect();
+        $selected = null;
+        $history = collect();
+
+        if ($shouldFetchList) {
+            $listQuery = Credit::query()->with('paidUpdatedByUser');
+
+            if (count($ids) > 0) {
+                $listQuery->whereIn('logicalref', $ids);
+            }
+
+            if ($q !== '') {
+                $like = '%' . $q . '%';
+                $listQuery->where(function ($qq) use ($like) {
+                    $qq->where('name', 'ilike', $like)
+                        ->orWhere('phone', 'ilike', $like)
+                        ->orWhere('passport', 'ilike', $like)
+                        ->orWhere('contract', 'ilike', $like)
+                        ->orWhere('clientref', 'ilike', $like);
+                });
+            }
+
+            $appends = [];
+            if ($q !== '') {
+                $appends['q'] = $q;
+            }
+            if (count($ids) > 0) {
+                $appends['ids'] = $ids;
+            }
+            if ($id !== null) {
+                $appends['id'] = $id;
+            }
+
+            $customers = $listQuery
+                ->orderByDesc('rv_bigint')
+                ->paginate(12)
+                ->appends($appends);
+
+            $pageItems = collect($customers->items());
+
+            if ($id !== null) {
+                $selected = $pageItems->firstWhere('logicalref', $id);
+
+                if (! $selected) {
+                    $selected = Credit::query()
+                        ->with('paidUpdatedByUser')
+                        ->where('logicalref', $id)
+                        ->first();
+                }
+            }
+
+            if (! $selected) {
+                $selected = $pageItems->first();
+            }
+        }
+
+        if ($selected) {
+            $history = CreditPayment::query()
+                ->with([
+                    'createdByUser:id,firstname,lastname',
+                    'correctedByUser:id,firstname,lastname',
+                    'voidedByUser:id,firstname,lastname',
+                ])
+                ->where('credit_logicalref', (int) $selected->logicalref)
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get();
+        }
+
+        return view('pages.payments.index', [
+            'customers' => $customers,
+            'selected' => $selected,
+            'history' => $history,
+            'q' => $q,
+            'emptyMode' => ! $shouldFetchList,
+        ]);
+    }
+
+    // STORE
+    public function store(Request $request)
+    {
+
+        $user = Auth::user();
+        if (! $user) {
+            return back()->with('warning', __('validations/validations.payments.auth_required'));
+        }
+        $userId = (int) $user->id;
+
+        $customerId = $this->sanitizeId($request->input('customer_id'));
+        if ($customerId === null) {
+            return back()->with('warning', __('validations/validations.payments.customer_not_selected'));
+        }
+
+        $method = (string) $request->input('payment_method', 'cash');
+        if (! in_array($method, ['cash', 'card', 'mixed', 'phone'], true)) {
+            return back()->with('warning', __('validations/validations.payments.method_invalid'));
+        }
+
+        // Payment Amount = the money given by the customer (RECEIVED)
+        $received = $this->toMoney($request->input('pay_amount', '0'));
+        if ($received <= 0) {
+            return back()->with('warning', __('validations/validations.payments.pay_amount_zero'))->withInput();
+        }
+
+        $note = trim((string) $request->input('note', ''));
+        $note = preg_replace('/\s+/', ' ', $note);
+
+        // $cashTotal = $this->toMoney($request->input('cash_total', '0'));
+        // $cardTotal = $this->toMoney($request->input('card_total', '0'));
+
+        // // Cash/card/mixed totals must match ‘received’
+        // if ($method === 'cash') {
+        //     $cashTotal = $received;
+        //     $cardTotal = 0.0;
+        // } elseif ($method === 'card') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } elseif ($method === 'phone') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } else {
+        //     if ($cashTotal < 0 || $cardTotal < 0) {
+        //         return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
+        //     }
+        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+        //         return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
+        //     }
+        // }
+
+        $cashTotal = $this->toMoney($request->input('cash_total', '0'));
+        $cardTotal = $this->toMoney($request->input('card_total', '0'));
+        $phoneTotal = 0.0;
+
+        // Cash/card/mixed/phone totals must match received
+        if ($method === 'cash') {
+            $cashTotal = $received;
+            $cardTotal = 0.0;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'card') {
+            $cashTotal = 0.0;
+            $cardTotal = $received;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'phone') {
+            $cashTotal = 0.0;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
+        } else {
+            $phoneTotal = 0.0;
+
+            if ($cashTotal < 0 || $cardTotal < 0) {
+                return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
+            }
+
+            if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+                return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
+            }
+        }
+
+        $paymentAtRaw = (string) $request->input('payment_at', '');
+        $paymentAtRaw = trim($paymentAtRaw);
+
+        $enteredAt = now();
+        $paymentAtProvided = ($paymentAtRaw !== '');
+
+        if ($paymentAtProvided) {
+            try {
+                $now = Carbon::createFromFormat('Y-m-d\TH:i', $paymentAtRaw);
+            } catch (\Throwable $e) {
+                return back()->with('warning', __('validations/validations.payments.invalid_payment_date'))->withInput();
+            }
+        } else {
+            $now = $enteredAt;
+        }
+        // Future date not allowed
+        if ($now->isFuture()) {
+            return back()->with('warning', __('validations/validations.payments.future_payment_date_not_allowed'))->withInput();
+        }
+
+        $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
+        try {
+
+            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal,  $note) {
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note) {
+                /** @var \App\Models\Credit $c */
+                $c = Credit::query()
+                    ->where('logicalref', $customerId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                // ONLY LOCAL
+                if ($c->amount_local === null || $c->paid_local === null) {
+                    throw new \RuntimeException(__('validations/validations.payments.local_debt_missing'));
+                }
+
+                $totalLocal = (float) $c->amount_local; // TOTAL DEBT
+                $paidLocal = (float) $c->paid_local;  // TOTAL PAID
+
+                // If closed, receive payment (including threshold)
+                if ($paidLocal >= $totalLocal - 0.01) {
+                    throw new \RuntimeException(__('validations/validations.payments.debt_closed_paid_ge_total'));
+                }
+
+                $remaining = $totalLocal - $paidLocal;
+                if ($remaining < 0) {
+                    $remaining = 0;
+                }
+
+                if ($remaining <= 0.01) {
+                    throw new \RuntimeException(__('validations/validations.payments.debt_closed_remaining_zero'));
+                }
+
+                // Overpayment limit (overpayment guard)
+                $maxExtra = 100;  // maximum permitted change
+                if ($received > $remaining + $maxExtra) {
+                    throw new \RuntimeException(
+                        __('validations/validations.payments.overpayment_too_high') . number_format($maxExtra, 2)
+                    );
+                }
+
+                // Change: the amount to be applied to the debt remaining
+                $apply = min($received, $remaining);
+                $change = $received - $apply;
+
+                // Mixed transaction-internal guarantee
+                if ($method === 'mixed') {
+                    if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+                        throw new \RuntimeException(__('validations/validations.payments.mixed_sum_must_equal_tx'));
+                    }
+                }
+
+                $oldRemaining = $remaining;
+                $oldPaidLocal = $paidLocal;
+
+                $newPaidLocal = $paidLocal + $apply;
+
+                $newRemaining = $totalLocal - $newPaidLocal;
+                if ($newRemaining < 0) {
+                    $newRemaining = 0;
+                }
+
+                // Audit note
+                $detail = [
+
+                    'backdated=' . ($backdated ? 'yes' : 'no'),
+                    'payment_at=' . $now->format('Y-m-d H:i:s'),
+                    'entered_at=' . $enteredAt->format('Y-m-d H:i:s'),
+
+                    'method=' . $method,
+
+                    'received=' . $this->fmtMoney($received),
+                    'applied=' . $this->fmtMoney($apply),
+                    'change=' . $this->fmtMoney($change),
+
+                    'cash=' . $this->fmtMoney($cashTotal),
+                    'card=' . $this->fmtMoney($cardTotal),
+                    'phone=' . $this->fmtMoney($phoneTotal),
+
+                    'total_local=' . $this->fmtMoney($totalLocal),
+
+                    'old_paid_local=' . $this->fmtMoney($oldPaidLocal),
+                    'new_paid_local=' . $this->fmtMoney($newPaidLocal),
+
+                    'old_remaining=' . $this->fmtMoney($oldRemaining),
+                    'new_remaining=' . $this->fmtMoney($newRemaining),
+                ];
+
+                $finalNote = implode(' | ', $detail);
+                if ($note !== '') {
+                    $finalNote .= ' | note=' . $note;
+                }
+
+                // Only paid_local increases
+                $c->forceFill([
+                    'paid_local' => $this->fmtMoney($newPaidLocal),
+                    'paid_updated_by' => $userId,
+                    'paid_updated_at' => $now,
+                    'paid_note' => $finalNote,
+                ])->save();
+
+                // History:
+                // pay_amount = received, change_amount = change
+                // old_amount_local/new_amount_local = remaining (log)
+                CreditPayment::create([
+                    'credit_logicalref' => (int) $c->logicalref,
+
+                    // SNAPSHOT (the owner should be clear from the payment record)
+                    'customer_name' => mb_substr((string) $c->name, 0, 255),
+                    'customer_phone' => mb_substr((string) $c->phone, 0, 50),
+                    'customer_passport' => mb_substr((string) $c->passport, 0, 50),
+                    'customer_contract' => mb_substr((string) $c->contract, 0, 50),
+                    'branch' => mb_substr((string) $c->branch, 0, 50),
+
+                    // User snapshot
+                    'created_by' => $userId,
+                    'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
+                    'created_by_email' => mb_substr((string) $user->email, 0, 255),
+                    'created_by_phone' => mb_substr((string) $user->phonenumber, 0, 50),
+
+                    'pay_amount' => $this->fmtMoney($received),
+                    'change_amount' => $this->fmtMoney($change),
+
+                    'method' => $method,
+                    'cash_amount' => $this->fmtMoney($cashTotal),
+                    'card_amount' => $this->fmtMoney($cardTotal),
+                    'phone_amount' => $this->fmtMoney($phoneTotal),
+
+                    'old_amount_local' => $this->fmtMoney($oldRemaining),
+                    'new_amount_local' => $this->fmtMoney($newRemaining),
+
+                    'old_paid_local' => $this->fmtMoney($oldPaidLocal),
+                    'new_paid_local' => $this->fmtMoney($newPaidLocal),
+
+                    'note' => $note !== '' ? $note : null,
+                    'created_at' => $now,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payments.payment_save_failed');
+
+            return back()->with('warning', $msg)->withInput();
+        }
+
+        $redirectUrl = route('payments', array_merge($request->query(), ['id' => (string) $customerId]));
+
+        return redirect($redirectUrl)->with('success', __('validations/validations.payments.payment_saved'));
+    }
+
+    private function sanitizeId($id): ?int
+    {
+        $v = trim((string) $id);
+        if ($v === '' || ! ctype_digit($v)) {
+            return null;
+        }
+
+        return (int) $v;
+    }
+
+    private function sanitizeIds($ids): array
+    {
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return collect($ids)
+            ->map(fn($v) => trim((string) $v))
+            ->filter(fn($v) => $v !== '' && ctype_digit($v))
+            ->map(fn($v) => (int) $v)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function toMoney($v): float
+    {
+        $s = trim((string) $v);
+        if ($s === '') {
+            return 0.0;
+        }
+
+        $s = str_replace([' ', "\u{00A0}"], '', $s);
+
+        $hasDot = str_contains($s, '.');
+        $hasComma = str_contains($s, ',');
+
+        if ($hasDot && $hasComma) {
+            $lastDot = strrpos($s, '.');
+            $lastComma = strrpos($s, ',');
+
+            if ($lastComma > $lastDot) {
+                $s = str_replace('.', '', $s);
+                $s = str_replace(',', '.', $s);
+            } else {
+                $s = str_replace(',', '', $s);
+            }
+        } else {
+            if ($hasComma && ! $hasDot) {
+                $s = str_replace(',', '.', $s);
+            }
+        }
+
+        $n = (float) $s;
+        if (! is_finite($n)) {
+            return 0.0;
+        }
+
+        return round($n, 2);
+    }
+
+    private function fmtMoney(float $n): string
+    {
+        return number_format(round($n, 2), 2, '.', '');
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Payments/PaymentCorrectController.php =====
+<?php
+
+namespace App\Http\Controllers\Payments;
+
+use App\Enums\UserRoleEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Credit;
+use App\Models\CreditPayment;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class PaymentCorrectController extends Controller
+{
+    public function __invoke(Request $request, CreditPayment $payment)
+    {
+        // Admin-only
+        $user = Auth::user();
+        if (!$user || $user->role !== UserRoleEnum::ADMIN) {
+            return back()->with('warning', __('validations/validations.payment_correct.admin_only'));
+        }
+
+        // Cannot correct already voided
+        if ($payment->voided_at) {
+            return back()->with('warning', __('validations/validations.payment_correct.already_voided'));
+        }
+
+        $data = $request->validate([
+            'payment_at' => ['nullable', 'date'],
+            'payment_method' => ['required', 'in:cash,card,mixed,phone'],
+            'pay_amount' => ['required', 'numeric', 'min:0.01'],
+            'cash_total' => ['nullable', 'numeric', 'min:0'],
+            'card_total' => ['nullable', 'numeric', 'min:0'],
+            'note' => ['nullable', 'string', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:300'],
+        ], [
+            'payment_at.date' => __('validations/validations.payment_correct.payment_at_date'),
+
+            'payment_method.required' => __('validations/validations.payment_correct.payment_method_required'),
+            'payment_method.in' => __('validations/validations.payment_correct.payment_method_invalid'),
+
+            'pay_amount.required' => __('validations/validations.payment_correct.pay_amount_required'),
+            'pay_amount.numeric' => __('validations/validations.payment_correct.pay_amount_numeric'),
+            'pay_amount.min' => __('validations/validations.payment_correct.pay_amount_min'),
+
+            'cash_total.numeric' => __('validations/validations.payment_correct.cash_total_numeric'),
+            'cash_total.min' => __('validations/validations.payment_correct.cash_total_min'),
+
+            'card_total.numeric' => __('validations/validations.payment_correct.card_total_numeric'),
+            'card_total.min' => __('validations/validations.payment_correct.card_total_min'),
+
+            'note.string' => __('validations/validations.payment_correct.note_string'),
+            'note.max' => __('validations/validations.payment_correct.note_max'),
+
+            'reason.string' => __('validations/validations.payment_correct.reason_string'),
+            'reason.max' => __('validations/validations.payment_correct.reason_max'),
+        ]);
+        $enteredAt = now();
+        $now = !empty($data['payment_at']) ? Carbon::parse($data['payment_at']) : $enteredAt;
+
+        if ($now->isFuture()) {
+            return back()->with('warning', __('validations/validations.payment_correct.future_payment_date_not_allowed'))->withInput();
+        }
+
+        // $method = $data['payment_method'];
+        // $received = $this->toMoney($data['pay_amount']);
+        // $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
+        // $cardTotal = $this->toMoney($data['card_total'] ?? 0);
+
+        // // Normalize totals by method
+        // if ($method === 'cash') {
+        //     $cashTotal = $received;
+        //     $cardTotal = 0.0;
+        // } elseif ($method === 'card' || $method === 'phone') {
+        //     $cashTotal = 0.0;
+        //     $cardTotal = $received;
+        // } else {
+        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+        //         return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
+        //     }
+        // }
+        $method = $data['payment_method'];
+        $received = $this->toMoney($data['pay_amount']);
+        $cashTotal = $this->toMoney($data['cash_total'] ?? 0);
+        $cardTotal = $this->toMoney($data['card_total'] ?? 0);
+        $phoneTotal = 0.0;
+
+        // Normalize totals by method
+        if ($method === 'cash') {
+            $cashTotal = $received;
+            $cardTotal = 0.0;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'card') {
+            $cashTotal = 0.0;
+            $cardTotal = $received;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'phone') {
+            $cashTotal = 0.0;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
+        } else {
+            $phoneTotal = 0.0;
+
+            if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+                return back()->with('warning', __('validations/validations.payment_correct.mixed_sum_must_equal'))->withInput();
+            }
+        }
+
+        $note = trim((string)($data['note'] ?? ''));
+        $note = preg_replace('/\s+/', ' ', $note);
+
+        $reason = trim((string)($data['reason'] ?? ''));
+        $reason = preg_replace('/\s+/', ' ', $reason);
+
+        try {
+            // DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $note, $reason) {
+            DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason) {
+                // lock payment row
+                $p = CreditPayment::query()->lockForUpdate()->findOrFail($payment->id);
+
+                if ($p->voided_at) {
+                    throw new \RuntimeException(__('validations/validations.payment_correct.already_voided'));
+                }
+
+                // lock credit
+                $c = Credit::query()
+                    ->where('logicalref', (int)$p->credit_logicalref)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($c->amount_local === null || $c->paid_local === null) {
+                    throw new \RuntimeException(__('validations/validations.payment_correct.local_debt_missing'));
+                }
+
+                $totalLocal = (float)$c->amount_local;
+                $paidLocal = (float)$c->paid_local;
+
+                // ---------- STEP 1: VOID OLD PAYMENT ----------
+                // Old apply = pay - change
+                $oldReceived = (float)$p->pay_amount;
+                $oldChange   = (float)($p->change_amount ?? 0);
+                $oldApplied  = $oldReceived - $oldChange;
+                if ($oldApplied < 0) $oldApplied = 0;
+
+                // revert paid_local by old applied
+                $paidAfterVoid = $paidLocal - $oldApplied;
+                if ($paidAfterVoid < 0) $paidAfterVoid = 0;
+
+                $p->forceFill([
+                    'voided_at' => $enteredAt,
+                    'voided_by' => (int)$user->id,
+                    'void_reason' => $reason !== '' ? $reason : __('validations/validations.payment_correct.corrected_default_reason'),
+                ])->save();
+
+                $c->forceFill([
+                    'paid_local' => $this->fmtMoney($paidAfterVoid),
+                    'paid_updated_by' => (int)$user->id,
+                    'paid_updated_at' => $enteredAt,
+                    'paid_note' => 'correct:void_old | old_payment_id=' . $p->id . ' | old_applied=' . $this->fmtMoney($oldApplied),
+                ])->save();
+
+                // ---------- STEP 2: CREATE NEW PAYMENT ----------
+                $remaining = $totalLocal - $paidAfterVoid;
+                if ($remaining < 0) $remaining = 0;
+
+                // Same rules as store()
+                $remaining = round($remaining, 2);
+                $received  = round($received, 2);
+
+                if ($remaining <= 0.01) {
+                    throw new \RuntimeException(__('validations/validations.payment_correct.debt_closed_use_void_only'));
+                }
+
+                $maxExtra = 100; // same as store
+                if ($received > $remaining + $maxExtra) {
+                    throw new \RuntimeException(
+                        __('validations/validations.payment_correct.overpayment_too_high', [
+                            'max' => number_format($maxExtra, 2),
+                        ])
+                    );
+                }
+
+                $apply = min($received, $remaining);
+                $change = $received - $apply;
+
+                $newPaidLocal = $paidAfterVoid + $apply;
+                $newRemaining = $totalLocal - $newPaidLocal;
+                if ($newRemaining < 0) $newRemaining = 0;
+
+                $detail = [
+                    'corrected=yes',
+                    'corrected_from_payment_id=' . $p->id,
+                    'payment_at=' . $now->format('Y-m-d H:i:s'),
+                    'entered_at=' . $enteredAt->format('Y-m-d H:i:s'),
+                    'method=' . $method,
+                    'received=' . $this->fmtMoney($received),
+                    'applied=' . $this->fmtMoney($apply),
+                    'change=' . $this->fmtMoney($change),
+                    'cash=' . $this->fmtMoney($cashTotal),
+                    'card=' . $this->fmtMoney($cardTotal),
+                    'phone=' . $this->fmtMoney($phoneTotal),
+                    'total_local=' . $this->fmtMoney($totalLocal),
+                    'old_paid_local=' . $this->fmtMoney($paidAfterVoid),
+                    'new_paid_local=' . $this->fmtMoney($newPaidLocal),
+                    'old_remaining=' . $this->fmtMoney($remaining),
+                    'new_remaining=' . $this->fmtMoney($newRemaining),
+                ];
+
+                $finalNote = implode(' | ', $detail);
+                if ($note !== '') {
+                    $finalNote .= ' | note=' . $note;
+                }
+
+                $c->forceFill([
+                    'paid_local' => $this->fmtMoney($newPaidLocal),
+                    'paid_updated_by' => (int)$user->id,
+                    'paid_updated_at' => $now,
+                    'paid_note' => $finalNote,
+                ])->save();
+
+                CreditPayment::create([
+                    'credit_logicalref' => (int)$c->logicalref,
+
+                    'customer_name' => mb_substr((string)$c->name, 0, 255),
+                    'customer_phone' => mb_substr((string)$c->phone, 0, 50),
+                    'customer_passport' => mb_substr((string)$c->passport, 0, 50),
+                    'customer_contract' => mb_substr((string)$c->contract, 0, 50),
+                    'branch' => mb_substr((string)$c->branch, 0, 50),
+
+                    // PAYMENT RECEIVED BY: ORIGINAL CASHIER TO REMAIN
+                    'created_by' => (int) ($p->created_by ?? 0),
+                    'created_by_name' => mb_substr((string) ($p->created_by_name ?? 'N/A'), 0, 255),
+                    'created_by_email' => mb_substr((string) ($p->created_by_email ?? ''), 0, 255),
+                    'created_by_phone' => mb_substr((string) ($p->created_by_phone ?? ''), 0, 50),
+
+                    'pay_amount' => $this->fmtMoney($received),
+                    'change_amount' => $this->fmtMoney($change),
+
+                    'method' => $method,
+                    'cash_amount' => $this->fmtMoney($cashTotal),
+                    'card_amount' => $this->fmtMoney($cardTotal),
+                    'phone_amount' => $this->fmtMoney($phoneTotal),
+
+                    'old_amount_local' => $this->fmtMoney($remaining),
+                    'new_amount_local' => $this->fmtMoney($newRemaining),
+
+                    'old_paid_local' => $this->fmtMoney($paidAfterVoid),
+                    'new_paid_local' => $this->fmtMoney($newPaidLocal),
+
+                    'note' => $note !== '' ? $note : null,
+                    'created_at' => $now,
+
+                    // EDITED BY: ADMIN/OPERATOR
+                    'corrected_by' => (int) $user->id,
+                    'corrected_at' => $enteredAt,
+                    'correct_reason' => $reason !== '' ? $reason : null,
+
+                    'corrected_from_payment_id' => $p->id,
+                ]);
+            });
+        } catch (\Throwable $e) {
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_correct.correction_failed');
+            return back()->with('warning', $msg)->withInput();
+        }
+
+        return back()->with('success', __('validations/validations.payment_correct.corrected_success'));
+    }
+
+    private function toMoney($v): float
+    {
+        $s = trim((string)$v);
+        if ($s === '') return 0.0;
+
+        $s = str_replace([' ', "\u{00A0}"], '', $s);
+
+        $hasDot = str_contains($s, '.');
+        $hasComma = str_contains($s, ',');
+
+        if ($hasDot && $hasComma) {
+            $lastDot = strrpos($s, '.');
+            $lastComma = strrpos($s, ',');
+            if ($lastComma > $lastDot) {
+                $s = str_replace('.', '', $s);
+                $s = str_replace(',', '.', $s);
+            } else {
+                $s = str_replace(',', '', $s);
+            }
+        } else {
+            if ($hasComma && !$hasDot) $s = str_replace(',', '.', $s);
+        }
+
+        $n = (float)$s;
+        if (!is_finite($n)) return 0.0;
+        return round($n, 2);
+    }
+
+    private function fmtMoney(float $n): string
+    {
+        return number_format(round($n, 2), 2, '.', '');
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Payments/PaymentVoidController.php =====
+<?php
+
+namespace App\Http\Controllers\Payments;
+
+use App\Http\Controllers\Controller;
+use App\Models\Credit;
+use App\Models\CreditPayment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Enums\UserRoleEnum;
+
+
+class PaymentVoidController extends Controller
+{
+    public function __invoke(Request $request, CreditPayment $payment)
+    {
+        // Admin only
+        $user = Auth::user();
+
+        if (!$user || $user->role !== UserRoleEnum::ADMIN) {
+            return back()->with('warning', __('validations/validations.payment_void.admin_only'));
+        }
+
+        $reason = trim((string) $request->input('void_reason', ''));
+        $reason = preg_replace('/\s+/', ' ', $reason);
+
+        if ($reason === '') {
+            return back()->with('warning', __('validations/validations.payment_void.void_reason_required'))->withInput();
+        }
+
+        try {
+            DB::transaction(function () use ($payment, $reason, $user) {
+
+                /** @var CreditPayment $p */
+                $p = CreditPayment::query()
+                    ->whereKey($payment->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($p->voided_at !== null) {
+                    throw new \RuntimeException(__('validations/validations.payment_void.already_voided'));
+                }
+
+
+                /** @var Credit $c */
+                $c = Credit::query()
+                    ->where('logicalref', (int) $p->credit_logicalref)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($c->amount_local === null || $c->paid_local === null) {
+                    throw new \RuntimeException(__('validations/validations.payment_void.local_debt_missing'));
+                }
+
+                $received = (float) $p->pay_amount;
+                $change = (float) ($p->change_amount ?? 0);
+                $applied = $received - $change;
+                if ($applied < 0) $applied = 0;
+                $applied = round($applied, 2);
+
+                $paidLocal = (float) $c->paid_local;
+                $newPaidLocal = $paidLocal - $applied;
+                if ($newPaidLocal < 0) $newPaidLocal = 0;
+
+
+                // Credit update (paid_local is refunded)
+                $c->forceFill([
+                    'paid_local' => number_format(round($newPaidLocal, 2), 2, '.', ''),
+                    'paid_updated_by' => (int) $user->id,
+                    'paid_updated_at' => now(),
+                    'paid_note' => 'voided=yes'
+                        . ' | voided_payment_id=' . $p->id
+                        . ' | voided_applied=' . number_format($applied, 2, '.', '')
+                        . ' | void_reason=' . $reason
+                        . ' | voided_by=' . $user->full_name
+                        . ' | voided_at=' . now()->format('Y-m-d H:i:s'),
+                ])->save();
+
+                // Payment void flag
+                $p->forceFill([
+                    'voided_at' => now(),
+                    'voided_by' => (int) $user->id,
+                    'void_reason' => $reason,
+                ])->save();
+            });
+        } catch (\Throwable $e) {
+            $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_void.void_failed');
+            return back()->with('warning', $msg);
+        }
+
+        return back()->with('success', __('validations/validations.payment_void.void_success'));
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Profile/ProfileController.php =====
+<?php
+
+namespace App\Http\Controllers\Profile;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class ProfileController extends Controller
+{
+    public function index(Request $request)
+    {
+        // Token-based authentication
+        $user = $this->getAuthenticatedUser($request);
+        if (! $user) {
+            return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
+        }
+
+        return view('pages.profile.profile-settings', compact('user'));
+    }
+
+    public function update(Request $request)
+    {
+
+        $user = $this->getAuthenticatedUser($request);
+        if (! $user) {
+            return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
+        }
+
+        // $validated = $request->validate([
+        //     'firstname' => 'required|string|max:255',
+        //     'lastname'  => 'required|string|max:255',
+        //     'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
+        //     'phonenumber' => 'required|string|max:50|unique:users,phonenumber,' . $user->id,
+        //     'old_password' => 'nullable|string',
+        //     'new_password' => 'nullable|string|confirmed|min:6',
+        // ]);
+
+        $validated = $request->validate([
+            'firstname'    => 'required|string|max:255',
+            'lastname'     => 'required|string|max:255',
+            'email'        => 'required|email|max:255|unique:users,email,' . $user->id,
+            'phonenumber'  => 'required|string|max:50|unique:users,phonenumber,' . $user->id,
+            'old_password' => 'nullable|string',
+            'new_password' => 'nullable|string|confirmed|min:6',
+        ], [
+            // firstname
+            'firstname.required' => __('validations/validations.profile.firstname_required'),
+            'firstname.string'   => __('validations/validations.profile.firstname_string'),
+            'firstname.max'      => __('validations/validations.profile.firstname_max'),
+
+            // lastname
+            'lastname.required' => __('validations/validations.profile.lastname_required'),
+            'lastname.string'   => __('validations/validations.profile.lastname_string'),
+            'lastname.max'      => __('validations/validations.profile.lastname_max'),
+
+            // email
+            'email.required' => __('validations/validations.profile.email_required'),
+            'email.email'    => __('validations/validations.profile.email_email'),
+            'email.max'      => __('validations/validations.profile.email_max'),
+            'email.unique'   => __('validations/validations.profile.email_unique'),
+
+            // phonenumber
+            'phonenumber.required' => __('validations/validations.profile.phonenumber_required'),
+            'phonenumber.string'   => __('validations/validations.profile.phonenumber_string'),
+            'phonenumber.max'      => __('validations/validations.profile.phonenumber_max'),
+            'phonenumber.unique'   => __('validations/validations.profile.phonenumber_unique'),
+
+            // passwords
+            'old_password.string' => __('validations/validations.profile.old_password_string'),
+
+            'new_password.string'     => __('validations/validations.profile.new_password_string'),
+            'new_password.confirmed'  => __('validations/validations.profile.new_password_confirmed'),
+            'new_password.min'        => __('validations/validations.profile.new_password_min'),
+        ]);
+
+
+        $passwordChanged = false;
+        $otherChanged = false;
+
+        if (! empty($validated['new_password'])) {
+            if (empty($validated['old_password'])) {
+                return back()->withErrors(['old_password' => __('validations/validations.profile.old_password_required_for_change')]);
+            }
+
+            if (! Hash::check($validated['old_password'], $user->password)) {
+                return back()->withErrors(['old_password' => __('validations/validations.profile.old_password_incorrect')]);
+            }
+
+            $user->password = Hash::make($validated['new_password']);
+            $passwordChanged = true;
+        }
+
+
+        foreach (['firstname', 'lastname', 'email', 'phonenumber'] as $field) {
+            $newValue = $validated[$field] ?? null;
+            if ($newValue !== $user->$field) {
+                $user->$field = $newValue;
+                $otherChanged = true;
+            }
+        }
+
+        if (! $passwordChanged && ! $otherChanged) {
+            return back()->with('info', __('validations/validations.profile.no_changes'));
+        }
+
+        $user->save();
+
+        if ($passwordChanged && ! $otherChanged) {
+            return back()->with('success', __('validations/validations.profile.password_updated'));
+        }
+
+        return back()->with('success', __('validations/validations.profile.profile_updated'));
+    }
+
+    // Helper function that returns the user logging in via token
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->cookie('auth_token');
+        if (! $token) {
+            return null;
+        }
+        return User::where('token', $token)
+            ->where('token_expires_at', '>', now())
+            ->first();
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Reports/AvshocrecatReportController.php =====
+<?php
+
+namespace app\Http\Controllers\Reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\AvshocrecatReport;
+use Illuminate\Http\Request;
+
+class AvshocrecatReportController extends Controller
+{
+    public function index(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+
+        // Base query (all records)
+        $query = AvshocrecatReport::query();
+
+        // Search 
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('karz_alyjy', 'ILIKE', "%{$q}%")
+                    ->orWhere('pasport_belgisi', 'ILIKE', "%{$q}%")
+                    ->orWhere('telefon_belgisi', 'ILIKE', "%{$q}%")
+                    ->orWhere('tiger_kody', 'ILIKE', "%{$q}%")
+                    ->orWhere('magazyn', 'ILIKE', "%{$q}%")
+                    ->orWhere('maglumat', 'ILIKE', "%{$q}%")
+                    ->orWhere('sertnama_nomeri', 'ILIKE', "%{$q}%");
+            });
+        }
+        // Pagination
+        $rows = $query
+            ->orderByDesc('id')
+            ->paginate(25)
+            ->appends(['q' => $q]);
+
+        return view('pages.reports.avshocrecat.index', compact('rows'));
+    }
+}
+
+===== FILE: src/App/Http/Controllers/Users/UserController.php =====
+<?php
+
+namespace App\Http\Controllers\Users;
+
+use App\Enums\UserRoleEnum;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Enum;
+
+class UserController extends Controller
+{
+    // INDEX
+    public function __invoke(Request $request)
+    {
+        $users = User::orderBy('id', 'asc')->paginate(10);
+        $roles = array_map(fn($role) => $role->value, UserRoleEnum::cases());
+
+        return view('pages.users.index', compact('users', 'roles'));
+    }
+
+    // STORE
+    public function store(Request $request)
+    {
+        // $request->validate([
+        //     'firstname' => 'required|string|max:255',
+        //     'lastname' => 'required|string|max:255',
+        //     'email' => 'required|email|unique:users,email',
+        //     'phonenumber' => 'required|unique:users,phonenumber',
+        //     'password' => 'required|min:6',
+        //     'role' => ['required', new Enum(UserRoleEnum::class)],
+        //     'status' => 'required|boolean',
+        // ]);
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phonenumber' => 'required|unique:users,phonenumber',
+            'password' => 'required|min:6',
+            'role' => ['required', new Enum(UserRoleEnum::class)],
+            'status' => 'required|boolean',
+        ], [
+            'firstname.required' => __('validations/validations.users.firstname_required'),
+            'firstname.string'   => __('validations/validations.users.firstname_string'),
+            'firstname.max'      => __('validations/validations.users.firstname_max'),
+
+            'lastname.required' => __('validations/validations.users.lastname_required'),
+            'lastname.string'   => __('validations/validations.users.lastname_string'),
+            'lastname.max'      => __('validations/validations.users.lastname_max'),
+
+            'email.required' => __('validations/validations.users.email_required'),
+            'email.email'    => __('validations/validations.users.email_email'),
+            'email.unique'   => __('validations/validations.users.email_unique'),
+
+            'phonenumber.required' => __('validations/validations.users.phonenumber_required'),
+            'phonenumber.unique'   => __('validations/validations.users.phonenumber_unique'),
+
+            'password.required' => __('validations/validations.users.password_required'),
+            'password.min'      => __('validations/validations.users.password_min'),
+
+            'role.required' => __('validations/validations.users.role_required'),
+            'role.enum'     => __('validations/validations.users.role_invalid'),
+
+            'status.required' => __('validations/validations.users.status_required'),
+            'status.boolean'  => __('validations/validations.users.status_boolean'),
+        ]);
+
+        User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'phonenumber' => $request->phonenumber,
+            'position' => $request->position,
+            'role' => UserRoleEnum::from($request->role)->value,
+            'status' => $request->status,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('users.index')->with('success', __('validations/validations.users.created'));
+    }
+
+    // UPDATE
+    public function update(Request $request, User $user)
+    {
+        // $request->validate([
+        //     'firstname' => 'required|string|max:255',
+        //     'lastname' => 'required|string|max:255',
+        //     'email' => 'required|email|unique:users,email,' . $user->id,
+        //     'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
+        //     'role' => ['required', new Enum(UserRoleEnum::class)],
+        //     'status' => 'required|boolean',
+        // ]);
+
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
+            'role' => ['required', new Enum(UserRoleEnum::class)],
+            'status' => 'required|boolean',
+        ], [
+            'firstname.required' => __('validations/validations.users.firstname_required'),
+            'firstname.string'   => __('validations/validations.users.firstname_string'),
+            'firstname.max'      => __('validations/validations.users.firstname_max'),
+
+            'lastname.required' => __('validations/validations.users.lastname_required'),
+            'lastname.string'   => __('validations/validations.users.lastname_string'),
+            'lastname.max'      => __('validations/validations.users.lastname_max'),
+
+            'email.required' => __('validations/validations.users.email_required'),
+            'email.email'    => __('validations/validations.users.email_email'),
+            'email.unique'   => __('validations/validations.users.email_unique'),
+
+            'phonenumber.required' => __('validations/validations.users.phonenumber_required'),
+            'phonenumber.unique'   => __('validations/validations.users.phonenumber_unique'),
+
+            'role.required' => __('validations/validations.users.role_required'),
+            'role.enum'     => __('validations/validations.users.role_invalid'),
+
+            'status.required' => __('validations/validations.users.status_required'),
+            'status.boolean'  => __('validations/validations.users.status_boolean'),
+        ]);
+
+        $data = $request->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'status',
+        ]);
+
+        $data['role'] = UserRoleEnum::from($request->role)->value;
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('users.index')->with('success', __('validations/validations.users.updated'));
+    }
+
+    // DELETE
+    public function destroy(User $user)
+    {
+        $user->delete();
+
+        return redirect()->route('users.index')->with('success', __('validations/validations.users.deleted'));
+    }
+}
