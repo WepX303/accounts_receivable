@@ -199,26 +199,26 @@ class AuthController extends Controller
 
         // Create a cookie and redirect
         return redirect()->route('dashboard')->withCookie(
-            // cookie(
-            //     'auth_token',
-            //     $token,
-            //     60 * 24,    // 1 day
-            //     '/',          // valid for all paths
-            //     null,
-            //     false,
-            //     true    // httpOnly
-            // )
             cookie(
                 'auth_token',
                 $token,
-                60 * 24,
-                '/',
+                60 * 24,    // 1 day
+                '/',          // valid for all paths
                 null,
-                app()->environment('production'),
-                true,
                 false,
-                'Lax'
+                true    // httpOnly
             )
+            // cookie(
+            //     'auth_token',
+            //     $token,
+            //     60 * 24,
+            //     '/',
+            //     null,
+            //     app()->environment('production'),
+            //     true,
+            //     false,
+            //     'Lax'
+            // )
         );
     }
 
