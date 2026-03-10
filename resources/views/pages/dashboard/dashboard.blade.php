@@ -461,52 +461,6 @@
                 </div>
             </div>
         </div>
-        {{-- <div class="col-xxl-12">
-            <div class="card">
-                <div class="card-header align-items-center d-flex">
-                    <h4 class="card-title mb-0 flex-grow-1">
-                        {{ __('admin_dashboard.collection') }} ({{ $periodText }})
-                    </h4>
-
-                    <form class="d-flex gap-2 me-3" method="GET" action="{{ route('dashboard') }}">
-                        <input type="hidden" name="period" value="custom">
-
-                        <input type="date" name="start" class="form-control"
-                            value="{{ request('start') ?? \Carbon\Carbon::parse($start)->format('Y-m-d') }}">
-
-                        <input type="date" name="end" class="form-control"
-                            value="{{ request('end') ?? \Carbon\Carbon::parse($end)->format('Y-m-d') }}">
-
-                        <button class="btn btn-primary" type="submit">{{ __('admin_dashboard.apply') }}</button>
-                    </form>
-
-                    <div class="flex-shrink-0">
-                        <div class="dropdown card-header-dropdown">
-                            <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="false">
-                                <span class="fw-semibold text-uppercase fs-12">{{ __('admin_dashboard.period_label') }}:
-                                </span>
-                                <span class="text-muted">
-                                    {{ $periodText }}
-                                    <i class="mdi mdi-chevron-down ms-1"></i>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                @foreach ($periodItems as $key => $label)
-                                    <a class="dropdown-item"
-                                        href="{{ route('dashboard', ['period' => $key]) }}">{{ $label }}</a>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body pb-0">
-                    <div id="sales-forecast-chart" data-colors='["--vz-primary", "--vz-success", "--vz-warning"]'
-                        class="apex-charts" dir="ltr"></div>
-                </div>
-            </div>
-        </div> --}}
 
         <div class="col-xxl-12">
             <div class="card card-height-100">
@@ -652,7 +606,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted py-4">
+                                        <td colspan="13" class="text-center text-muted py-4">
                                             {{ __('admin_dashboard.no_records') }}
                                         </td>
                                     </tr>
@@ -671,12 +625,6 @@
     <script>
         window.ADMIN_DASHBOARD = {!! json_encode([
             'daily' => $chartDaily ?? ['labels' => [], 'series' => []],
-            // 'payMethods' => [
-            //     'cash' => $kpi['total_cash'] ?? 0,
-            //     'card' => $kpi['total_card'] ?? 0,
-            //     'mixed' => $kpi['total_mixed'] ?? 0,
-            //     'phone' => $kpi['total_phone'] ?? 0,
-            // ],
             'payMethods' => [
                 'cash' => $kpi['total_cash'] ?? 0,
                 'card' => $kpi['total_card'] ?? 0,
