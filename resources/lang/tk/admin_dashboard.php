@@ -12,6 +12,7 @@ return [
         'last7' => 'Soňky 7 gün',
         'last30' => 'Soňky 30 gün',
         'custom' => 'Ýörite',
+        'all' => 'Ähli Wagt',
     ],
 
     'net_collection' => 'Arassa ýygnalan',

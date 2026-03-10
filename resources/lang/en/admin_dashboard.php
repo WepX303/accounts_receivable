@@ -12,6 +12,8 @@ return [
         'last7' => 'Last 7 Days',
         'last30' => 'Last 30 Days',
         'custom' => 'Custom',
+        'all' => 'All Time',
+
     ],
 
     'net_collection' => 'Net Collection',

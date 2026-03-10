@@ -12,6 +12,7 @@
             'last7' => __('admin_dashboard.period.last7'),
             'last30' => __('admin_dashboard.period.last30'),
             'custom' => __('admin_dashboard.period.custom'),
+            'all' => __('admin_dashboard.period.all'),
             default => __('admin_dashboard.period.today'),
         };
 
@@ -22,6 +23,7 @@
             'month' => __('admin_dashboard.period.month'),
             'last7' => __('admin_dashboard.period.last7'),
             'last30' => __('admin_dashboard.period.last30'),
+            'all' => __('admin_dashboard.period.all'),
         ];
     @endphp
 
@@ -330,11 +332,18 @@
                                         <td class="text-end">{{ number_format((float) $r->total_card, 2) }}</td>
                                         <td class="text-end">{{ number_format((float) $r->total_phone, 2) }}</td>
                                     </tr>
-                                @empty
+                                {{-- @empty
                                     <tr>
                                         {{ __('admin_dashboard.no_cashier_tx') }}
                                         <td colspan="6" class="text-center text-muted py-4"></td>
                                     </tr>
+                                @endforelse --}}
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        {{ __('admin_dashboard.no_cashier_tx') }}
+                                    </td>
+                                </tr>
                                 @endforelse
                             </tbody>
                         </table>

@@ -12,6 +12,8 @@ return [
         'last7' => 'Son 7 Gün',
         'last30' => 'Son 30 Gün',
         'custom' => 'Özel',
+        'all' => 'Tüm Zamanlar',
+
     ],
 
     'net_collection' => 'Net Tahsilat',

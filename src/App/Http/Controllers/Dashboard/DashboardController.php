@@ -67,7 +67,7 @@ class DashboardController extends Controller
         // =========================
 
         $request->validate([
-            'period' => 'nullable|in:today,yesterday,week,month,last7,last30,custom',
+            'period' => 'nullable|in:today,yesterday,week,month,last7,last30,custom,all',
             'start'  => 'nullable|date',
             'end'    => 'nullable|date|after_or_equal:start',
         ], [
@@ -121,6 +121,17 @@ class DashboardController extends Controller
                 if ($request->filled('end')) {
                     $end = Carbon::parse($request->end)->endOfDay();
                 }
+                break;
+            case 'all':
+                $firstPaymentDate = CreditPayment::query()
+                    ->notVoided()
+                    ->min('created_at');
+
+                $start = $firstPaymentDate
+                    ? Carbon::parse($firstPaymentDate)->startOfDay()
+                    : now()->startOfDay();
+
+                $end = now()->endOfDay();
                 break;
 
             default: // default period today
@@ -266,12 +277,55 @@ class DashboardController extends Controller
                     'labels' => $hours->map(fn($h) => str_pad((string)$h, 2, '0', STR_PAD_LEFT) . ':00')->values(),
                     'series' => $hours->map(fn($h) => (float)($rows[$h] ?? 0))->values(),
                 ];
-            } elseif (in_array($period, ['week', 'last7'], true)) {
+            }
+            // elseif (in_array($period, ['week', 'last7'], true)) {
+            //     $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
+
+            //     $rows = CreditPayment::query()
+            //         ->notVoided()
+            //         ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+            //         ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+            //         ->groupBy('d')
+            //         ->pluck('total_net', 'd');
+
+            //     $chartDaily = [
+            //         'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+            //         'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+            //     ];
+            // } 
+
+            elseif ($period === 'week') {
+                $weekStart = now()->startOfWeek()->startOfDay();
+                $weekEnd = now()->endOfDay();
+
+                $days = collect();
+                $cursor = $weekStart->copy();
+
+                while ($cursor <= $weekEnd) {
+                    $days->push($cursor->copy());
+                    $cursor->addDay();
+                }
+
+                $rows = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$weekStart, $weekEnd])
+                    ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
+                    ->groupBy('d')
+                    ->pluck('total_net', 'd');
+
+                $chartDaily = [
+                    'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
+                    'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
+                ];
+            } elseif ($period === 'last7') {
+                $last7Start = now()->subDays(6)->startOfDay();
+                $last7End = now()->endOfDay();
+
                 $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
 
                 $rows = CreditPayment::query()
                     ->notVoided()
-                    ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+                    ->whereBetween('created_at', [$last7Start, $last7End])
                     ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
                     ->groupBy('d')
                     ->pluck('total_net', 'd');
@@ -309,6 +363,39 @@ class DashboardController extends Controller
                     'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
                     'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
                 ];
+            } elseif ($period === 'all') {
+                $firstPaymentDate = CreditPayment::query()
+                    ->notVoided()
+                    ->min('created_at');
+
+                if ($firstPaymentDate) {
+                    $firstMonth = Carbon::parse($firstPaymentDate)->startOfMonth();
+                    $lastMonth = now()->startOfMonth();
+
+                    $months = collect();
+                    $cursor = $firstMonth->copy();
+
+                    while ($cursor <= $lastMonth) {
+                        $months->push($cursor->copy());
+                        $cursor->addMonth();
+                    }
+
+                    $rows = CreditPayment::query()
+                        ->notVoided()
+                        ->whereBetween('created_at', [$firstMonth->copy()->startOfDay(), now()->endOfDay()])
+                        ->selectRaw("
+                TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') as month_key,
+                COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net
+            ")
+                        ->groupBy('month_key')
+                        ->orderBy('month_key')
+                        ->pluck('total_net', 'month_key');
+
+                    $chartDaily = [
+                        'labels' => $months->map(fn($m) => $m->format('m.Y'))->values()->all(),
+                        'series' => $months->map(fn($m) => (float) ($rows[$m->format('Y-m')] ?? 0))->values()->all(),
+                    ];
+                }
             }
 
             return compact('kpi', 'byCashier', 'topCashier', 'byBranch', 'recentAdminPayments', 'chartDaily');
