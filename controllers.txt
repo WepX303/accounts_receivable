@@ -1,0 +1,2453 @@
+===== src/App/Http/Controllers/Api/V1/Customers/ApiCustomersExportController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Customers;
+
+use App\Exports\CustomersExport;
+use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+class ApiCustomersExportController extends Controller
+{
+    public function __invoke(Request $request): BinaryFileResponse|\Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'quick_filter' => ['nullable', 'in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch'],
+        ]);
+
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+
+        if (!$user) {
+            return ApiResponse::error(
+                'Unauthorized.',
+                401,
+                'AUTH_REQUIRED'
+            );
+        }
+
+        $audit = app(AuditLogger::class);
+
+        $audit->log(
+            action: 'api_customers_exported',
+            category: 'export',
+            subject: $user,
+            oldValues: null,
+            newValues: null,
+            extra: [
+                'q' => $request->get('q'),
+                'quick_filter' => $request->get('quick_filter'),
+            ],
+            message: 'Customers export downloaded via API',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
+
+        @ini_set('max_execution_time', '0');
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(0);
+
+        return Excel::download(
+            new CustomersExport($request),
+            'customers.xlsx'
+        );
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Customers/ApiCustomerController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Customers;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CreditDetailResource;
+use App\Http\Resources\CreditListResource;
+use App\Models\Credit;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+
+class ApiCustomerController extends Controller
+{
+    public function index(Request $request)
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $q = trim((string) $request->input('q', ''));
+        $perPage = (int) $request->input('per_page', 20);
+
+        $query = Credit::query();
+
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+
+            $query->where(function ($sub) use ($like) {
+                $sub->where('name', 'ilike', $like)
+                    ->orWhere('phone', 'ilike', $like)
+                    ->orWhere('passport', 'ilike', $like)
+                    ->orWhere('contract', 'ilike', $like)
+                    ->orWhere('clientref', 'ilike', $like)
+                    ->orWhere('assurance', 'ilike', $like);
+            });
+        }
+
+        $paginator = $query
+            ->orderByDesc('rv_bigint')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        return ApiResponse::paginated(
+            $paginator,
+            CreditListResource::collection($paginator->getCollection())->resolve(),
+            'Customers fetched successfully.'
+        );
+    }
+
+    public function search(Request $request)
+    {
+        $request->validate([
+            'q' => ['required', 'string', 'max:100'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+        ]);
+
+        $q = trim((string) $request->input('q'));
+        $limit = (int) $request->input('limit', 20);
+
+        $like = '%' . $q . '%';
+
+        $items = Credit::query()
+            ->where(function ($sub) use ($like) {
+                $sub->where('name', 'ilike', $like)
+                    ->orWhere('phone', 'ilike', $like)
+                    ->orWhere('passport', 'ilike', $like)
+                    ->orWhere('contract', 'ilike', $like)
+                    ->orWhere('clientref', 'ilike', $like)
+                    ->orWhere('assurance', 'ilike', $like);
+            })
+            ->orderByDesc('rv_bigint')
+            ->limit($limit)
+            ->get();
+
+        return ApiResponse::success(
+            CreditListResource::collection($items)->resolve(),
+            'Customer search completed successfully.'
+        );
+    }
+
+    public function show(Credit $credit)
+    {
+        $credit->load([
+            'paidUpdatedByUser:id,firstname,lastname',
+            'amountUpdatedByUser:id,firstname,lastname',
+        ]);
+
+        return ApiResponse::success(
+            new CreditDetailResource($credit),
+            'Customer fetched successfully.'
+        );
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Payments/ApiPaymentController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Payments;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CreditPaymentResource;
+use App\Models\Credit;
+use App\Models\CreditPayment;
+use App\Services\AuditLogger;
+use App\Support\ApiResponse;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ApiPaymentController extends Controller
+{
+    public function history(Request $request, Credit $credit)
+    {
+        $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $payments = CreditPayment::query()
+            ->with([
+                'correctedByUser:id,firstname,lastname',
+                'voidedByUser:id,firstname,lastname',
+            ])
+            ->where('credit_logicalref', $credit->logicalref)
+            ->orderByDesc('id')
+            ->paginate((int) $request->input('per_page', 20))
+            ->appends($request->query());
+
+        return ApiResponse::paginated(
+            $payments,
+            CreditPaymentResource::collection($payments->getCollection())->resolve(),
+            'Payment history fetched successfully.'
+        );
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'customer_id' => ['required', 'integer'],
+            'payment_method' => ['required', 'in:cash,card,mixed,phone'],
+            'pay_amount' => ['required', 'numeric', 'min:0.01'],
+            'cash_total' => ['nullable', 'numeric', 'min:0'],
+            'card_total' => ['nullable', 'numeric', 'min:0'],
+            'payment_at' => ['nullable', 'date'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        $customerId = (int) $request->input('customer_id');
+        $method = (string) $request->input('payment_method');
+        $received = round((float) $request->input('pay_amount'), 2);
+        $cashTotal = round((float) $request->input('cash_total', 0), 2);
+        $cardTotal = round((float) $request->input('card_total', 0), 2);
+        $phoneTotal = 0.0;
+
+        $note = trim((string) $request->input('note', ''));
+        $note = preg_replace('/\s+/', ' ', $note);
+        $note = $note !== '' ? $note : null;
+
+        if ($method === 'cash') {
+            $cashTotal = $received;
+            $cardTotal = 0.0;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'card') {
+            $cashTotal = 0.0;
+            $cardTotal = $received;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'phone') {
+            $cashTotal = 0.0;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
+        } else {
+            $phoneTotal = 0.0;
+
+            if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+                return ApiResponse::error(
+                    'Mixed total must equal received amount.',
+                    422,
+                    'MIXED_TOTAL_INVALID'
+                );
+            }
+        }
+
+        $enteredAt = now();
+
+        $paymentAt = $request->filled('payment_at')
+            ? Carbon::parse($request->input('payment_at'))
+            : $enteredAt;
+
+        if ($paymentAt->isFuture()) {
+            return ApiResponse::error(
+                'Future payment date is not allowed.',
+                422,
+                'FUTURE_PAYMENT_NOT_ALLOWED'
+            );
+        }
+
+        $createdPayment = null;
+        $auditData = [];
+
+        try {
+            DB::transaction(function () use (
+                $customerId,
+                $received,
+                $method,
+                $cashTotal,
+                $cardTotal,
+                $phoneTotal,
+                $paymentAt,
+                $enteredAt,
+                $note,
+                $user,
+                &$createdPayment,
+                &$auditData
+            ) {
+                /** @var \App\Models\Credit $credit */
+                $credit = Credit::query()
+                    ->where('logicalref', $customerId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($credit->amount_local === null || $credit->paid_local === null) {
+                    throw new \RuntimeException('Local debt information is missing.');
+                }
+
+                $totalLocal = (float) $credit->amount_local;
+                $paidLocal = (float) $credit->paid_local;
+                $remaining = round($totalLocal - $paidLocal, 2);
+
+                if ($remaining <= 0.01) {
+                    throw new \RuntimeException('Debt already closed.');
+                }
+
+                $maxExtra = 100;
+                if ($received > $remaining + $maxExtra) {
+                    throw new \RuntimeException('Overpayment is too high.');
+                }
+
+                $apply = min($received, $remaining);
+                $change = round($received - $apply, 2);
+                $newPaidLocal = round($paidLocal + $apply, 2);
+                $newRemaining = round($totalLocal - $newPaidLocal, 2);
+
+                if ($newRemaining < 0) {
+                    $newRemaining = 0;
+                }
+
+                $backdated = $paymentAt->lt($enteredAt->copy()->startOfMinute());
+
+                $credit->forceFill([
+                    'paid_local' => number_format($newPaidLocal, 2, '.', ''),
+                    'paid_updated_by' => $user->id,
+                    'paid_updated_at' => $paymentAt,
+                    'paid_note' => 'api_payment_created'
+                        . ' | method=' . $method
+                        . ' | received=' . number_format($received, 2, '.', '')
+                        . ' | applied=' . number_format($apply, 2, '.', '')
+                        . ' | change=' . number_format($change, 2, '.', '')
+                        . ' | payment_at=' . $paymentAt->format('Y-m-d H:i:s'),
+                ])->save();
+
+                $createdPayment = CreditPayment::create([
+                    'credit_logicalref' => (int) $credit->logicalref,
+
+                    'customer_name' => mb_substr((string) $credit->name, 0, 255),
+                    'customer_phone' => mb_substr((string) $credit->phone, 0, 50),
+                    'customer_passport' => mb_substr((string) $credit->passport, 0, 50),
+                    'customer_contract' => mb_substr((string) $credit->contract, 0, 50),
+                    'branch' => mb_substr((string) $credit->branch, 0, 50),
+
+                    'created_by' => (int) $user->id,
+                    'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
+                    'created_by_email' => mb_substr((string) $user->email, 0, 255),
+                    'created_by_phone' => mb_substr((string) $user->phonenumber, 0, 50),
+
+                    'pay_amount' => number_format($received, 2, '.', ''),
+                    'change_amount' => number_format($change, 2, '.', ''),
+                    'method' => $method,
+                    'cash_amount' => number_format($cashTotal, 2, '.', ''),
+                    'card_amount' => number_format($cardTotal, 2, '.', ''),
+                    'phone_amount' => number_format($phoneTotal, 2, '.', ''),
+
+                    'old_amount_local' => number_format($remaining, 2, '.', ''),
+                    'new_amount_local' => number_format($newRemaining, 2, '.', ''),
+                    'old_paid_local' => number_format($paidLocal, 2, '.', ''),
+                    'new_paid_local' => number_format($newPaidLocal, 2, '.', ''),
+
+                    'note' => $note,
+                    'created_at' => $paymentAt,
+                ]);
+
+                $createdPayment->load([
+                    'correctedByUser:id,firstname,lastname',
+                    'voidedByUser:id,firstname,lastname',
+                ]);
+
+                $auditData = [
+                    'credit_logicalref' => (int) $credit->logicalref,
+                    'customer_name' => $credit->name,
+                    'customer_contract' => $credit->contract,
+                    'method' => $method,
+                    'received' => $received,
+                    'applied' => $apply,
+                    'change' => $change,
+                    'cash_amount' => $cashTotal,
+                    'card_amount' => $cardTotal,
+                    'phone_amount' => $phoneTotal,
+                    'payment_at' => $paymentAt->format('Y-m-d H:i:s'),
+                    'entered_at' => $enteredAt->format('Y-m-d H:i:s'),
+                    'backdated' => $backdated,
+                ];
+            });
+        } catch (\Throwable $e) {
+            return ApiResponse::error(
+                $e instanceof \RuntimeException ? $e->getMessage() : 'Payment create failed.',
+                422,
+                'PAYMENT_CREATE_FAILED'
+            );
+        }
+
+        $audit->log(
+            action: 'api_payment_created',
+            category: 'payment',
+            subject: $createdPayment,
+            oldValues: null,
+            newValues: null,
+            extra: $auditData,
+            message: 'API payment created',
+            isSuccess: true,
+            severity: !empty($auditData['backdated']) ? 'warning' : 'info',
+            isSuspicious: !empty($auditData['backdated'])
+        );
+
+        if (!empty($auditData['backdated'])) {
+            $audit->alert(
+                alertType: 'api_backdated_payment',
+                riskLevel: 'high',
+                message: 'Backdated payment recorded via API',
+                meta: $auditData
+            );
+        }
+
+        if (((float) ($auditData['received'] ?? 0)) >= 5000) {
+            $audit->alert(
+                alertType: 'api_high_amount_payment',
+                riskLevel: 'medium',
+                message: 'High amount payment detected via API',
+                meta: $auditData
+            );
+        }
+
+        return ApiResponse::success(
+            new CreditPaymentResource($createdPayment),
+            'Payment created successfully.',
+            201
+        );
+    }
+
+    public function void(Request $request, CreditPayment $payment)
+    {
+        $request->validate([
+            'void_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        $reason = trim((string) $request->input('void_reason'));
+        $reason = preg_replace('/\s+/', ' ', $reason);
+
+        $voidedPayment = null;
+        $auditData = [];
+
+        try {
+            DB::transaction(function () use ($payment, $reason, $user, &$voidedPayment, &$auditData) {
+                /** @var \App\Models\CreditPayment $p */
+                $p = CreditPayment::query()
+                    ->whereKey($payment->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($p->voided_at !== null) {
+                    throw new \RuntimeException('Payment is already voided.');
+                }
+
+                /** @var \App\Models\Credit $credit */
+                $credit = Credit::query()
+                    ->where('logicalref', (int) $p->credit_logicalref)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($credit->amount_local === null || $credit->paid_local === null) {
+                    throw new \RuntimeException('Local debt information is missing.');
+                }
+
+                $received = (float) $p->pay_amount;
+                $change = (float) ($p->change_amount ?? 0);
+                $applied = round(max($received - $change, 0), 2);
+
+                $paidLocal = (float) $credit->paid_local;
+                $newPaidLocal = round($paidLocal - $applied, 2);
+
+                if ($newPaidLocal < 0) {
+                    $newPaidLocal = 0;
+                }
+
+                $now = now();
+
+                $credit->forceFill([
+                    'paid_local' => number_format($newPaidLocal, 2, '.', ''),
+                    'paid_updated_by' => (int) $user->id,
+                    'paid_updated_at' => $now,
+                    'paid_note' => 'api_voided=yes'
+                        . ' | payment_id=' . $p->id
+                        . ' | applied=' . number_format($applied, 2, '.', '')
+                        . ' | reason=' . $reason,
+                ])->save();
+
+                $p->forceFill([
+                    'voided_at' => $now,
+                    'voided_by' => (int) $user->id,
+                    'void_reason' => $reason,
+                ])->save();
+
+                $voidedPayment = $p->fresh([
+                    'voidedByUser:id,firstname,lastname',
+                    'correctedByUser:id,firstname,lastname',
+                ]);
+
+                $auditData = [
+                    'payment_id' => $p->id,
+                    'credit_logicalref' => (int) $credit->logicalref,
+                    'customer_name' => $credit->name,
+                    'customer_contract' => $credit->contract,
+                    'applied' => $applied,
+                    'void_reason' => $reason,
+                ];
+            });
+        } catch (\Throwable $e) {
+            return ApiResponse::error(
+                $e instanceof \RuntimeException ? $e->getMessage() : 'Payment void failed.',
+                422,
+                'PAYMENT_VOID_FAILED'
+            );
+        }
+
+        $audit->log(
+            action: 'api_payment_voided',
+            category: 'payment',
+            subject: $voidedPayment,
+            oldValues: null,
+            newValues: null,
+            extra: $auditData,
+            message: 'API payment voided',
+            isSuccess: true,
+            severity: 'critical',
+            isSuspicious: true
+        );
+
+        $audit->alert(
+            alertType: 'api_payment_voided',
+            riskLevel: 'critical',
+            message: 'A payment was voided via API',
+            meta: $auditData
+        );
+
+        return ApiResponse::success(
+            new CreditPaymentResource($voidedPayment),
+            'Payment voided successfully.'
+        );
+    }
+
+    public function correct(Request $request, CreditPayment $payment)
+    {
+        $request->validate([
+            'payment_at' => ['nullable', 'date'],
+            'payment_method' => ['required', 'in:cash,card,mixed,phone'],
+            'pay_amount' => ['required', 'numeric', 'min:0.01'],
+            'cash_total' => ['nullable', 'numeric', 'min:0'],
+            'card_total' => ['nullable', 'numeric', 'min:0'],
+            'note' => ['nullable', 'string', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:300'],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        $enteredAt = now();
+        $paymentAt = $request->filled('payment_at')
+            ? Carbon::parse($request->input('payment_at'))
+            : $enteredAt;
+
+        if ($paymentAt->isFuture()) {
+            return ApiResponse::error(
+                'Future payment date is not allowed.',
+                422,
+                'FUTURE_PAYMENT_NOT_ALLOWED'
+            );
+        }
+
+        $method = (string) $request->input('payment_method');
+        $received = round((float) $request->input('pay_amount'), 2);
+        $cashTotal = round((float) $request->input('cash_total', 0), 2);
+        $cardTotal = round((float) $request->input('card_total', 0), 2);
+        $phoneTotal = 0.0;
+
+        if ($method === 'cash') {
+            $cashTotal = $received;
+            $cardTotal = 0.0;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'card') {
+            $cashTotal = 0.0;
+            $cardTotal = $received;
+            $phoneTotal = 0.0;
+        } elseif ($method === 'phone') {
+            $cashTotal = 0.0;
+            $cardTotal = 0.0;
+            $phoneTotal = $received;
+        } else {
+            $phoneTotal = 0.0;
+
+            if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
+                return ApiResponse::error(
+                    'Mixed total must equal received amount.',
+                    422,
+                    'MIXED_TOTAL_INVALID'
+                );
+            }
+        }
+
+        $note = trim((string) $request->input('note', ''));
+        $note = preg_replace('/\s+/', ' ', $note);
+        $note = $note !== '' ? $note : null;
+
+        $reason = trim((string) $request->input('reason', ''));
+        $reason = preg_replace('/\s+/', ' ', $reason);
+        $reason = $reason !== '' ? $reason : null;
+
+        $newPayment = null;
+        $auditData = [];
+
+        try {
+            DB::transaction(function () use (
+                $payment,
+                $user,
+                $enteredAt,
+                $paymentAt,
+                $method,
+                $received,
+                $cashTotal,
+                $cardTotal,
+                $phoneTotal,
+                $note,
+                $reason,
+                &$newPayment,
+                &$auditData
+            ) {
+                /** @var \App\Models\CreditPayment $oldPayment */
+                $oldPayment = CreditPayment::query()
+                    ->lockForUpdate()
+                    ->findOrFail($payment->id);
+
+                if ($oldPayment->voided_at) {
+                    throw new \RuntimeException('Payment is already voided.');
+                }
+
+                /** @var \App\Models\Credit $credit */
+                $credit = Credit::query()
+                    ->where('logicalref', (int) $oldPayment->credit_logicalref)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($credit->amount_local === null || $credit->paid_local === null) {
+                    throw new \RuntimeException('Local debt information is missing.');
+                }
+
+                $totalLocal = (float) $credit->amount_local;
+                $paidLocal = (float) $credit->paid_local;
+
+                $oldReceived = (float) $oldPayment->pay_amount;
+                $oldChange = (float) ($oldPayment->change_amount ?? 0);
+                $oldApplied = round(max($oldReceived - $oldChange, 0), 2);
+
+                $paidAfterVoid = round($paidLocal - $oldApplied, 2);
+                if ($paidAfterVoid < 0) {
+                    $paidAfterVoid = 0;
+                }
+
+                $oldPayment->forceFill([
+                    'voided_at' => $enteredAt,
+                    'voided_by' => (int) $user->id,
+                    'void_reason' => $reason ?: 'Corrected via API',
+                ])->save();
+
+                $credit->forceFill([
+                    'paid_local' => number_format($paidAfterVoid, 2, '.', ''),
+                    'paid_updated_by' => (int) $user->id,
+                    'paid_updated_at' => $enteredAt,
+                    'paid_note' => 'api_correct_void_old | old_payment_id=' . $oldPayment->id,
+                ])->save();
+
+                $remaining = round($totalLocal - $paidAfterVoid, 2);
+                if ($remaining <= 0.01) {
+                    throw new \RuntimeException('Debt already closed after reverting old payment.');
+                }
+
+                $maxExtra = 100;
+                if ($received > $remaining + $maxExtra) {
+                    throw new \RuntimeException('Overpayment is too high.');
+                }
+
+                $apply = min($received, $remaining);
+                $change = round($received - $apply, 2);
+                $newPaidLocal = round($paidAfterVoid + $apply, 2);
+                $newRemaining = round($totalLocal - $newPaidLocal, 2);
+
+                if ($newRemaining < 0) {
+                    $newRemaining = 0;
+                }
+
+                $credit->forceFill([
+                    'paid_local' => number_format($newPaidLocal, 2, '.', ''),
+                    'paid_updated_by' => (int) $user->id,
+                    'paid_updated_at' => $paymentAt,
+                    'paid_note' => 'api_payment_corrected'
+                        . ' | corrected_from_payment_id=' . $oldPayment->id
+                        . ' | method=' . $method,
+                ])->save();
+
+                $newPayment = CreditPayment::create([
+                    'credit_logicalref' => (int) $credit->logicalref,
+
+                    'customer_name' => mb_substr((string) $credit->name, 0, 255),
+                    'customer_phone' => mb_substr((string) $credit->phone, 0, 50),
+                    'customer_passport' => mb_substr((string) $credit->passport, 0, 50),
+                    'customer_contract' => mb_substr((string) $credit->contract, 0, 50),
+                    'branch' => mb_substr((string) $credit->branch, 0, 50),
+
+                    'created_by' => $oldPayment->created_by,
+                    'created_by_name' => mb_substr((string) ($oldPayment->created_by_name ?? 'N/A'), 0, 255),
+                    'created_by_email' => mb_substr((string) ($oldPayment->created_by_email ?? ''), 0, 255),
+                    'created_by_phone' => mb_substr((string) ($oldPayment->created_by_phone ?? ''), 0, 50),
+
+                    'pay_amount' => number_format($received, 2, '.', ''),
+                    'change_amount' => number_format($change, 2, '.', ''),
+                    'method' => $method,
+                    'cash_amount' => number_format($cashTotal, 2, '.', ''),
+                    'card_amount' => number_format($cardTotal, 2, '.', ''),
+                    'phone_amount' => number_format($phoneTotal, 2, '.', ''),
+
+                    'old_amount_local' => number_format($remaining, 2, '.', ''),
+                    'new_amount_local' => number_format($newRemaining, 2, '.', ''),
+                    'old_paid_local' => number_format($paidAfterVoid, 2, '.', ''),
+                    'new_paid_local' => number_format($newPaidLocal, 2, '.', ''),
+
+                    'note' => $note,
+                    'created_at' => $paymentAt,
+
+                    'corrected_by' => (int) $user->id,
+                    'corrected_at' => $enteredAt,
+                    'correct_reason' => $reason,
+                    'corrected_from_payment_id' => $oldPayment->id,
+                ]);
+
+                $newPayment->load([
+                    'correctedByUser:id,firstname,lastname',
+                    'voidedByUser:id,firstname,lastname',
+                ]);
+
+                $auditData = [
+                    'old_payment_id' => $oldPayment->id,
+                    'new_payment_id' => $newPayment->id,
+                    'credit_logicalref' => (int) $credit->logicalref,
+                    'customer_name' => $credit->name,
+                    'customer_contract' => $credit->contract,
+                    'method' => $method,
+                    'received' => $received,
+                    'reason' => $reason,
+                ];
+            });
+        } catch (\Throwable $e) {
+            return ApiResponse::error(
+                $e instanceof \RuntimeException ? $e->getMessage() : 'Payment correction failed.',
+                422,
+                'PAYMENT_CORRECT_FAILED'
+            );
+        }
+
+        $audit->log(
+            action: 'api_payment_corrected',
+            category: 'payment',
+            subject: $newPayment,
+            oldValues: null,
+            newValues: null,
+            extra: $auditData,
+            message: 'API payment corrected',
+            isSuccess: true,
+            severity: 'critical',
+            isSuspicious: true
+        );
+
+        $audit->alert(
+            alertType: 'api_payment_corrected',
+            riskLevel: 'critical',
+            message: 'A payment was corrected via API',
+            meta: $auditData
+        );
+
+        return ApiResponse::success(
+            new CreditPaymentResource($newPayment),
+            'Payment corrected successfully.'
+        );
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Auth/ApiAuthController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
+use App\Models\LoginHistory;
+use App\Models\User;
+use App\Services\AuditLogger;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class ApiAuthController extends Controller
+{
+    public function login(Request $request)
+    {
+        $request->validate([
+            'login' => ['required', 'string'],
+            'password' => ['required', 'string'],
+        ]);
+
+        $audit = app(AuditLogger::class);
+
+        $login = trim((string) $request->input('login'));
+
+        $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[0-9\+\-\s]{6,20}$/', $login);
+
+        $user = User::query()
+            ->where('email', $login)
+            ->orWhere('phonenumber', $login)
+            ->first();
+
+        if (!$user) {
+            $this->writeLoginHistory(
+                user: null,
+                loginValue: $login,
+                status: 'failed',
+                failReason: 'user_not_found',
+                message: 'API login failed: user not found',
+                isSuspicious: true
+            );
+
+            $audit->log(
+                action: 'api_login_failed',
+                category: 'auth',
+                subject: null,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'login' => $login,
+                    'reason' => 'user_not_found',
+                ],
+                message: 'API login failed: user not found',
+                isSuccess: false,
+                severity: 'warning',
+                isSuspicious: true
+            );
+
+            $audit->alert(
+                alertType: 'api_login_failed_user_not_found',
+                riskLevel: 'medium',
+                message: 'API login attempt with unknown user',
+                meta: [
+                    'login' => $login,
+                ]
+            );
+
+            return ApiResponse::error(
+                $isEmail || $isPhone ? 'Invalid credentials.' : 'Invalid login value.',
+                422,
+                'INVALID_CREDENTIALS'
+            );
+        }
+
+        if (!$user->status) {
+            $this->writeLoginHistory(
+                user: $user,
+                loginValue: $login,
+                status: 'failed',
+                failReason: 'inactive_account',
+                message: 'API login failed: inactive account',
+                isSuspicious: true
+            );
+
+            $audit->log(
+                action: 'api_login_failed',
+                category: 'auth',
+                subject: $user,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'login' => $login,
+                    'reason' => 'inactive_account',
+                ],
+                message: 'API login failed: inactive account',
+                isSuccess: false,
+                severity: 'warning',
+                isSuspicious: true
+            );
+
+            $audit->alert(
+                alertType: 'api_inactive_account_login_attempt',
+                riskLevel: 'high',
+                message: 'Inactive account API login attempt detected',
+                userId: $user->id,
+                meta: [
+                    'user_id' => $user->id,
+                    'login' => $login,
+                    'ip' => $request->ip(),
+                ]
+            );
+
+            return ApiResponse::error(
+                'Your account is inactive.',
+                403,
+                'ACCOUNT_INACTIVE'
+            );
+        }
+
+        if (!Hash::check((string) $request->input('password'), $user->password)) {
+            $this->writeLoginHistory(
+                user: $user,
+                loginValue: $login,
+                status: 'failed',
+                failReason: 'wrong_password',
+                message: 'API login failed: wrong password',
+                isSuspicious: true
+            );
+
+            $audit->log(
+                action: 'api_login_failed',
+                category: 'auth',
+                subject: $user,
+                oldValues: null,
+                newValues: null,
+                extra: [
+                    'login' => $login,
+                    'reason' => 'wrong_password',
+                ],
+                message: 'API login failed: wrong password',
+                isSuccess: false,
+                severity: 'warning',
+                isSuspicious: true
+            );
+
+            $audit->alert(
+                alertType: 'api_wrong_password_attempt',
+                riskLevel: 'medium',
+                message: 'Wrong password API attempt detected',
+                userId: $user->id,
+                meta: [
+                    'login' => $login,
+                ]
+            );
+
+            return ApiResponse::error(
+                'Invalid credentials.',
+                422,
+                'INVALID_CREDENTIALS'
+            );
+        }
+
+        $token = bin2hex(random_bytes(32));
+
+        $user->token = $token;
+        $user->token_expires_at = now()->addDay();
+        $user->save();
+
+        $this->writeLoginHistory(
+            user: $user,
+            loginValue: $login,
+            status: 'success',
+            failReason: null,
+            message: 'API login success',
+            isSuspicious: false
+        );
+
+        $audit->log(
+            action: 'api_login_success',
+            category: 'auth',
+            subject: $user,
+            oldValues: null,
+            newValues: null,
+            extra: [
+                'login' => $login,
+            ],
+            message: 'API login successful',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
+
+        return ApiResponse::success([
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'expires_at' => optional($user->token_expires_at)?->format('Y-m-d H:i:s'),
+            'user' => new UserResource($user),
+            'permissions' => [
+                'can_manage_users' => $user->canManageUsers(),
+                'can_void_payments' => $user->canVoidPayments(),
+                'can_correct_payments' => $user->canCorrectPayments(),
+            ],
+        ], 'Login successful.');
+    }
+
+    public function me(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        return ApiResponse::success([
+            'user' => new UserResource($user),
+            'permissions' => [
+                'can_manage_users' => $user->canManageUsers(),
+                'can_void_payments' => $user->canVoidPayments(),
+                'can_correct_payments' => $user->canCorrectPayments(),
+            ],
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        if ($user) {
+            $this->writeLoginHistory(
+                user: $user,
+                loginValue: $user->email ?? $user->phonenumber ?? 'unknown',
+                status: 'logout',
+                failReason: null,
+                message: 'API logout',
+                isSuspicious: false
+            );
+
+            $audit->log(
+                action: 'api_logout',
+                category: 'auth',
+                subject: $user,
+                oldValues: null,
+                newValues: null,
+                extra: null,
+                message: 'API logout',
+                isSuccess: true,
+                severity: 'info',
+                isSuspicious: false
+            );
+
+            $user->token = null;
+            $user->token_expires_at = null;
+            $user->save();
+        }
+
+        return ApiResponse::success(null, 'Logout successful.');
+    }
+
+    private function writeLoginHistory(
+        ?User $user,
+        string $loginValue,
+        string $status,
+        ?string $failReason = null,
+        ?string $message = null,
+        bool $isSuspicious = false
+    ): void {
+        $ua = (string) request()->userAgent();
+        $uaLower = mb_strtolower($ua);
+
+        $deviceType = 'desktop';
+        if (str_contains($uaLower, 'mobile')) {
+            $deviceType = 'mobile';
+        } elseif (str_contains($uaLower, 'tablet') || str_contains($uaLower, 'ipad')) {
+            $deviceType = 'tablet';
+        }
+
+        $browser = 'Unknown';
+        if (str_contains($uaLower, 'edg')) {
+            $browser = 'Edge';
+        } elseif (str_contains($uaLower, 'chrome')) {
+            $browser = 'Chrome';
+        } elseif (str_contains($uaLower, 'firefox')) {
+            $browser = 'Firefox';
+        } elseif (str_contains($uaLower, 'safari') && !str_contains($uaLower, 'chrome')) {
+            $browser = 'Safari';
+        } elseif (str_contains($uaLower, 'opera') || str_contains($uaLower, 'opr/')) {
+            $browser = 'Opera';
+        }
+
+        $platform = 'Unknown';
+        if (str_contains($uaLower, 'windows')) {
+            $platform = 'Windows';
+        } elseif (str_contains($uaLower, 'linux')) {
+            $platform = 'Linux';
+        } elseif (str_contains($uaLower, 'android')) {
+            $platform = 'Android';
+        } elseif (str_contains($uaLower, 'iphone') || str_contains($uaLower, 'ios')) {
+            $platform = 'iPhone';
+        } elseif (str_contains($uaLower, 'macintosh') || str_contains($uaLower, 'mac os')) {
+            $platform = 'Mac';
+        }
+
+        LoginHistory::create([
+            'user_id' => $user?->id,
+            'login_value' => $loginValue,
+            'status' => $status,
+            'fail_reason' => $failReason,
+            'ip_address' => request()->ip(),
+            'user_agent' => $ua,
+            'device_type' => $deviceType,
+            'browser' => $browser,
+            'platform' => $platform,
+            'is_suspicious' => $isSuspicious,
+            'message' => $message,
+            'created_at' => now(),
+        ]);
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Dashboard/ApiDashboardController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Dashboard;
+
+use App\Enums\UserRoleEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CreditPaymentResource;
+use App\Models\CreditPayment;
+use App\Support\ApiResponse;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+
+class ApiDashboardController extends Controller
+{
+    public function __invoke(Request $request)
+    {
+        $request->validate([
+            'period' => ['nullable', 'in:today,yesterday,week,month,last7,last30,custom,all'],
+            'start' => ['nullable', 'date'],
+            'end' => ['nullable', 'date', 'after_or_equal:start'],
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        $role = $user->role;
+
+        $period = (string) $request->input('period', 'today');
+
+        $start = now()->startOfDay();
+        $end = now()->endOfDay();
+
+        switch ($period) {
+            case 'today':
+                $start = now()->startOfDay();
+                $end = now()->endOfDay();
+                break;
+
+            case 'yesterday':
+                $start = now()->subDay()->startOfDay();
+                $end = now()->subDay()->endOfDay();
+                break;
+
+            case 'week':
+                $start = now()->startOfWeek()->startOfDay();
+                $end = now()->endOfDay();
+                break;
+
+            case 'month':
+                $start = now()->startOfMonth()->startOfDay();
+                $end = now()->endOfDay();
+                break;
+
+            case 'last7':
+                $start = now()->subDays(6)->startOfDay();
+                $end = now()->endOfDay();
+                break;
+
+            case 'last30':
+                $start = now()->subDays(29)->startOfDay();
+                $end = now()->endOfDay();
+                break;
+
+            case 'custom':
+                if ($request->filled('start')) {
+                    $start = Carbon::parse($request->input('start'))->startOfDay();
+                }
+                if ($request->filled('end')) {
+                    $end = Carbon::parse($request->input('end'))->endOfDay();
+                }
+                break;
+
+            case 'all':
+                $firstPaymentDate = CreditPayment::query()
+                    ->notVoided()
+                    ->min('created_at');
+
+                $start = $firstPaymentDate
+                    ? Carbon::parse($firstPaymentDate)->startOfDay()
+                    : now()->startOfDay();
+
+                $end = now()->endOfDay();
+                break;
+
+            default:
+                $period = 'today';
+                $start = now()->startOfDay();
+                $end = now()->endOfDay();
+                break;
+        }
+
+        if ($role === UserRoleEnum::CASHIER) {
+            return $this->cashierDashboard($user->id, $start, $end, $period);
+        }
+
+        return $this->adminDashboard($start, $end, $period);
+    }
+
+    private function cashierDashboard(int $userId, Carbon $start, Carbon $end, string $period)
+    {
+        $cacheKey = 'api_dashboard_cashier:' . md5(json_encode([
+            'user_id' => $userId,
+            'period' => $period,
+            'start' => $start->toDateTimeString(),
+            'end' => $end->toDateTimeString(),
+            'v' => Cache::get('admin_dashboard:v', 1),
+        ]));
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($userId, $start, $end, $period) {
+            $base = CreditPayment::query()
+                ->notVoided()
+                ->forCashier($userId);
+
+            $statsRow = (clone $base)
+                ->whereBetween('created_at', [$start, $end])
+                ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as total_net')
+                ->selectRaw('COUNT(*) as total_count')
+                ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount, 0)), 0) as avg_payment')
+                ->selectRaw('COALESCE(SUM(cash_amount), 0) as total_cash')
+                ->selectRaw('COALESCE(SUM(card_amount), 0) as total_card')
+                ->selectRaw('COALESCE(SUM(phone_amount), 0) as total_phone')
+                ->selectRaw('MAX(created_at) as last_payment_at')
+                ->first();
+
+            $recentPayments = (clone $base)
+                ->whereBetween('created_at', [$start, $end])
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get();
+
+            return [
+                'type' => 'cashier',
+                'period' => [
+                    'key' => $period,
+                    'start' => $start->format('Y-m-d H:i:s'),
+                    'end' => $end->format('Y-m-d H:i:s'),
+                ],
+                'stats' => [
+                    'total_net' => (float) ($statsRow->total_net ?? 0),
+                    'total_count' => (int) ($statsRow->total_count ?? 0),
+                    'avg_payment' => (float) ($statsRow->avg_payment ?? 0),
+                    'total_cash' => (float) ($statsRow->total_cash ?? 0),
+                    'total_card' => (float) ($statsRow->total_card ?? 0),
+                    'total_phone' => (float) ($statsRow->total_phone ?? 0),
+                    'last_payment_at' => $statsRow->last_payment_at
+                        ? Carbon::parse($statsRow->last_payment_at)->format('Y-m-d H:i:s')
+                        : null,
+                ],
+                'recent_payments' => CreditPaymentResource::collection($recentPayments)->resolve(),
+                'chart' => $this->buildChart($start, $end, $period, $userId),
+            ];
+        });
+
+        return ApiResponse::success($data, 'Dashboard fetched successfully.');
+    }
+
+    private function adminDashboard(Carbon $start, Carbon $end, string $period)
+    {
+        $dashV = (int) Cache::get('admin_dashboard:v', 1);
+
+        $cacheKey = 'api_dashboard_admin:' . md5(json_encode([
+            'v' => $dashV,
+            'period' => $period,
+            'start' => $start->toDateTimeString(),
+            'end' => $end->toDateTimeString(),
+        ]));
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($start, $end, $period) {
+            $base = CreditPayment::query()
+                ->notVoided()
+                ->whereBetween('created_at', [$start, $end]);
+
+            $row = (clone $base)
+                ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->selectRaw('COUNT(*) as total_count')
+                ->selectRaw('COALESCE(AVG(pay_amount - COALESCE(change_amount,0)),0) as avg_net')
+                ->selectRaw('COALESCE(SUM(cash_amount),0) as total_cash')
+                ->selectRaw('COALESCE(SUM(card_amount),0) as total_card')
+                ->selectRaw('COALESCE(SUM(phone_amount),0) as total_phone')
+                ->selectRaw('COUNT(CASE WHEN method = \'mixed\' THEN 1 END) as mixed_tx_count')
+                ->selectRaw('MAX(created_at) as last_payment_at')
+                ->first();
+
+            $byCashier = (clone $base)
+                ->selectRaw("
+                    created_by as cashier_id,
+                    COALESCE(created_by_name, 'N/A') as cashier_name,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
+                ->groupBy('cashier_id', 'cashier_name')
+                ->orderByDesc('total_net')
+                ->limit(12)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'cashier_id' => $item->cashier_id ? (int) $item->cashier_id : null,
+                        'cashier_name' => $item->cashier_name,
+                        'tx_count' => (int) $item->tx_count,
+                        'total_net' => (float) $item->total_net,
+                        'total_cash' => (float) $item->total_cash,
+                        'total_card' => (float) $item->total_card,
+                        'total_phone' => (float) $item->total_phone,
+                    ];
+                })
+                ->values();
+
+            $byBranch = (clone $base)
+                ->selectRaw("
+                    COALESCE(branch, 'N/A') as branch,
+                    COUNT(*) as tx_count,
+                    COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net,
+                    COALESCE(SUM(cash_amount), 0) as total_cash,
+                    COALESCE(SUM(card_amount), 0) as total_card,
+                    COALESCE(SUM(phone_amount), 0) as total_phone
+                ")
+                ->groupBy('branch')
+                ->orderByDesc('total_net')
+                ->limit(20)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'branch' => $item->branch,
+                        'tx_count' => (int) $item->tx_count,
+                        'total_net' => (float) $item->total_net,
+                        'total_cash' => (float) $item->total_cash,
+                        'total_card' => (float) $item->total_card,
+                        'total_phone' => (float) $item->total_phone,
+                    ];
+                })
+                ->values();
+
+            $recentPayments = (clone $base)
+                ->with([
+                    'correctedByUser:id,firstname,lastname',
+                    'voidedByUser:id,firstname,lastname',
+                ])
+                ->orderByDesc('id')
+                ->limit(20)
+                ->get();
+
+            return [
+                'type' => 'admin',
+                'period' => [
+                    'key' => $period,
+                    'start' => $start->format('Y-m-d H:i:s'),
+                    'end' => $end->format('Y-m-d H:i:s'),
+                ],
+                'stats' => [
+                    'total_net' => (float) ($row->total_net ?? 0),
+                    'total_count' => (int) ($row->total_count ?? 0),
+                    'avg_net' => (float) ($row->avg_net ?? 0),
+                    'total_cash' => (float) ($row->total_cash ?? 0),
+                    'total_card' => (float) ($row->total_card ?? 0),
+                    'total_phone' => (float) ($row->total_phone ?? 0),
+                    'all_total' => (float) (
+                        ($row->total_cash ?? 0) +
+                        ($row->total_card ?? 0) +
+                        ($row->total_phone ?? 0)
+                    ),
+                    'mixed_tx_count' => (int) ($row->mixed_tx_count ?? 0),
+                    'last_payment_at' => $row->last_payment_at
+                        ? Carbon::parse($row->last_payment_at)->format('Y-m-d H:i:s')
+                        : null,
+                ],
+                'top_cashier' => $byCashier->first(),
+                'by_cashier' => $byCashier,
+                'by_branch' => $byBranch,
+                'recent_payments' => CreditPaymentResource::collection($recentPayments)->resolve(),
+                'chart' => $this->buildChart($start, $end, $period),
+            ];
+        });
+
+        return ApiResponse::success($data, 'Dashboard fetched successfully.');
+    }
+
+    private function buildChart(Carbon $start, Carbon $end, string $period, ?int $cashierId = null): array
+    {
+        $query = CreditPayment::query()
+            ->notVoided()
+            ->whereBetween('created_at', [$start, $end]);
+
+        if ($cashierId !== null) {
+            $query->forCashier($cashierId);
+        }
+
+        if (in_array($period, ['today', 'yesterday'], true)) {
+            $hours = collect(range(0, 23));
+
+            $rows = (clone $query)
+                ->selectRaw('EXTRACT(HOUR FROM created_at) as h, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->groupBy('h')
+                ->pluck('total_net', 'h');
+
+            return [
+                'labels' => $hours->map(fn($h) => str_pad((string) $h, 2, '0', STR_PAD_LEFT) . ':00')->values()->all(),
+                'series' => $hours->map(fn($h) => (float) ($rows[$h] ?? 0))->values()->all(),
+            ];
+        }
+
+        if ($period === 'week') {
+            $days = collect();
+            $cursor = $start->copy();
+
+            while ($cursor <= $end) {
+                $days->push($cursor->copy());
+                $cursor->addDay();
+            }
+
+            $rows = (clone $query)
+                ->selectRaw('DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->groupBy('d')
+                ->pluck('total_net', 'd');
+
+            return [
+                'labels' => $days->map(fn($d) => $d->format('d.m'))->values()->all(),
+                'series' => $days->map(fn($d) => (float) ($rows[$d->toDateString()] ?? 0))->values()->all(),
+            ];
+        }
+
+        if ($period === 'last7') {
+            $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
+
+            $rows = (clone $query)
+                ->selectRaw('DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->groupBy('d')
+                ->pluck('total_net', 'd');
+
+            return [
+                'labels' => $days->map(fn($d) => $d->format('d.m'))->values()->all(),
+                'series' => $days->map(fn($d) => (float) ($rows[$d->toDateString()] ?? 0))->values()->all(),
+            ];
+        }
+
+        if ($period === 'month') {
+            $daysInMonth = $end->day;
+            $days = collect(range(1, $daysInMonth));
+
+            $rows = (clone $query)
+                ->selectRaw('EXTRACT(DAY FROM created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->groupBy('d')
+                ->pluck('total_net', 'd');
+
+            return [
+                'labels' => $days->map(fn($d) => str_pad((string) $d, 2, '0', STR_PAD_LEFT))->values()->all(),
+                'series' => $days->map(fn($d) => (float) ($rows[$d] ?? 0))->values()->all(),
+            ];
+        }
+
+        if ($period === 'last30' || $period === 'custom') {
+            $days = collect();
+            $cursor = $start->copy()->startOfDay();
+
+            while ($cursor <= $end) {
+                $days->push($cursor->copy());
+                $cursor->addDay();
+            }
+
+            $rows = (clone $query)
+                ->selectRaw('DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net')
+                ->groupBy('d')
+                ->pluck('total_net', 'd');
+
+            return [
+                'labels' => $days->map(fn($d) => $d->format('d.m'))->values()->all(),
+                'series' => $days->map(fn($d) => (float) ($rows[$d->toDateString()] ?? 0))->values()->all(),
+            ];
+        }
+
+        if ($period === 'all') {
+            $firstPaymentDate = CreditPayment::query()
+                ->notVoided()
+                ->min('created_at');
+
+            if ($firstPaymentDate) {
+                $firstMonth = Carbon::parse($firstPaymentDate)->startOfMonth();
+                $lastMonth = now()->startOfMonth();
+
+                $months = collect();
+                $cursor = $firstMonth->copy();
+
+                while ($cursor <= $lastMonth) {
+                    $months->push($cursor->copy());
+                    $cursor->addMonth();
+                }
+
+                $monthQuery = CreditPayment::query()
+                    ->notVoided()
+                    ->whereBetween('created_at', [$firstMonth->copy()->startOfDay(), now()->endOfDay()]);
+
+                if ($cashierId !== null) {
+                    $monthQuery->forCashier($cashierId);
+                }
+
+                $rows = $monthQuery
+                    ->selectRaw("
+                        TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') as month_key,
+                        COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net
+                    ")
+                    ->groupBy('month_key')
+                    ->orderBy('month_key')
+                    ->pluck('total_net', 'month_key');
+
+                return [
+                    'labels' => $months->map(fn($m) => $m->format('m.Y'))->values()->all(),
+                    'series' => $months->map(fn($m) => (float) ($rows[$m->format('Y-m')] ?? 0))->values()->all(),
+                ];
+            }
+        }
+
+        return [
+            'labels' => [],
+            'series' => [],
+        ];
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Logs/ApiLogsController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Logs;
+
+use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\LoginHistory;
+use App\Models\SecurityAlert;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class ApiLogsController extends Controller
+{
+    public function index(Request $request)
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:150'],
+            'type' => ['nullable', 'in:all,activity,login,alert'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $q = trim((string) $request->input('q', ''));
+        $type = (string) $request->input('type', 'all');
+        $perPage = (int) $request->input('per_page', 20);
+
+        $dateFrom = $request->filled('date_from')
+            ? $request->date('date_from')->startOfDay()
+            : null;
+
+        $dateTo = $request->filled('date_to')
+            ? $request->date('date_to')->endOfDay()
+            : null;
+
+        $items = collect();
+
+        if ($type === 'all' || $type === 'activity') {
+            $activityLogs = ActivityLog::query()
+                ->when($q !== '', function ($query) use ($q) {
+                    $like = '%' . $q . '%';
+
+                    $query->where(function ($sub) use ($like) {
+                        $sub->where('action', 'ilike', $like)
+                            ->orWhere('category', 'ilike', $like)
+                            ->orWhere('severity', 'ilike', $like)
+                            ->orWhere('message', 'ilike', $like)
+                            ->orWhere('user_name', 'ilike', $like)
+                            ->orWhere('user_email', 'ilike', $like)
+                            ->orWhere('user_phone', 'ilike', $like)
+                            ->orWhere('user_role', 'ilike', $like)
+                            ->orWhere('ip_address', 'ilike', $like)
+                            ->orWhere('browser', 'ilike', $like)
+                            ->orWhere('platform', 'ilike', $like)
+                            ->orWhere('route_name', 'ilike', $like)
+                            ->orWhere('subject_type', 'ilike', $like)
+                            ->orWhere('subject_id', 'ilike', $like);
+                    });
+                })
+                ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
+                    $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+                })
+                ->latest('created_at')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'type' => 'activity',
+                        'id' => (int) $row->id,
+                        'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                        'main_title' => $row->action,
+                        'sub_title' => $row->category,
+                        'user_text' => $row->user_name ?: $row->user_email ?: '-',
+                        'status_text' => $row->is_success ? 'success' : 'failed',
+                        'level_text' => $row->severity ?: 'info',
+                        'ip_address' => $row->ip_address,
+                        'message' => $row->message,
+                        'raw' => [
+                            'id' => $row->id,
+                            'user_id' => $row->user_id,
+                            'user_name' => $row->user_name,
+                            'user_email' => $row->user_email,
+                            'user_phone' => $row->user_phone,
+                            'user_role' => $row->user_role,
+                            'action' => $row->action,
+                            'category' => $row->category,
+                            'severity' => $row->severity,
+                            'is_suspicious' => $row->is_suspicious,
+                            'subject_type' => $row->subject_type,
+                            'subject_id' => $row->subject_id,
+                            'ip_address' => $row->ip_address,
+                            'user_agent' => $row->user_agent,
+                            'device_type' => $row->device_type,
+                            'browser' => $row->browser,
+                            'platform' => $row->platform,
+                            'http_method' => $row->http_method,
+                            'url' => $row->url,
+                            'route_name' => $row->route_name,
+                            'is_success' => $row->is_success,
+                            'message' => $row->message,
+                            'old_values' => $row->old_values,
+                            'new_values' => $row->new_values,
+                            'extra' => $row->extra,
+                            'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                        ],
+                    ];
+                });
+
+            $items = $items->merge($activityLogs);
+        }
+
+        if ($type === 'all' || $type === 'login') {
+            $loginHistories = LoginHistory::query()
+                ->when($q !== '', function ($query) use ($q) {
+                    $like = '%' . $q . '%';
+
+                    $query->where(function ($sub) use ($like) {
+                        $sub->where('login_value', 'ilike', $like)
+                            ->orWhere('status', 'ilike', $like)
+                            ->orWhere('fail_reason', 'ilike', $like)
+                            ->orWhere('message', 'ilike', $like)
+                            ->orWhere('ip_address', 'ilike', $like)
+                            ->orWhere('browser', 'ilike', $like)
+                            ->orWhere('platform', 'ilike', $like)
+                            ->orWhere('device_type', 'ilike', $like);
+                    });
+                })
+                ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
+                    $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+                })
+                ->latest('created_at')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'type' => 'login',
+                        'id' => (int) $row->id,
+                        'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                        'main_title' => $row->status,
+                        'sub_title' => $row->fail_reason,
+                        'user_text' => $row->login_value ?: '-',
+                        'status_text' => $row->status ?: '-',
+                        'level_text' => $row->is_suspicious ? 'warning' : 'info',
+                        'ip_address' => $row->ip_address,
+                        'message' => $row->message,
+                        'raw' => [
+                            'id' => $row->id,
+                            'user_id' => $row->user_id,
+                            'login_value' => $row->login_value,
+                            'status' => $row->status,
+                            'fail_reason' => $row->fail_reason,
+                            'ip_address' => $row->ip_address,
+                            'user_agent' => $row->user_agent,
+                            'device_type' => $row->device_type,
+                            'browser' => $row->browser,
+                            'platform' => $row->platform,
+                            'is_suspicious' => $row->is_suspicious,
+                            'message' => $row->message,
+                            'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                        ],
+                    ];
+                });
+
+            $items = $items->merge($loginHistories);
+        }
+
+        if ($type === 'all' || $type === 'alert') {
+            $securityAlerts = SecurityAlert::query()
+                ->when($q !== '', function ($query) use ($q) {
+                    $like = '%' . $q . '%';
+
+                    $query->where(function ($sub) use ($like) {
+                        $sub->where('alert_type', 'ilike', $like)
+                            ->orWhere('risk_level', 'ilike', $like)
+                            ->orWhere('message', 'ilike', $like)
+                            ->orWhere('ip_address', 'ilike', $like);
+                    });
+                })
+                ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
+                    $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+                })
+                ->latest('created_at')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'type' => 'alert',
+                        'id' => (int) $row->id,
+                        'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                        'main_title' => $row->alert_type,
+                        'sub_title' => $row->risk_level,
+                        'user_text' => $row->user_id ? 'User #' . $row->user_id : '-',
+                        'status_text' => $row->is_resolved ? 'resolved' : 'open',
+                        'level_text' => $row->risk_level ?: 'medium',
+                        'ip_address' => $row->ip_address,
+                        'message' => $row->message,
+                        'raw' => [
+                            'id' => $row->id,
+                            'user_id' => $row->user_id,
+                            'alert_type' => $row->alert_type,
+                            'risk_level' => $row->risk_level,
+                            'is_resolved' => $row->is_resolved,
+                            'ip_address' => $row->ip_address,
+                            'message' => $row->message,
+                            'meta' => $row->meta,
+                            'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                            'resolved_at' => optional($row->resolved_at)?->format('Y-m-d H:i:s'),
+                        ],
+                    ];
+                });
+
+            $items = $items->merge($securityAlerts);
+        }
+
+        $items = $items->sortByDesc('created_at')->values();
+
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $pageItems = $items
+            ->slice(($currentPage - 1) * $perPage, $perPage)
+            ->values();
+
+        $paginator = new LengthAwarePaginator(
+            $pageItems,
+            $items->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $stats = [
+            'total' => $items->count(),
+            'activity' => $items->where('type', 'activity')->count(),
+            'login' => $items->where('type', 'login')->count(),
+            'alert' => $items->where('type', 'alert')->count(),
+
+            'success_count' => $items->where('status_text', 'success')->count(),
+            'failed_count' => $items->where('status_text', 'failed')->count(),
+            'resolved_count' => $items->where('status_text', 'resolved')->count(),
+            'open_count' => $items->where('status_text', 'open')->count(),
+
+            'critical_count' => $items->where('level_text', 'critical')->count(),
+            'warning_count' => $items->where('level_text', 'warning')->count(),
+            'info_count' => $items->where('level_text', 'info')->count(),
+            'medium_count' => $items->where('level_text', 'medium')->count(),
+            'high_count' => $items->where('level_text', 'high')->count(),
+        ];
+
+        return ApiResponse::paginated(
+            $paginator,
+            $pageItems,
+            'Logs fetched successfully.'
+        )->setData([
+            'success' => true,
+            'message' => 'Logs fetched successfully.',
+            'data' => $pageItems,
+            'meta' => [
+                'stats' => $stats,
+                'pagination' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                    'from' => $paginator->firstItem(),
+                    'to' => $paginator->lastItem(),
+                    'has_more_pages' => $paginator->hasMorePages(),
+                ],
+            ],
+        ]);
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Profile/ApiProfileController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Profile;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
+use App\Services\AuditLogger;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class ApiProfileController extends Controller
+{
+    public function show(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        return ApiResponse::success(
+            new UserResource($user),
+            'Profile fetched successfully.'
+        );
+    }
+
+    public function update(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+        ]);
+
+        $validated = $request->validate([
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phonenumber' => ['required', 'string', 'max:50', 'unique:users,phonenumber,' . $user->id],
+        ]);
+
+        $changed = false;
+
+        foreach (['firstname', 'lastname', 'email', 'phonenumber'] as $field) {
+            $newValue = $validated[$field] ?? null;
+
+            if ($newValue !== $user->$field) {
+                $user->$field = $newValue;
+                $changed = true;
+            }
+        }
+
+        if (!$changed) {
+            return ApiResponse::success(
+                new UserResource($user),
+                'No changes detected.'
+            );
+        }
+
+        $user->save();
+
+        $new = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+        ]);
+
+        $audit->log(
+            action: 'api_profile_updated',
+            category: 'profile',
+            subject: $user,
+            oldValues: $old,
+            newValues: $new,
+            extra: [
+                'password_changed' => false,
+            ],
+            message: 'Profile updated via API',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
+
+        return ApiResponse::success(
+            new UserResource($user->fresh()),
+            'Profile updated successfully.'
+        );
+    }
+
+    public function changePassword(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        $audit = app(AuditLogger::class);
+
+        $validated = $request->validate([
+            'old_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'confirmed', 'min:6'],
+        ]);
+
+        if (!Hash::check($validated['old_password'], $user->password)) {
+            return ApiResponse::error(
+                'Old password is incorrect.',
+                422,
+                'OLD_PASSWORD_INCORRECT'
+            );
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        $audit->log(
+            action: 'api_profile_password_changed',
+            category: 'profile',
+            subject: $user,
+            oldValues: null,
+            newValues: null,
+            extra: [
+                'password_changed' => true,
+            ],
+            message: 'Password changed via API',
+            isSuccess: true,
+            severity: 'warning',
+            isSuspicious: true
+        );
+
+        $audit->alert(
+            alertType: 'api_password_changed',
+            riskLevel: 'medium',
+            message: 'User password changed via API',
+            meta: [
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]
+        );
+
+        return ApiResponse::success(
+            null,
+            'Password updated successfully.'
+        );
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Users/ApiUserController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Users;
+
+use App\Enums\UserRoleEnum;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
+use App\Models\User;
+use App\Services\AuditLogger;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class ApiUserController extends Controller
+{
+    public function index(Request $request)
+    {
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = $request->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return ApiResponse::error(
+                'You do not have permission to view users.',
+                403,
+                'USER_VIEW_FORBIDDEN'
+            );
+        }
+
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $q = trim((string) $request->input('q', ''));
+        $perPage = (int) $request->input('per_page', 20);
+
+        $query = User::query()->orderBy('id', 'asc');
+
+        if (!$currentUser->isSuperAdmin()) {
+            $query->where('role', '!=', UserRoleEnum::SUPER_ADMIN->value);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('firstname', 'ILIKE', "%{$q}%")
+                    ->orWhere('lastname', 'ILIKE', "%{$q}%")
+                    ->orWhere('email', 'ILIKE', "%{$q}%")
+                    ->orWhere('phonenumber', 'ILIKE', "%{$q}%")
+                    ->orWhere('position', 'ILIKE', "%{$q}%");
+            });
+        }
+
+        $users = $query
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        $allowedRoles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => [
+                'value' => $role->value,
+                'label' => $role->label(),
+            ])
+            ->values()
+            ->all();
+
+        return ApiResponse::paginated(
+            $users,
+            [
+                'users' => UserResource::collection($users->getCollection())->resolve(),
+                'allowed_roles' => $allowedRoles,
+            ],
+            'Users fetched successfully.'
+        );
+    }
+
+    public function store(Request $request)
+    {
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = $request->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return ApiResponse::error(
+                'You do not have permission to create users.',
+                403,
+                'USER_CREATE_FORBIDDEN'
+            );
+        }
+
+        $allowedRoles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => $role->value)
+            ->values()
+            ->all();
+
+        $validated = $request->validate([
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phonenumber' => ['required', 'string', 'max:50', 'unique:users,phonenumber'],
+            'password' => ['required', 'string', 'min:6'],
+            'role' => ['required', 'in:' . implode(',', $allowedRoles)],
+            'position' => ['nullable', 'string', 'max:255'],
+            'status' => ['required', 'boolean'],
+        ]);
+
+        if (
+            $validated['role'] === UserRoleEnum::SUPER_ADMIN->value &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return ApiResponse::error(
+                'Only Super Admin can create Super Admin user.',
+                403,
+                'SUPER_ADMIN_CREATE_FORBIDDEN'
+            );
+        }
+
+        $audit = app(AuditLogger::class);
+
+        $user = User::create([
+            'firstname' => $validated['firstname'],
+            'lastname' => $validated['lastname'],
+            'email' => $validated['email'],
+            'phonenumber' => $validated['phonenumber'],
+            'password' => Hash::make($validated['password']),
+            'role' => UserRoleEnum::from($validated['role'])->value,
+            'position' => $validated['position'] ?? null,
+            'status' => $validated['status'],
+        ]);
+
+        $audit->log(
+            action: 'api_user_created',
+            category: 'user',
+            subject: $user,
+            oldValues: null,
+            newValues: [
+                'firstname' => $user->firstname,
+                'lastname' => $user->lastname,
+                'email' => $user->email,
+                'phonenumber' => $user->phonenumber,
+                'position' => $user->position,
+                'role' => $user->role?->value ?? $user->role,
+                'status' => $user->status,
+            ],
+            extra: null,
+            message: 'User created via API',
+            isSuccess: true,
+            severity: 'info',
+            isSuspicious: false
+        );
+
+        return ApiResponse::success(
+            new UserResource($user),
+            'User created successfully.',
+            201
+        );
+    }
+
+    public function update(Request $request, User $user)
+    {
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = $request->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return ApiResponse::error(
+                'You do not have permission to update users.',
+                403,
+                'USER_UPDATE_FORBIDDEN'
+            );
+        }
+
+        if (
+            $user->role === UserRoleEnum::SUPER_ADMIN &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return ApiResponse::error(
+                'You cannot modify Super Admin user.',
+                403,
+                'SUPER_ADMIN_MODIFY_FORBIDDEN'
+            );
+        }
+
+        $allowedRoles = collect(UserRoleEnum::cases())
+            ->filter(function ($role) use ($currentUser) {
+                if ($currentUser->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $role !== UserRoleEnum::SUPER_ADMIN;
+            })
+            ->map(fn($role) => $role->value)
+            ->values()
+            ->all();
+
+        $validated = $request->validate([
+            'firstname' => ['required', 'string', 'max:255'],
+            'lastname' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phonenumber' => ['required', 'string', 'max:50', 'unique:users,phonenumber,' . $user->id],
+            'role' => ['required', 'in:' . implode(',', $allowedRoles)],
+            'position' => ['nullable', 'string', 'max:255'],
+            'status' => ['required', 'boolean'],
+            'password' => ['nullable', 'string', 'min:6'],
+        ]);
+
+        if (
+            $validated['role'] === UserRoleEnum::SUPER_ADMIN->value &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return ApiResponse::error(
+                'Only Super Admin can assign Super Admin role.',
+                403,
+                'SUPER_ADMIN_ASSIGN_FORBIDDEN'
+            );
+        }
+
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'role',
+            'status',
+        ]);
+
+        $old['role'] = $user->role?->value ?? $user->role;
+
+        $data = [
+            'firstname' => $validated['firstname'],
+            'lastname' => $validated['lastname'],
+            'email' => $validated['email'],
+            'phonenumber' => $validated['phonenumber'],
+            'position' => $validated['position'] ?? null,
+            'status' => $validated['status'],
+            'role' => UserRoleEnum::from($validated['role'])->value,
+        ];
+
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($data);
+
+        $freshUser = $user->fresh();
+
+        $new = $freshUser->only([
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'status',
+        ]);
+
+        $new['role'] = $freshUser->role?->value ?? $freshUser->role;
+
+        $audit->log(
+            action: 'api_user_updated',
+            category: 'user',
+            subject: $user,
+            oldValues: $old,
+            newValues: $new,
+            extra: null,
+            message: 'User updated via API',
+            isSuccess: true,
+            severity: 'warning',
+            isSuspicious: ($old['role'] !== $new['role']) || ((bool) $old['status'] !== (bool) $new['status'])
+        );
+
+        if ($old['role'] !== $new['role']) {
+            $audit->alert(
+                alertType: 'api_user_role_changed',
+                riskLevel: 'high',
+                message: 'A user role was changed via API',
+                meta: [
+                    'user_id' => $user->id,
+                    'old_role' => $old['role'],
+                    'new_role' => $new['role'],
+                ]
+            );
+        }
+
+        if ((bool) $old['status'] !== (bool) $new['status']) {
+            $audit->alert(
+                alertType: 'api_user_status_changed',
+                riskLevel: 'high',
+                message: 'A user status was changed via API',
+                meta: [
+                    'user_id' => $user->id,
+                    'old_status' => $old['status'],
+                    'new_status' => $new['status'],
+                ]
+            );
+        }
+
+        return ApiResponse::success(
+            new UserResource($freshUser),
+            'User updated successfully.'
+        );
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = $request->user();
+
+        if (!$currentUser || !$currentUser->canManageUsers()) {
+            return ApiResponse::error(
+                'You do not have permission to delete users.',
+                403,
+                'USER_DELETE_FORBIDDEN'
+            );
+        }
+
+        if (
+            $user->role === UserRoleEnum::SUPER_ADMIN &&
+            !$currentUser->isSuperAdmin()
+        ) {
+            return ApiResponse::error(
+                'You cannot delete Super Admin user.',
+                403,
+                'SUPER_ADMIN_DELETE_FORBIDDEN'
+            );
+        }
+
+        if ($currentUser->id === $user->id) {
+            return ApiResponse::error(
+                'You cannot delete your own account.',
+                422,
+                'SELF_DELETE_FORBIDDEN'
+            );
+        }
+
+        $audit = app(AuditLogger::class);
+
+        $old = $user->only([
+            'id',
+            'firstname',
+            'lastname',
+            'email',
+            'phonenumber',
+            'position',
+            'role',
+            'status',
+        ]);
+
+        $old['role'] = $user->role?->value ?? $user->role;
+
+        $user->delete();
+
+        $audit->log(
+            action: 'api_user_deleted',
+            category: 'user',
+            subject: null,
+            oldValues: $old,
+            newValues: null,
+            extra: [
+                'deleted_user_id' => $old['id'],
+            ],
+            message: 'User deleted via API',
+            isSuccess: true,
+            severity: 'critical',
+            isSuspicious: true
+        );
+
+        $audit->alert(
+            alertType: 'api_user_deleted',
+            riskLevel: 'critical',
+            message: 'A user account was deleted via API',
+            meta: $old
+        );
+
+        return ApiResponse::success(
+            null,
+            'User deleted successfully.'
+        );
+    }
+}
+
+
+===== src/App/Http/Controllers/Api/V1/Reports/ApiReportController.php =====
+<?php
+
+namespace App\Http\Controllers\Api\V1\Reports;
+
+use App\Http\Controllers\Controller;
+use App\Models\AvshocrecatReport;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+
+class ApiReportController extends Controller
+{
+    public function index(Request $request)
+    {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $q = trim((string) $request->input('q', ''));
+        $perPage = (int) $request->input('per_page', 20);
+
+        $query = AvshocrecatReport::query();
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('karz_alyjy', 'ILIKE', "%{$q}%")
+                    ->orWhere('pasport_belgisi', 'ILIKE', "%{$q}%")
+                    ->orWhere('telefon_belgisi', 'ILIKE', "%{$q}%")
+                    ->orWhere('tiger_kody', 'ILIKE', "%{$q}%")
+                    ->orWhere('magazyn', 'ILIKE', "%{$q}%")
+                    ->orWhere('maglumat', 'ILIKE', "%{$q}%")
+                    ->orWhere('sertnama_nomeri', 'ILIKE', "%{$q}%");
+            });
+        }
+
+        $rows = $query
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        return ApiResponse::paginated(
+            $rows,
+            $rows->getCollection()->map(function ($row) {
+                return [
+                    'id' => (int) $row->id,
+                    'magazyn' => $row->magazyn,
+                    'karz_alyjy' => $row->karz_alyjy,
+                    'telefon_belgisi' => $row->telefon_belgisi,
+                    'pasport_belgisi' => $row->pasport_belgisi,
+                    'sertnama_nomeri' => $row->sertnama_nomeri,
+                    'tiger_kody' => $row->tiger_kody,
+                    'kt_cykdajy' => $row->kt_cykdajy,
+                    'dt_girdeji' => $row->dt_girdeji,
+                    'galyndy' => $row->galyndy,
+                    'aylyk_tolegi' => $row->aylyk_tolegi,
+                    'tolejek_senesi' => optional($row->tolejek_senesi)?->format('Y-m-d'),
+                    'statusy' => $row->statusy,
+                    'created_at' => optional($row->created_at)?->format('Y-m-d H:i:s'),
+                    'updated_at' => optional($row->updated_at)?->format('Y-m-d H:i:s'),
+                ];
+            })->values(),
+            'Report list fetched successfully.'
+        );
+    }
+
+    public function show(AvshocrecatReport $report)
+    {
+        return ApiResponse::success([
+            'id' => (int) $report->id,
+            'magazyn' => $report->magazyn,
+            'karz_alyjy' => $report->karz_alyjy,
+            'telefon_belgisi' => $report->telefon_belgisi,
+            'pasport_belgisi' => $report->pasport_belgisi,
+            'sertnama_nomeri' => $report->sertnama_nomeri,
+            'tiger_kody' => $report->tiger_kody,
+            'kt_cykdajy' => $report->kt_cykdajy,
+            'dt_girdeji' => $report->dt_girdeji,
+            'm1' => $report->m1,
+            'm2' => $report->m2,
+            'm3' => $report->m3,
+            'm4' => $report->m4,
+            'm5' => $report->m5,
+            'm6' => $report->m6,
+            'galyndy' => $report->galyndy,
+            'aylyk_tolegi' => $report->aylyk_tolegi,
+            'karz_alan_senesi' => $report->karz_alan_senesi,
+            'gutaryan_senesi' => $report->gutaryan_senesi,
+            'kategoriyasy' => $report->kategoriyasy,
+            'maglumat' => $report->maglumat,
+            'bellik' => $report->bellik,
+            'tolejek_senesi' => optional($report->tolejek_senesi)?->format('Y-m-d'),
+            'statusy' => $report->statusy,
+            'created_at' => optional($report->created_at)?->format('Y-m-d H:i:s'),
+            'updated_at' => optional($report->updated_at)?->format('Y-m-d H:i:s'),
+        ], 'Report detail fetched successfully.');
+    }
+}
+
+

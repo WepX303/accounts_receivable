@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Support\ApiResponse;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
@@ -24,27 +29,75 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
-            //
-        });
+        //
     }
 
-    // public function register(): void
-    // {
-    //     // 1) HTTP hataları: 401/403/404/419/429/503 vs.
-    //     $this->renderable(function (HttpExceptionInterface $e, $request) {
-    //         $status = $e->getStatusCode();
+    public function render($request, Throwable $e)
+    {
+        if ($request->is('api/*')) {
+            if ($e instanceof ValidationException) {
+                return ApiResponse::error(
+                    'Validation failed.',
+                    422,
+                    'VALIDATION_ERROR',
+                    $e->errors()
+                );
+            }
 
-    //         return match ($status) {
-    //             404 => response()->view('errors.404', ['exception' => $e], 404),
-    //             500 => response()->view('errors.500', ['exception' => $e], 500),
-    //             default => response()->view('errors.other', ['exception' => $e, 'status' => $status], $status),
-    //         };
-    //     });
+            if ($e instanceof AuthenticationException) {
+                return ApiResponse::error(
+                    'Unauthorized.',
+                    401,
+                    'UNAUTHORIZED'
+                );
+            }
 
-    //     // 2) HttpException olmayan tüm hatalar (gerçek 500'ler)
-    //     $this->renderable(function (Throwable $e, $request) {
-    //         return response()->view('errors.500', ['exception' => $e], 500);
-    //     });
-    // }
+            if ($e instanceof ModelNotFoundException) {
+                return ApiResponse::error(
+                    'Resource not found.',
+                    404,
+                    'RESOURCE_NOT_FOUND'
+                );
+            }
+
+            if ($e instanceof ThrottleRequestsException) {
+                return ApiResponse::error(
+                    'Too many requests.',
+                    429,
+                    'TOO_MANY_REQUESTS'
+                );
+            }
+
+            if ($e instanceof HttpExceptionInterface) {
+                $status = $e->getStatusCode();
+
+                $message = match ($status) {
+                    401 => 'Unauthorized.',
+                    403 => 'Forbidden.',
+                    404 => 'Resource not found.',
+                    405 => 'Method not allowed.',
+                    419 => 'Page expired.',
+                    422 => 'Validation failed.',
+                    429 => 'Too many requests.',
+                    default => $status >= 500 ? 'Server error.' : ($e->getMessage() ?: 'Request failed.'),
+                };
+
+                return ApiResponse::error(
+                    $message,
+                    $status,
+                    'HTTP_' . $status
+                );
+            }
+
+            report($e);
+
+            return ApiResponse::error(
+                'Server error.',
+                500,
+                'SERVER_ERROR'
+            );
+        }
+
+        return parent::render($request, $e);
+    }
 }

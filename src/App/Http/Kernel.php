@@ -42,7 +42,8 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \App\Http\Middleware\ApiRequestLogger::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -69,6 +70,9 @@ class Kernel extends HttpKernel
         'auth.token' => \App\Http\Middleware\AuthToken::class,
         'set.locale' => \App\Http\Middleware\SetLocale::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'api.auth.token' => \App\Http\Middleware\ApiAuthToken::class,
+        'api.role' => \App\Http\Middleware\ApiRoleMiddleware::class,
+        'api.request.logger' => \App\Http\Middleware\ApiRequestLogger::class,
 
     ];
 }
