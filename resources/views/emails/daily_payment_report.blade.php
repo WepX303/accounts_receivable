@@ -100,7 +100,7 @@
                 </table>
 
                 <!-- Payment Method Summary -->
-                <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
+                {{-- <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
                     Collection by Payment Method
                 </h2>
 
@@ -146,6 +146,62 @@
                                 </td>
                             </tr>
                         @endforelse
+                    </tbody>
+                </table> --}}
+
+                <!-- Payment Method Summary -->
+                <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
+                    Collection by Payment Method
+                </h2>
+
+                <table role="presentation"
+                    style="width:100%; border-collapse:collapse; margin-bottom:30px; border:1px solid #e5e7eb;">
+                    <thead>
+                        <tr style="background-color:#f8fafc;">
+                            <th
+                                style="padding:12px 16px; border:1px solid #e5e7eb; text-align:left; font-size:14px; line-height:22px; font-weight:700; color:#111827;">
+                                Payment Method
+                            </th>
+                            <th
+                                style="padding:12px 16px; border:1px solid #e5e7eb; text-align:right; font-size:14px; line-height:22px; font-weight:700; color:#111827;">
+                                Count
+                            </th>
+                            <th
+                                style="padding:12px 16px; border:1px solid #e5e7eb; text-align:right; font-size:14px; line-height:22px; font-weight:700; color:#111827;">
+                                Amount
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $methods = ['cash', 'card', 'phone'];
+                        @endphp
+
+                        @foreach ($methods as $method)
+                            <tr>
+                                <td
+                                    style="padding:12px 16px; border:1px solid #e5e7eb; font-size:14px; line-height:22px; color:#111827;">
+                                    {{ ucfirst($method) }}
+                                </td>
+                                <td
+                                    style="padding:12px 16px; border:1px solid #e5e7eb; text-align:right; font-size:14px; line-height:22px; color:#111827;">
+                                    {{ $report['method_summary'][$method]['count'] ?? 0 }}
+                                </td>
+                                <td
+                                    style="padding:12px 16px; border:1px solid #e5e7eb; text-align:right; font-size:14px; line-height:22px; color:#111827;">
+                                    {{ number_format($report['method_summary'][$method]['amount'] ?? 0, 2) }} TMT
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        @if (empty($report['method_summary']))
+                            <tr>
+                                <td colspan="3"
+                                    style="padding:14px 16px; border:1px solid #e5e7eb; text-align:center; font-size:14px; line-height:22px; color:#6b7280;">
+                                    No payment method data available.
+                                </td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
 
