@@ -150,7 +150,7 @@
                 </table> --}}
 
                 <!-- Payment Method Summary -->
-                <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
+                {{-- <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
                     Collection by Payment Method
                 </h2>
 
@@ -203,7 +203,7 @@
                             </tr>
                         @endif
                     </tbody>
-                </table>
+                </table> --}}
 
                 <!-- Branch Summary -->
                 <h2 style="margin:0 0 14px 0; font-size:18px; line-height:26px; color:#111827; font-weight:700;">
