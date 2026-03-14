@@ -19,7 +19,10 @@ class Kernel extends ConsoleKernel
             ->between('09:00', '22:59')
             ->withoutOverlapping(10)
             ->runInBackground();
+
+        $schedule->command('report:daily-payments')->dailyAt('23:00');
     }
+
 
     /**
      * Register the commands for the application.
@@ -36,5 +39,6 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\LaravelClearLogs::class,
         \App\Console\Commands\CreditsInitLocalFields::class,
         \App\Console\Commands\SyncRunCommand::class,
+        \App\Console\Commands\SendDailyPaymentReportCommand::class,
     ];
 }
