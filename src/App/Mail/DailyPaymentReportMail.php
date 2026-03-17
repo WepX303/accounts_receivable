@@ -23,4 +23,18 @@ class DailyPaymentReportMail extends Mailable
             ->subject('Daily Payment Report - ' . $this->report['date'])
             ->view('emails.daily_payment_report');
     }
+
+    // public function build(): static
+    // {
+    //     return $this
+    //         ->subject('Daily Payment Report - ' . $this->report['date'])
+    //         ->view('emails.daily_payment_report')
+    //         ->attach(public_path('images/email-logo.png'), [
+    //             'as' => 'logo.png',
+    //             'mime' => 'image/png',
+    //         ])
+    //         ->with([
+    //             'logo_cid' => 'logo.png',
+    //         ]);
+    // }
 }

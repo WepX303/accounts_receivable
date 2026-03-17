@@ -24,7 +24,12 @@ class SendDailyPaymentReportCommand extends Command
 
         $report = $reportService->getTodayReport();
 
-        Mail::to($emails)->send(new DailyPaymentReportMail($report));
+        // Mail::to($emails)->send(new DailyPaymentReportMail($report));
+        
+        foreach ($emails as $email) {
+            Mail::to($email)
+                ->send(new DailyPaymentReportMail($report));
+        }
 
         $this->info('Daily payment report sent successfully.');
 

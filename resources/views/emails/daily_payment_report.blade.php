@@ -15,9 +15,15 @@
 
             <!-- Header -->
             <div style="background-color:#0f172a; padding:28px 32px;">
+                {{-- <img src="cid:{{ $logo_cid }}" style="height:40px; margin-bottom:16px;"> --}}
                 <h1 style="margin:0; font-size:24px; line-height:32px; color:#ffffff; font-weight:700;">
                     Daily Credit Collection Report
                 </h1>
+                <!-- Automated email notice -->
+                <p style="margin:8px 0 0 0; font-size:14px; line-height:22px; color:#fcd34d;">
+                    This is an informational and reporting email generated automatically by the WepX system.
+                    Please do not reply or contact the sender.
+                </p>
                 <p style="margin:8px 0 0 0; font-size:14px; line-height:22px; color:#cbd5e1;">
                     Summary of collected credit payments for the selected reporting date.
                 </p>
@@ -259,7 +265,7 @@
             <!-- Footer -->
             <div style="padding:18px 32px; background-color:#f9fafb; border-top:1px solid #e5e7eb;">
                 <p style="margin:0; font-size:12px; line-height:20px; color:#6b7280; text-align:center;">
-                    This report was generated automatically by WepX system. Please do not reply to this email.
+                    This report was generated automatically by WepX system.
                 </p>
             </div>
 
