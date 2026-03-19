@@ -25,7 +25,7 @@
                     </li>
 
                     {{-- Customers (Admin + Manager + Analyst + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin','Admin', 'Manager', 'Analyst', 'Operator'], true))
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Manager', 'Analyst', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('customers') }}">
                                 <i class="ri-user-line"></i> <span>{{ __('menu.customers') }}</span>
@@ -34,7 +34,7 @@
                     @endif
 
                     {{-- Payments (Admin + Cashier + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin','Admin', 'Cashier', 'Operator'], true))
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('payments') }}">
                                 <i class="ri-money-dollar-box-line"></i>
@@ -44,7 +44,7 @@
                     @endif
 
                     {{-- Customer Info (Admin + Cashier + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin','Admin', 'Cashier', 'Operator'], true))
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('customers.info') }}">
                                 <i class="ri-contacts-line"></i>
@@ -54,7 +54,7 @@
                     @endif
 
                     {{-- Report (Admin + Cashier + Analyst + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin','Admin', 'Cashier', 'Analyst', 'Operator'], true))
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('report') }}">
                                 <i class="ri-folder-chart-line"></i>
@@ -93,7 +93,6 @@
                         </li>
                     @endif
 
-                    {{-- @if ($role === 'SuperAdmin''Admin') --}}
                     @if (in_array($role, ['SuperAdmin', 'Admin'], true))
                         <li class="nav-item dropdown">
                             <a class="nav-link menu-link dropdown-toggle" href="#" id="settingsDropdown"
@@ -108,6 +107,13 @@
                                         {{ __('menu.create_user') }}
                                     </a>
                                 </li>
+                                @if ($role === 'SuperAdmin')
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('commands.index') }}">
+                                            Commands
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </li>
                     @endif

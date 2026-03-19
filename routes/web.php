@@ -10,6 +10,7 @@ use App\Http\Controllers\Payments\PaymentVoidController;
 use App\Http\Controllers\Payments\PaymentCorrectController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
+use App\Http\Controllers\Admin\Settings\CommandCenterController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -96,10 +97,13 @@ Route::middleware(['auth.token'])->group(function () {
     });
 
     /**
-     * LOGS (ONLY SUPERADMIN )
+     * LOGS + COMMANDS (ONLY SUPERADMIN )
      */
     Route::middleware(['role:SuperAdmin'])->group(function () {
         Route::get('/logs', LogsController::class)->name('logs');
+        Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
+        Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
+        Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
     });
 
     /**

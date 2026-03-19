@@ -10,7 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class SyncCreditsJob implements ShouldQueue
+class SyncCreditsJobcopy implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -107,19 +107,22 @@ class SyncCreditsJob implements ShouldQueue
                 $existing = $existingMap[$logicalref] ?? null;
                 $isExisting = (bool) $existing;
 
-                // amount_local must always be exactly the same as remote amount
-                $amountLocal = $amount;
-
                 // SAME KEYS IN EVERY LINE: We set local fields to the default value by default.
+                $amountLocal = $isExisting ? $existing->amount_local : null;
                 $paidLocal = $isExisting ? $existing->paid_local : null;
 
                 // RULE-1: new registration -> local initialisation
                 if (! $isExisting) {
+                    $amountLocal = $amount;
                     $paidLocal = $paid;
                 } else {
                     // RULE-2: if it's an old record but the local is ‘virgin’ and the remote is now full -> fill the local
+                    $amountNeverTouched = is_null($existing->amount_updated_at);
                     $paidNeverTouched = is_null($existing->paid_updated_at);
 
+                    if (is_null($amountLocal) && $amountNeverTouched && ! is_null($amount)) {
+                        $amountLocal = $amount;
+                    }
                     if (is_null($paidLocal) && $paidNeverTouched && ! is_null($paid)) {
                         $paidLocal = $paid;
                     }

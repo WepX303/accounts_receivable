@@ -13,21 +13,6 @@ class SyncRunCommand extends Command
 
     protected $description = 'MSSQL -> PG senkron: Credits incremental + Avshocrecat report refresh';
 
-    // public function handle(): int
-    // {
-    //     $passport = (string) ($this->option('passport') ?? '');
-
-    //     // 1) incremental
-    //     SyncCreditsJob::dispatch();
-
-    //     // 2) report (truncate+insert yapan job)
-    //     SyncAvshocrecatReportJob::dispatch($passport);
-
-    //     $this->info('Dispatched: SyncCreditsJob + SyncAvshocrecatReportJob (passport='.($passport === '' ? 'ALL' : $passport).')');
-
-    //     return self::SUCCESS;
-    // }
-
     public function handle(): int
     {
         $lock = Cache::lock('sync:run-lock', 14 * 60); // 14 dk
