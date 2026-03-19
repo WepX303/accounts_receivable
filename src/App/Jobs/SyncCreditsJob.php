@@ -107,19 +107,22 @@ class SyncCreditsJob implements ShouldQueue
                 $existing = $existingMap[$logicalref] ?? null;
                 $isExisting = (bool) $existing;
 
-                // amount_local must always be exactly the same as remote amount
-                $amountLocal = $amount;
-
                 // SAME KEYS IN EVERY LINE: We set local fields to the default value by default.
+                $amountLocal = $isExisting ? $existing->amount_local : null;
                 $paidLocal = $isExisting ? $existing->paid_local : null;
 
                 // RULE-1: new registration -> local initialisation
                 if (! $isExisting) {
+                    $amountLocal = $amount;
                     $paidLocal = $paid;
                 } else {
                     // RULE-2: if it's an old record but the local is ‘virgin’ and the remote is now full -> fill the local
+                    $amountNeverTouched = is_null($existing->amount_updated_at);
                     $paidNeverTouched = is_null($existing->paid_updated_at);
 
+                    if (is_null($amountLocal) && $amountNeverTouched && ! is_null($amount)) {
+                        $amountLocal = $amount;
+                    }
                     if (is_null($paidLocal) && $paidNeverTouched && ! is_null($paid)) {
                         $paidLocal = $paid;
                     }
@@ -159,7 +162,7 @@ class SyncCreditsJob implements ShouldQueue
                     // local variables are present in EVERY LINE
                     'amount_local' => $amountLocal,
                     'paid_local' => $paidLocal,
-
+                    
                     // created_at is present in every row (we are preserving the value in the database for existing records)
                     'created_at' => $isExisting ? $existing->created_at : $now,
                     'updated_at' => $now,
@@ -224,12 +227,5 @@ class SyncCreditsJob implements ShouldQueue
                     'updated_at' => $now,
                 ]);
         }
-        
-        $pgsql->table($pgTable)
-            ->whereRaw('ROUND(COALESCE(amount_local, 0)::numeric, 2) <> ROUND(COALESCE(amount, 0)::numeric, 2)')
-            ->update([
-                'amount_local' => DB::raw('amount'),
-                'updated_at' => now(),
-            ]);
     }
 }
