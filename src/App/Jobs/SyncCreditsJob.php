@@ -159,7 +159,7 @@ class SyncCreditsJob implements ShouldQueue
                     // local variables are present in EVERY LINE
                     'amount_local' => $amountLocal,
                     'paid_local' => $paidLocal,
-                    
+
                     // created_at is present in every row (we are preserving the value in the database for existing records)
                     'created_at' => $isExisting ? $existing->created_at : $now,
                     'updated_at' => $now,
@@ -224,5 +224,12 @@ class SyncCreditsJob implements ShouldQueue
                     'updated_at' => $now,
                 ]);
         }
+        
+        $pgsql->table($pgTable)
+            ->whereRaw('ROUND(COALESCE(amount_local, 0)::numeric, 2) <> ROUND(COALESCE(amount, 0)::numeric, 2)')
+            ->update([
+                'amount_local' => DB::raw('amount'),
+                'updated_at' => now(),
+            ]);
     }
 }
