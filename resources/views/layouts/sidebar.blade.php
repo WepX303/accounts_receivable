@@ -107,13 +107,11 @@
                                         {{ __('menu.create_user') }}
                                     </a>
                                 </li>
-                                @if ($role === 'SuperAdmin')
                                     <li>
                                         <a class="dropdown-item" href="{{ route('commands.index') }}">
                                             Commands
                                         </a>
                                     </li>
-                                @endif
                             </ul>
                         </li>
                     @endif

@@ -96,14 +96,24 @@ Route::middleware(['auth.token'])->group(function () {
         Route::post('/payments/{payment}/correct', PaymentCorrectController::class)->name('payments.correct');
     });
 
+
     /**
-     * LOGS + COMMANDS (ONLY SUPERADMIN )
+     * COMMANDS
+     * Superadmin + Admin + Operator
      */
     Route::middleware(['role:SuperAdmin'])->group(function () {
-        Route::get('/logs', LogsController::class)->name('logs');
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
+    });
+
+
+
+    /**
+     * LOGS (ONLY SUPERADMIN )
+     */
+    Route::middleware(['role:SuperAdmin'])->group(function () {
+        Route::get('/logs', LogsController::class)->name('logs');
     });
 
     /**
