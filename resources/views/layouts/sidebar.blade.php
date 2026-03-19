@@ -109,7 +109,7 @@
                                 </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('commands.index') }}">
-                                            Commands
+                                            {{ __('menu.commands') }}
                                         </a>
                                     </li>
                             </ul>
