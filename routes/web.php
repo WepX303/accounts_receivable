@@ -101,12 +101,11 @@ Route::middleware(['auth.token'])->group(function () {
      * COMMANDS
      * Superadmin + Admin + Operator
      */
-    Route::middleware(['role:SuperAdmin'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
     });
-
 
 
     /**
