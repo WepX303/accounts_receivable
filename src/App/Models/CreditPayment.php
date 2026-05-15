@@ -50,6 +50,8 @@ class CreditPayment extends Model
         'corrected_at',
         'correct_reason',
         'corrected_from_payment_id',
+
+        'receiver_phone_number',
     ];
 
     protected $casts = [

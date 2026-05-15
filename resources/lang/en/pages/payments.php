@@ -72,6 +72,11 @@ return [
         'payment_date_help' => 'You can enter any past date. Future dates are not allowed.',
         'mixed_rule_pay_amount' => 'Mixed rule: Cash + Card must equal Pay Amount.',
 
+        'receiver_phone_number' => 'Receiver phone number',
+        'receiver_phone_number_placeholder' => 'Enter digits only',
+        'receiver_phone_number_help' => 'Enter the company/team phone number that received the payment.',
+        'receiver_phone_number_required' => 'Receiver phone number cannot be empty.',
+        'receiver_phone_number_digits' => 'Receiver phone number must contain digits only.',
 
     ],
 
@@ -142,6 +147,5 @@ return [
             'confirm' => 'Save Correction',
         ],
     ],
-
 
 ];

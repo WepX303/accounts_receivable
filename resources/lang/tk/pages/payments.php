@@ -72,6 +72,11 @@ return [
         'payment_date_help' => 'Islendik geçen senäni girizip bolýar. Geljek seneler bolmaýar.',
         'mixed_rule_pay_amount' => 'Garyşyk düzgün: Nagt + Kard, töleg möçberine deň bolmaly.',
 
+        'receiver_phone_number' => 'Tölegi kabul eden telefon belgisi',
+        'receiver_phone_number_placeholder' => 'Diňe san giriziň',
+        'receiver_phone_number_help' => 'Töleg gelen kompaniýa/topar telefon belgisini giriziň.',
+        'receiver_phone_number_required' => 'Tölegi kabul eden telefon belgisi boş bolup bilmez.',
+        'receiver_phone_number_digits' => 'Tölegi kabul eden telefon belgisinde diňe san bolmaly.',
 
     ],
 
@@ -141,6 +146,5 @@ return [
             'confirm' => 'Düzedişi ýaz',
         ],
     ],
-
 
 ];

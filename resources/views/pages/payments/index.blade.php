@@ -609,6 +609,18 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3 d-none" id="phoneNumberBox">
+                                <label class="form-label">{{ __('pages/payments.form.receiver_phone_number') }}</label>
+                                <input type="text" class="form-control" name="receiver_phone_number"
+                                    id="receiverPhoneNumber" value="{{ old('receiver_phone_number') }}"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    placeholder="{{ __('pages/payments.form.receiver_phone_number_placeholder') }}"
+                                    {{ $isClosed ? 'disabled' : '' }}>
+                                <div class="small text-muted mt-1">
+                                    {{ __('pages/payments.form.receiver_phone_number_help') }}
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">{{ __('pages/payments.form.note') }}</label>
                                 <input type="text" class="form-control" name="note"
@@ -745,6 +757,12 @@
             const changePreview = document.getElementById('changePreview');
 
             const methods = Array.from(document.querySelectorAll('.js-method'));
+
+            const phoneNumberBox = document.getElementById('phoneNumberBox');
+            const receiverPhoneNumber = document.getElementById('receiverPhoneNumber');
+            const payForm = document.getElementById('payForm');
+
+
             if (!payAmount || methods.length === 0) return;
 
             if (payAmount.disabled) return;
@@ -803,6 +821,7 @@
                 refreshPreview();
 
                 const m = getMethod();
+
                 if (m === 'mixed') {
                     if (mixedBox) mixedBox.classList.remove('d-none');
 
@@ -817,7 +836,19 @@
                 } else {
                     if (mixedBox) mixedBox.classList.add('d-none');
                 }
+
+                if (phoneNumberBox && receiverPhoneNumber) {
+                    if (m === 'phone') {
+                        phoneNumberBox.classList.remove('d-none');
+                        receiverPhoneNumber.required = true;
+                    } else {
+                        phoneNumberBox.classList.add('d-none');
+                        receiverPhoneNumber.required = false;
+                        receiverPhoneNumber.value = '';
+                    }
+                }
             };
+
 
             methods.forEach(r => r.addEventListener('change', refresh));
             payAmount.addEventListener('input', refresh);
@@ -849,6 +880,28 @@
                 cardTotal.value = (total - half).toFixed(2);
                 normalizeMixed();
             });
+
+            if (receiverPhoneNumber) {
+                receiverPhoneNumber.addEventListener('input', () => {
+                    receiverPhoneNumber.value = receiverPhoneNumber.value.replace(/[^0-9]/g, '');
+                });
+            }
+
+            if (payForm) {
+                payForm.addEventListener('submit', (e) => {
+                    const m = getMethod();
+
+                    if (m === 'phone' && receiverPhoneNumber) {
+                        receiverPhoneNumber.value = receiverPhoneNumber.value.replace(/[^0-9]/g, '');
+
+                        if (receiverPhoneNumber.value.trim() === '') {
+                            e.preventDefault();
+                            alert("{{ __('pages/payments.form.receiver_phone_number_required') }}");
+                            receiverPhoneNumber.focus();
+                        }
+                    }
+                });
+            }
 
             refresh();
         })();

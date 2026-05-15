@@ -140,6 +140,25 @@ class CustomersPaymentController extends Controller
             return back()->with('warning', __('validations/validations.payments.method_invalid'));
         }
 
+        $receiverPhoneNumber = null;
+
+        if ($method === 'phone') {
+            $receiverPhoneNumber = trim((string) $request->input('receiver_phone_number', ''));
+            $receiverPhoneNumber = preg_replace('/\s+/', '', $receiverPhoneNumber);
+
+            if ($receiverPhoneNumber === '') {
+                return back()
+                    ->with('warning', __('pages/payments.form.receiver_phone_number_required'))
+                    ->withInput();
+            }
+
+            if (! preg_match('/^[0-9]+$/', $receiverPhoneNumber)) {
+                return back()
+                    ->with('warning', __('pages/payments.form.receiver_phone_number_digits'))
+                    ->withInput();
+            }
+        }
+
         // Payment Amount = the money given by the customer (RECEIVED)
         $received = $this->toMoney($request->input('pay_amount', '0'));
         if ($received <= 0) {
@@ -223,8 +242,7 @@ class CustomersPaymentController extends Controller
         $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
         try {
 
-            // DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note) {
-            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, &$auditData) {
+            DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, $receiverPhoneNumber, &$auditData) {
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
                     ->where('logicalref', $customerId)
@@ -347,6 +365,7 @@ class CustomersPaymentController extends Controller
                     'cash_amount' => $this->fmtMoney($cashTotal),
                     'card_amount' => $this->fmtMoney($cardTotal),
                     'phone_amount' => $this->fmtMoney($phoneTotal),
+                    'receiver_phone_number' => $receiverPhoneNumber,
 
                     'old_amount_local' => $this->fmtMoney($oldRemaining),
                     'new_amount_local' => $this->fmtMoney($newRemaining),
@@ -379,6 +398,7 @@ class CustomersPaymentController extends Controller
                         'cash_amount' => $cashTotal,
                         'card_amount' => $cardTotal,
                         'phone_amount' => $phoneTotal,
+                        'receiver_phone_number' => $receiverPhoneNumber,
                         'payment_at' => $now->format('Y-m-d H:i:s'),
                         'entered_at' => $enteredAt->format('Y-m-d H:i:s'),
                         'backdated' => $backdated,
@@ -418,7 +438,7 @@ class CustomersPaymentController extends Controller
             return back()->with('warning', $msg)->withInput();
         }
 
-        
+
         if (!empty($auditData)) {
             $audit->log(
                 action: 'payment_created',

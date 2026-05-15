@@ -72,6 +72,12 @@ return [
         'payment_date_help' => 'Herhangi bir geçmiş tarih girebilirsiniz. Gelecek tarihe izin verilmez.',
         'mixed_rule_pay_amount' => 'Karma kural: Nakit + Kart, Ödeme Tutarına eşit olmalı.',
 
+        'receiver_phone_number' => 'Ödemeyi alan telefon numarası',
+        'receiver_phone_number_placeholder' => 'Sadece rakam girin',
+        'receiver_phone_number_help' => 'Ödemenin geldiği şirket/ekip telefon numarasını girin.',
+        'receiver_phone_number_required' => 'Ödemeyi alan telefon numarası boş olamaz.',
+        'receiver_phone_number_digits' => 'Ödemeyi alan telefon numarası sadece rakamlardan oluşmalıdır.',
+
     ],
 
     'detail_keys' => [
