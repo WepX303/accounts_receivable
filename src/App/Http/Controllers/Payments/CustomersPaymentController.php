@@ -42,6 +42,7 @@ class CustomersPaymentController extends Controller
         $customers = collect();
         $selected = null;
         $history = collect();
+        $monthlyPayments = collect();
 
         if ($shouldFetchList) {
             $listQuery = Credit::query()->with('paidUpdatedByUser');
@@ -95,6 +96,19 @@ class CustomersPaymentController extends Controller
             }
         }
 
+        // if ($selected) {
+        //     $history = CreditPayment::query()
+        //         ->with([
+        //             'createdByUser:id,firstname,lastname',
+        //             'correctedByUser:id,firstname,lastname',
+        //             'voidedByUser:id,firstname,lastname',
+        //         ])
+        //         ->where('credit_logicalref', (int) $selected->logicalref)
+        //         ->orderByDesc('id')
+        //         ->limit(10)
+        //         ->get();
+        // }
+
         if ($selected) {
             $history = CreditPayment::query()
                 ->with([
@@ -106,12 +120,26 @@ class CustomersPaymentController extends Controller
                 ->orderByDesc('id')
                 ->limit(10)
                 ->get();
+
+            $monthlyPayments = \App\Models\AvshocrecatReport::query()
+                ->where('sertnama_nomeri', (string) $selected->contract)
+                ->orderBy('tolejek_senesi')
+                ->get();
         }
+
+        // return view('pages.payments.index', [
+        //     'customers' => $customers,
+        //     'selected' => $selected,
+        //     'history' => $history,
+        //     'q' => $q,
+        //     'emptyMode' => ! $shouldFetchList,
+        // ]);
 
         return view('pages.payments.index', [
             'customers' => $customers,
             'selected' => $selected,
             'history' => $history,
+            'monthlyPayments' => $monthlyPayments,
             'q' => $q,
             'emptyMode' => ! $shouldFetchList,
         ]);

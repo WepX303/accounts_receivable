@@ -3,7 +3,7 @@
 return [
     'validation_fix' => 'Aşakdaky ýalňyşlary düzedip görüň:',
     'search_placeholder' => 'Gözleg: ad / telefon / pasport / şertnama / clientref...',
-
+    'view_monthly_payments' => 'Aýlyk tölegleri gör',
     'empty_title' => 'Müşderi tapmak üçin gözleg ediň',
     'empty_desc' => 'Ýa-da :customers_info bölüminde müşderileri saýlap :payment düwmesine basyň.',
     'customers_info' => 'Müşderi Maglumatlary',

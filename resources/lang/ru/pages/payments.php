@@ -3,7 +3,7 @@
 return [
     'validation_fix' => 'Пожалуйста, исправьте следующее:',
     'search_placeholder' => 'Поиск: имя / телефон / паспорт / договор / clientref...',
-
+    'view_monthly_payments' => 'Посмотреть ежемесячные платежи',
     'empty_title' => 'Выполните поиск, чтобы найти клиентов',
     'empty_desc' => 'Или выберите клиентов в :customers_info и нажмите :payment.',
     'customers_info' => 'Информация о клиентах',

@@ -3,7 +3,7 @@
 return [
     'validation_fix' => 'Lütfen aşağıdaki hataları düzeltin:',
     'search_placeholder' => 'Ara: ad / telefon / pasaport / sözleşme / clientref...',
-
+    'view_monthly_payments' => 'Aylık Ödemeleri Gör',
     'empty_title' => 'Müşteri bulmak için arama yapın',
     'empty_desc' => 'Veya :customers_info sayfasında müşterileri seçip :payment butonuna tıklayın.',
     'customers_info' => 'Müşteri Bilgisi',

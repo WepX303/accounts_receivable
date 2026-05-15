@@ -3,7 +3,7 @@
 return [
     'validation_fix' => 'Please fix the following:',
     'search_placeholder' => 'Search name / phone / passport / contract / clientref...',
-
+    'view_monthly_payments' => 'View Monthly Payments',
     'empty_title' => 'Search to find customers',
     'empty_desc' => 'Or select customers in :customers_info and click :payment.',
     'customers_info' => 'Customers Info',

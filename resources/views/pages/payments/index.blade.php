@@ -182,9 +182,28 @@
                             <img src="{{ URL::asset('build/images/users/user.jpg') }}"
                                 class="avatar-lg rounded-circle img-thumbnail" alt="">
                             <h5 class="mt-3 mb-0">{{ $selected->name ?? '-' }}</h5>
-                            <div class="text-muted">{{ $selected->branch ?? '-' }} | {{ $selected->contract ?? '-' }}
+                            {{-- <div class="text-muted">{{ $selected->branch ?? '-' }} | {{ $selected->contract ?? '-' }}
+                            </div> --}}
+                            <div class="text-muted">
+                                {{ $selected->branch ?? '-' }} |
+
+                                @if (!empty($selected->contract))
+                                    <a href="javascript:void(0);" class="fw-semibold text-primary" data-bs-toggle="modal"
+                                        data-bs-target="#monthlyPaymentsModal">
+                                        {{ $selected->contract }}
+                                    </a>
+                                @else
+                                    -
+                                @endif
                             </div>
                             <div class="small text-muted">ClientRef: {{ $selected->clientref ?? '-' }}</div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                    data-bs-toggle="modal" data-bs-target="#monthlyPaymentsModal">
+                                    <i class="ri-file-list-3-line align-bottom me-1"></i>
+                                    {{ __('pages/payments.view_monthly_payments') }}
+                                </button>
+                            </div>
                         </div>
 
                         <div class="table-responsive">
@@ -639,6 +658,447 @@
         </div>
 
     </div>
+
+    {{-- monthly payment modal --}}
+    @if ($selected)
+        <div class="modal fade" id="monthlyPaymentsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+
+                    <div class="modal-header bg-light border-bottom">
+                        <div>
+                            <h5 class="modal-title mb-1">
+                                {{ __('pages/monthly_report.th.contract') }}: {{ $selected->contract ?? '-' }}
+                            </h5>
+                            <div class="text-muted small">
+                                {{ $selected->name ?? '-' }} | {{ $selected->branch ?? '-' }} | ClientRef:
+                                {{ $selected->clientref ?? '-' }}
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body bg-light-subtle">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm mb-0">
+                                    <div class="card-body p-3">
+                                        <div class="text-muted small">{{ __('pages/monthly_report.th.borrower') }}</div>
+                                        <div class="fw-semibold text-truncate">{{ $selected->name ?? '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm mb-0">
+                                    <div class="card-body p-3">
+                                        <div class="text-muted small">{{ __('pages/monthly_report.th.contract') }}</div>
+                                        <div class="fw-semibold">{{ $selected->contract ?? '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm mb-0">
+                                    <div class="card-body p-3">
+                                        <div class="text-muted small">{{ __('pages/monthly_report.th.store') }}</div>
+                                        <div class="fw-semibold">{{ $selected->branch ?? '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="card border-0 shadow-sm mb-0">
+                                    <div class="card-body p-3">
+                                        <div class="text-muted small">{{ __('pages/monthly_report.total') }}</div>
+                                        <div class="fw-semibold">{{ ($monthlyPayments ?? collect())->count() }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (($monthlyPayments ?? collect())->isEmpty())
+                            <div class="card border-0 shadow-sm mb-0">
+                                <div class="card-body text-center text-muted py-5">
+                                    <div class="mb-2">
+                                        <i class="ri-file-search-line fs-1"></i>
+                                    </div>
+                                    <div class="fw-semibold">
+                                        {{ __('pages/monthly_report.no_records') }}
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            {{-- <div class="card border-0 shadow-sm mb-0">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-nowrap align-middle mb-0">
+                                            <thead class="table-light text-muted">
+                                                <tr class="text-uppercase">
+                                                    <th>{{ __('pages/monthly_report.th.store') }} /
+                                                        {{ __('pages/monthly_report.th.id') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.borrower') }} /
+                                                        {{ __('pages/monthly_report.th.passport') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.phone') }} /
+                                                        {{ __('pages/monthly_report.th.tiger') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.contract') }}</th>
+
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.kt_expense') }}
+                                                    </th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.dt_income') }}
+                                                    </th>
+
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m1') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m2') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m3') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m4') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m5') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.m6') }}</th>
+
+                                                    <th class="text-end">
+                                                        {{ __('pages/monthly_report.th.monthly_payment') }}</th>
+                                                    <th class="text-end">{{ __('pages/monthly_report.th.balance') }}</th>
+
+                                                    <th>{{ __('pages/monthly_report.th.loan_date') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.end_date') }}</th>
+
+                                                    <th>{{ __('pages/monthly_report.th.category') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.info') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.note') }}</th>
+
+                                                    <th>{{ __('pages/monthly_report.th.will_pay_date') }}</th>
+                                                    <th>{{ __('pages/monthly_report.th.status') }}</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach ($monthlyPayments as $r)
+                                                    @php
+                                                        $tolerance = 0.15;
+
+                                                        $ktRaw = $r->kt_cykdajy;
+                                                        $dtRaw = $r->dt_girdeji;
+
+                                                        $kt =
+                                                            $ktRaw === null
+                                                                ? null
+                                                                : (float) str_replace(
+                                                                    [',', ' '],
+                                                                    ['.', ''],
+                                                                    trim((string) $ktRaw),
+                                                                );
+                                                        $dt =
+                                                            $dtRaw === null
+                                                                ? null
+                                                                : (float) str_replace(
+                                                                    [',', ' '],
+                                                                    ['.', ''],
+                                                                    trim((string) $dtRaw),
+                                                                );
+
+                                                        $rowClass = '';
+
+                                                        if ($kt !== null && $dt !== null) {
+                                                            $diff = abs($kt - $dt);
+
+                                                            if ($diff > $tolerance) {
+                                                                $rowClass = 'table-danger';
+                                                            }
+                                                        }
+                                                    @endphp
+
+                                                    <tr class="{{ $rowClass }}">
+                                                        <td>
+                                                            <span class="fw-medium text-primary">
+                                                                {{ $r->magazyn ?? '-' }}
+                                                            </span>
+                                                            <div class="text-muted small">
+                                                                #{{ $r->id ?? '-' }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="fw-medium">{{ $r->karz_alyjy ?? '-' }}</div>
+                                                            <div class="text-muted small">
+                                                                {{ $r->pasport_belgisi ?? '-' }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="fw-medium">{{ $r->telefon_belgisi ?? '-' }}</div>
+                                                            <div class="text-muted small">
+                                                                {{ $r->tiger_kody ?? '-' }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="fw-medium">{{ $r->sertnama_nomeri ?? '-' }}</div>
+                                                        </td>
+
+                                                        <td class="text-end">
+                                                            <div class="fw-medium">
+                                                                {{ $r->kt_cykdajy === null ? '-' : number_format((float) $r->kt_cykdajy, 2) }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="text-end">
+                                                            <div class="fw-medium">
+                                                                {{ $r->dt_girdeji === null ? '-' : number_format((float) $r->dt_girdeji, 2) }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="text-end">
+                                                            {{ $r->m1 === null ? '-' : number_format((float) $r->m1, 2) }}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {{ $r->m2 === null ? '-' : number_format((float) $r->m2, 2) }}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {{ $r->m3 === null ? '-' : number_format((float) $r->m3, 2) }}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {{ $r->m4 === null ? '-' : number_format((float) $r->m4, 2) }}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {{ $r->m5 === null ? '-' : number_format((float) $r->m5, 2) }}
+                                                        </td>
+                                                        <td class="text-end">
+                                                            {{ $r->m6 === null ? '-' : number_format((float) $r->m6, 2) }}
+                                                        </td>
+
+                                                        <td class="text-end">
+                                                            <div class="fw-semibold">
+                                                                {{ $r->aylyk_tolegi === null ? '-' : number_format((float) $r->aylyk_tolegi, 2) }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="text-end">
+                                                            <div class="fw-semibold">
+                                                                {{ $r->galyndy === null ? '-' : number_format((float) $r->galyndy, 2) }}
+                                                            </div>
+                                                        </td>
+
+                                                        <td>{{ $r->karz_alan_senesi ?? '-' }}</td>
+                                                        <td>{{ $r->gutaryan_senesi ?? '-' }}</td>
+
+                                                        <td>{{ $r->kategoriyasy ?? '-' }}</td>
+                                                        <td>{{ $r->maglumat ?? '-' }}</td>
+                                                        <td>{{ isset($r->bellik) && trim($r->bellik) !== '' ? $r->bellik : '-' }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ $r->tolejek_senesi ? \Carbon\Carbon::parse($r->tolejek_senesi)->format('d.m.Y') : '-' }}
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                                {{ isset($r->statusy) && trim($r->statusy) !== '' ? $r->statusy : __('pages/monthly_report.status_missing') }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div> --}}
+                            <div class="row g-3">
+                                @foreach ($monthlyPayments as $r)
+                                    @php
+                                        $tolerance = 0.15;
+
+                                        $kt = $r->kt_cykdajy === null ? null : (float) $r->kt_cykdajy;
+                                        $dt = $r->dt_girdeji === null ? null : (float) $r->dt_girdeji;
+
+                                        $hasDiff = $kt !== null && $dt !== null && abs($kt - $dt) > $tolerance;
+                                    @endphp
+
+                                    <div class="col-12">
+                                        <div
+                                            class="card border-0 shadow-sm mb-0 {{ $hasDiff ? 'border-start border-4 border-danger' : '' }}">
+                                            <div class="card-body">
+
+                                                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                    <div>
+                                                        <div class="fw-semibold fs-15">
+                                                            {{ $r->karz_alyjy ?? '-' }}
+                                                        </div>
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.contract') }}:
+                                                            <span
+                                                                class="fw-medium">{{ $r->sertnama_nomeri ?? '-' }}</span>
+                                                            |
+                                                            {{ __('pages/monthly_report.th.store') }}:
+                                                            <span class="fw-medium">{{ $r->magazyn ?? '-' }}</span>
+                                                            |
+                                                            ID:
+                                                            <span class="fw-medium">#{{ $r->id ?? '-' }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-end">
+                                                        <span class="badge bg-secondary-subtle text-secondary">
+                                                            {{ isset($r->statusy) && trim($r->statusy) !== '' ? $r->statusy : __('pages/monthly_report.status_missing') }}
+                                                        </span>
+
+                                                        @if ($hasDiff)
+                                                            <div class="mt-1">
+                                                                <span class="badge bg-danger-subtle text-danger">
+                                                                    KT / DT tapawut
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-3">
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.phone') }}</div>
+                                                        <div class="fw-medium">{{ $r->telefon_belgisi ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.passport') }}</div>
+                                                        <div class="fw-medium">{{ $r->pasport_belgisi ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.tiger') }}</div>
+                                                        <div class="fw-medium">{{ $r->tiger_kody ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.will_pay_date') }}</div>
+                                                        <div class="fw-medium">
+                                                            {{ $r->tolejek_senesi ? \Carbon\Carbon::parse($r->tolejek_senesi)->format('d.m.Y') : '-' }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.kt_expense') }}</div>
+                                                        <div class="fw-semibold">
+                                                            {{ $r->kt_cykdajy === null ? '-' : number_format((float) $r->kt_cykdajy, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.dt_income') }}</div>
+                                                        <div class="fw-semibold">
+                                                            {{ $r->dt_girdeji === null ? '-' : number_format((float) $r->dt_girdeji, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.monthly_payment') }}</div>
+                                                        <div class="fw-semibold text-primary">
+                                                            {{ $r->aylyk_tolegi === null ? '-' : number_format((float) $r->aylyk_tolegi, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.balance') }}</div>
+                                                        <div class="fw-semibold">
+                                                            {{ $r->galyndy === null ? '-' : number_format((float) $r->galyndy, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="border rounded-3 p-2 bg-light">
+                                                            <div class="row g-2 text-center">
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M1</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m1 === null ? '-' : number_format((float) $r->m1, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M2</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m2 === null ? '-' : number_format((float) $r->m2, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M3</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m3 === null ? '-' : number_format((float) $r->m3, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M4</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m4 === null ? '-' : number_format((float) $r->m4, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M5</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m5 === null ? '-' : number_format((float) $r->m5, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-2 col-4">
+                                                                    <div class="text-muted small">M6</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $r->m6 === null ? '-' : number_format((float) $r->m6, 2) }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.loan_date') }}</div>
+                                                        <div class="fw-medium">{{ $r->karz_alan_senesi ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.end_date') }}</div>
+                                                        <div class="fw-medium">{{ $r->gutaryan_senesi ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.category') }}</div>
+                                                        <div class="fw-medium">{{ $r->kategoriyasy ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-md-3 col-sm-6">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.info') }}</div>
+                                                        <div class="fw-medium">{{ $r->maglumat ?? '-' }}</div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="text-muted small">
+                                                            {{ __('pages/monthly_report.th.note') }}</div>
+                                                        <div class="fw-medium">
+                                                            {{ isset($r->bellik) && trim($r->bellik) !== '' ? $r->bellik : '-' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="modal fade" id="correctModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
