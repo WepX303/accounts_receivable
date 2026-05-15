@@ -8,6 +8,12 @@ return [
     'empty_desc' => 'Or select customers in :customers_info and click :payment.',
     'customers_info' => 'Customers Info',
     'payment' => 'Payment',
+    'payment_statement' => 'Payment Statement',
+    'print' => 'Print',
+    'statement_customer_info' => 'Customer Information',
+    'statement_debt_status' => 'Debt Status',
+    'statement_total_debt' => 'Total Debt',
+    'statement_date' => 'Date',
 
     'th' => [
         'name' => 'Name',

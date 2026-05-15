@@ -8,6 +8,12 @@ return [
     'empty_desc' => 'Или выберите клиентов в :customers_info и нажмите :payment.',
     'customers_info' => 'Информация о клиентах',
     'payment' => 'Оплата',
+    'payment_statement' => 'Платежная выписка',
+    'print' => 'Печать',
+    'statement_customer_info' => 'Информация о клиенте',
+    'statement_debt_status' => 'Состояние долга',
+    'statement_total_debt' => 'Общий долг',
+    'statement_date' => 'Дата',
 
     'th' => [
         'name' => 'Имя',

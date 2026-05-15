@@ -197,12 +197,21 @@
                                 @endif
                             </div>
                             <div class="small text-muted">ClientRef: {{ $selected->clientref ?? '-' }}</div>
-                            <div class="mt-3">
+                            <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
                                 <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
                                     data-bs-toggle="modal" data-bs-target="#monthlyPaymentsModal">
                                     <i class="ri-file-list-3-line align-bottom me-1"></i>
                                     {{ __('pages/payments.view_monthly_payments') }}
                                 </button>
+                                {{-- <a href="{{ route('payments.customer.statement', $selected->logicalref) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                    <i class="ri-printer-line align-bottom me-1"></i>
+                                    Töleg dökümi
+                                </a> --}}
+                                <a href="{{ route('payments.customer.statement', ['credit' => $selected->logicalref, 'lang' => app()->getLocale()]) }}"
+                                    target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                    <i class="ri-printer-line align-bottom me-1"></i>
+                                    {{ __('pages/payments.payment_statement') }} </a>
                             </div>
                         </div>
 

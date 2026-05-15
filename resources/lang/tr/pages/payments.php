@@ -8,6 +8,12 @@ return [
     'empty_desc' => 'Veya :customers_info sayfasında müşterileri seçip :payment butonuna tıklayın.',
     'customers_info' => 'Müşteri Bilgisi',
     'payment' => 'Ödeme',
+    'payment_statement' => 'Ödeme Dökümü',
+    'print' => 'Yazdır',
+    'statement_customer_info' => 'Müşteri Bilgileri',
+    'statement_debt_status' => 'Borç Durumu',
+    'statement_total_debt' => 'Toplam Borç',
+    'statement_date' => 'Tarih',
 
     'th' => [
         'name' => 'Ad',

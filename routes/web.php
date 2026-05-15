@@ -11,6 +11,7 @@ use App\Http\Controllers\Payments\PaymentCorrectController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Admin\Settings\CommandCenterController;
+use App\Http\Controllers\Payments\CustomerPaymentStatementController;
 use App\Http\Controllers\Sms\CustomerSmsController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,8 @@ Route::middleware(['auth.token'])->group(function () {
      */
     Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers', CustomersController::class)->name('customers');
+        Route::get('/payments/customer/{credit}/statement', [CustomerPaymentStatementController::class, 'show'])
+            ->name('payments.customer.statement');
     });
 
     // Export: Admin + Operator + Manager + Analyst

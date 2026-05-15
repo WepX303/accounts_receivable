@@ -8,6 +8,12 @@ return [
     'empty_desc' => 'Ýa-da :customers_info bölüminde müşderileri saýlap :payment düwmesine basyň.',
     'customers_info' => 'Müşderi Maglumatlary',
     'payment' => 'Töleg',
+    'payment_statement' => 'Töleg dökümi',
+    'print' => 'Çap et',
+    'statement_customer_info' => 'Müşderi maglumatlary',
+    'statement_debt_status' => 'Bergi ýagdaýy',
+    'statement_total_debt' => 'Jemi bergi',
+    'statement_date' => 'Sene',
 
     'th' => [
         'name' => 'Ady',
