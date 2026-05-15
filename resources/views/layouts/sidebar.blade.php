@@ -43,7 +43,7 @@
                         </li>
                     @endif
 
-                    {{-- Customer Info (Admin + Cashier + Operator) --}}
+                    {{-- Customer Info (Superadmin + Admin + Cashier + Operator) --}}
                     @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('customers.info') }}">
@@ -53,12 +53,22 @@
                         </li>
                     @endif
 
-                    {{-- Report (Admin + Cashier + Analyst + Operator) --}}
+                    {{-- Report (Superadmin + Admin + Cashier + Analyst + Operator) --}}
                     @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('report') }}">
                                 <i class="ri-folder-chart-line"></i>
                                 <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- SMS (Superadmin + Admin + Operator) --}}
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Operator'], true))
+                        <li class="nav-item">
+                            <a class="nav-link menu-link" href="{{ route('sms.index') }}">
+                                <i class="bx bx-message-detail me-1"></i>
+                                <span>{{ __('messages.sms_distribution') }}</span>
                             </a>
                         </li>
                     @endif
@@ -107,11 +117,11 @@
                                         {{ __('menu.create_user') }}
                                     </a>
                                 </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('commands.index') }}">
-                                            {{ __('menu.commands') }}
-                                        </a>
-                                    </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('commands.index') }}">
+                                        {{ __('menu.commands') }}
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     @endif

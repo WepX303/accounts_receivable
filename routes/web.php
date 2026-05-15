@@ -11,6 +11,7 @@ use App\Http\Controllers\Payments\PaymentCorrectController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Admin\Settings\CommandCenterController;
+use App\Http\Controllers\Sms\CustomerSmsController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -96,6 +97,17 @@ Route::middleware(['auth.token'])->group(function () {
         Route::post('/payments/{payment}/correct', PaymentCorrectController::class)->name('payments.correct');
     });
 
+    /**
+     * SMS DISTRIBUTION
+     * SuperAdmin + Admin + Operator
+     */
+    Route::middleware(['role:SuperAdmin,Admin,Operator'])->group(function () {
+        Route::get('/sms', [CustomerSmsController::class, 'index'])->name('sms.index');
+        Route::post('/sms/preview', [CustomerSmsController::class, 'preview'])->name('sms.preview');
+        Route::post('/sms/send', [CustomerSmsController::class, 'send'])->name('sms.send');
+        Route::get('/sms/export-preview', [CustomerSmsController::class, 'exportPreview'])
+            ->name('sms.export.preview');
+    });
 
     /**
      * COMMANDS

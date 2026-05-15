@@ -1,0 +1,1445 @@
+===== MODELS =====
+
+===== FILE: src/App/Models/ActivityLog.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ActivityLog extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = [
+        'user_id',
+        'user_name',
+        'user_email',
+        'user_phone',
+        'user_role',
+        'action',
+        'category',
+        'severity',
+        'is_suspicious',
+        'subject_type',
+        'subject_id',
+        'ip_address',
+        'user_agent',
+        'device_type',
+        'browser',
+        'platform',
+        'http_method',
+        'url',
+        'route_name',
+        'is_success',
+        'message',
+        'old_values',
+        'new_values',
+        'extra',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'is_suspicious' => 'boolean',
+        'is_success' => 'boolean',
+        'old_values' => 'array',
+        'new_values' => 'array',
+        'extra' => 'array',
+        'created_at' => 'datetime',
+    ];
+}
+
+===== FILE: src/App/Models/AvshocrecatReport.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class AvshocrecatReport extends Model
+{
+    protected $connection = 'pgsql';
+
+    protected $table = 'avshocrecat_report';
+
+    protected $guarded = [];
+
+    public $timestamps = true;
+}
+
+
+===== FILE: src/App/Models/Credit.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Credit extends Model
+{
+    protected $table = 'credits';
+
+    protected $primaryKey = 'logicalref';
+
+    public $incrementing = false;
+
+    protected $keyType = 'int';
+
+    protected $fillable = [
+        'paid_local',
+        'paid_note',
+        'paid_updated_by',
+        'paid_updated_at',
+
+        'amount_local',
+        'amount_note',
+        'amount_updated_by',
+        'amount_updated_at',
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'paid' => 'decimal:2',
+        'amount_local' => 'decimal:2',
+        'paid_local' => 'decimal:2',
+
+        'paid_updated_at' => 'datetime',
+        'amount_updated_at' => 'datetime',
+
+        'date_' => 'datetime',
+        'willpaiddate' => 'datetime',
+        'lastnoteddate' => 'datetime',
+        'active' => 'boolean',
+    ];
+
+    public function paidUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'paid_updated_by');
+    }
+
+    public function amountUpdatedByUser()
+    {
+        return $this->belongsTo(User::class, 'amount_updated_by');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(CreditPayment::class, 'credit_logicalref', 'logicalref')
+            ->orderByDesc('id');
+    }
+
+    // Local remaining accessor (LOCAL ONLY)
+    public function getLocalRemainingAttribute(): ?float
+    {
+        if ($this->amount_local === null || $this->paid_local === null) {
+            return null;
+        }
+
+        $total = (float) $this->amount_local;
+        $paid = (float) $this->paid_local;
+
+        $rem = $total - $paid;
+        if ($rem < 0) {
+            $rem = 0;
+        }
+
+        return round($rem, 2);
+    }
+
+    public function getLocalClosedAttribute(): bool
+    {
+        if ($this->amount_local === null || $this->paid_local === null) {
+            return true;
+        }
+
+        $total = (float) $this->amount_local;
+        $paid = (float) $this->paid_local;
+
+        return $paid >= $total - 0.01;
+    }
+
+    // Remote balance (amount - paid) => may be negative
+    public function getRemoteRemainingAttribute(): ?float
+    {
+        if ($this->amount === null || $this->paid === null) {
+            return null;
+        }
+
+        return round(((float) $this->amount - (float) $this->paid), 2);
+    }
+
+    // Remote closed
+    public function getRemoteClosedAttribute(): bool
+    {
+        if ($this->amount === null || $this->paid === null) {
+            return true;
+        }
+
+        return (float) $this->paid >= (float) $this->amount - 0.01;
+    }
+}
+
+
+===== FILE: src/App/Models/CreditPayment.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+
+
+class CreditPayment extends Model
+{
+    protected $table = 'credit_payments';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'credit_logicalref',
+
+        'customer_name',
+        'customer_phone',
+        'customer_passport',
+        'customer_contract',
+        'branch',
+
+        'created_by_name',
+        'created_by_email',
+        'created_by_phone',
+
+        // pay_amount: the money given by the customer (RECEIVED)
+        'pay_amount',
+
+        // change_amount: change
+        'change_amount',
+
+        'method',
+        'cash_amount',
+        'card_amount',
+        'phone_amount',
+
+        'old_amount_local',
+        'new_amount_local',
+
+        'old_paid_local',
+        'new_paid_local',
+
+        'note',
+        'created_by',
+        'created_at',
+
+        'corrected_by',
+        'corrected_at',
+        'correct_reason',
+        'corrected_from_payment_id',
+    ];
+
+    protected $casts = [
+        'credit_logicalref' => 'integer',
+        'created_by' => 'integer',
+        'created_at' => 'datetime',
+
+        'pay_amount' => 'decimal:2',
+        'change_amount' => 'decimal:2',
+
+        'cash_amount' => 'decimal:2',
+        'card_amount' => 'decimal:2',
+        'phone_amount' => 'decimal:2',
+
+        'old_amount_local' => 'decimal:2',
+        'new_amount_local' => 'decimal:2',
+
+        'old_paid_local' => 'decimal:2',
+        'new_paid_local' => 'decimal:2',
+
+        'voided_by' => 'integer',
+        'voided_at' => 'datetime',
+
+        'corrected_by' => 'integer',
+        'corrected_at' => 'datetime',
+        'corrected_from_payment_id' => 'integer',
+    ];
+
+    public function credit()
+    {
+        return $this->belongsTo(Credit::class, 'credit_logicalref', 'logicalref');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function scopeForCashier($query, $userId)
+    {
+        return $query->where('created_by', $userId);
+    }
+
+    // computed: amount applied to the debt
+    public function getAppliedAmountAttribute(): float
+    {
+        $received = (float) $this->pay_amount;
+        $change = (float) ($this->change_amount ?? 0);
+        $applied = $received - $change;
+        if ($applied < 0) {
+            $applied = 0;
+        }
+
+        return round($applied, 2);
+    }
+
+    public function scopeNotVoided($query)
+    {
+        return $query->whereNull('voided_at');
+    }
+
+    public function getIsVoidedAttribute(): bool
+    {
+        return $this->voided_at !== null;
+    }
+
+    public function voidedByUser()
+    {
+        return $this->belongsTo(User::class, 'voided_by');
+    }
+    public function correctedByUser()
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
+    }
+
+    protected static function booted()
+    {
+
+        $bump = function () {
+            if (!Cache::has('admin_dashboard:v')) {
+                Cache::forever('admin_dashboard:v', 1);
+            }
+
+            Cache::increment('admin_dashboard:v');
+        };
+
+        static::created($bump);
+        static::updated($bump);
+        static::deleted($bump);
+    }
+}
+
+
+===== FILE: src/App/Models/LoginHistory.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class LoginHistory extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = [
+        'user_id',
+        'login_value',
+        'status',
+        'fail_reason',
+        'ip_address',
+        'user_agent',
+        'device_type',
+        'browser',
+        'platform',
+        'is_suspicious',
+        'message',
+        'created_at',
+    ];
+
+    protected $casts = [
+        'is_suspicious' => 'boolean',
+        'created_at' => 'datetime',
+    ];
+}
+
+===== FILE: src/App/Models/SecurityAlert.php =====
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SecurityAlert extends Model
+{
+    public $timestamps = false;
+
+    protected $fillable = [
+        'user_id',
+        'alert_type',
+        'risk_level',
+        'is_resolved',
+        'ip_address',
+        'message',
+        'meta',
+        'created_at',
+        'resolved_at',
+    ];
+
+    protected $casts = [
+        'is_resolved' => 'boolean',
+        'meta' => 'array',
+        'created_at' => 'datetime',
+        'resolved_at' => 'datetime',
+    ];
+}
+
+===== FILE: src/App/Models/User.php =====
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\UserRoleEnum;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $fillable = [
+        'firstname',
+        'lastname',
+        'email',
+        'phonenumber',
+        'position',
+        'role',
+        'status',
+        'password',
+        'token',
+        'token_expires_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'token',
+
+    ];
+
+    protected $casts = [
+        'role' => UserRoleEnum::class,
+        'token_expires_at' => 'datetime',
+    ];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->firstname} {$this->lastname}");
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRoleEnum::SUPER_ADMIN;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRoleEnum::ADMIN;
+    }
+
+    public function isAdminLike(): bool
+    {
+        return in_array($this->role, [
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+        ], true);
+    }
+
+    public function hasRole(UserRoleEnum ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN
+        );
+    }
+
+    public function canVoidPayments(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+            // UserRoleEnum::OPERATOR
+
+        );
+    }
+
+    public function canCorrectPayments(): bool
+    {
+        return $this->hasRole(
+            UserRoleEnum::SUPER_ADMIN,
+            UserRoleEnum::ADMIN,
+            // UserRoleEnum::OPERATOR
+        );
+    }
+}
+
+
+===== MIGRATIONS =====
+
+===== FILE: database/migrations/2014_10_12_000000_create_users_table.php =====
+<?php
+
+use App\Enums\UserRoleEnum;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('firstname');
+            $table->string('lastname');
+
+            $table->string('email')->unique();
+
+            $table->string('phonenumber')->unique()->nullable(false);
+
+            $table->string('position')->nullable();
+            $table->string('role')->default(UserRoleEnum::USER->value);
+
+            $table->boolean('status')->default(true)->comment('1=Active, 0=Deactive');
+
+            $table->string('password');
+
+            $table->string('token')->nullable();
+            $table->timestamp('token_expires_at')->nullable();
+
+            $table->rememberToken();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+    }
+};
+
+
+===== FILE: database/migrations/2014_10_12_100000_create_password_reset_tokens_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('password_reset_tokens');
+    }
+};
+
+
+===== FILE: database/migrations/2019_08_19_000000_create_failed_jobs_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('failed_jobs', function (Blueprint $table) {
+            $table->id();
+            $table->string('uuid')->unique();
+            $table->text('connection');
+            $table->text('queue');
+            $table->longText('payload');
+            $table->longText('exception');
+            $table->timestamp('failed_at')->useCurrent();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('failed_jobs');
+    }
+};
+
+
+===== FILE: database/migrations/2019_12_14_000001_create_personal_access_tokens_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('personal_access_tokens');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_19_123027_create_jobs_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('jobs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('queue')->index();
+            $table->longText('payload');
+            $table->unsignedTinyInteger('attempts');
+            $table->unsignedInteger('reserved_at')->nullable();
+            $table->unsignedInteger('available_at');
+            $table->unsignedInteger('created_at');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('jobs');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_19_123226_create_credits_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('credits', function (Blueprint $table) {
+            $table->bigInteger('logicalref')->primary();
+
+            $table->string('branch')->nullable();
+            $table->text('name')->nullable();
+            $table->string('passport')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('contract')->nullable();
+
+            $table->timestamp('date_')->nullable();
+
+            $table->double('amount')->nullable();
+            $table->decimal('paid', 18, 2)->nullable();
+
+            $table->timestamp('willpaiddate')->nullable();
+            $table->integer('willpaidamount')->nullable();
+
+            $table->text('note')->nullable();
+            $table->timestamp('lastnoteddate')->nullable();
+
+            $table->string('status')->nullable();
+            $table->boolean('active')->default(true);
+
+            $table->integer('initiator_i')->nullable();
+            $table->string('clientref')->nullable();
+            $table->string('custstatus')->nullable();
+            $table->string('assurance')->nullable();
+            $table->integer('ctype')->nullable();
+            $table->string('cardno')->nullable();
+            $table->string('fishno')->nullable();
+            $table->string('manager')->nullable();
+            $table->string('confirmedby')->nullable();
+            $table->string('gstatus')->nullable();
+
+            $table->bigInteger('rv_bigint')->default(0)->index();
+
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('credits');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_19_123226_create_sync_state_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('sync_state', function (Blueprint $table) {
+            $table->string('key')->primary();
+            $table->text('value')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('sync_state');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_19_174944_create_avshocrecat_report_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::connection('pgsql')->create('avshocrecat_report', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->string('magazyn', 255)->nullable();
+            $table->text('karz_alyjy')->nullable();
+            $table->string('telefon_belgisi', 255)->nullable();
+            $table->string('pasport_belgisi', 255)->nullable();
+            $table->string('sertnama_nomeri', 255)->nullable();
+            $table->string('tiger_kody', 255)->nullable();
+
+            $table->decimal('kt_cykdajy', 18, 2)->nullable();
+            $table->decimal('dt_girdeji', 18, 2)->nullable();
+
+            $table->decimal('m1', 18, 2)->nullable();
+            $table->decimal('m2', 18, 2)->nullable();
+            $table->decimal('m3', 18, 2)->nullable();
+            $table->decimal('m4', 18, 2)->nullable();
+            $table->decimal('m5', 18, 2)->nullable();
+            $table->decimal('m6', 18, 2)->nullable();
+
+            $table->decimal('galyndy', 18, 2)->nullable();
+            $table->decimal('aylyk_tolegi', 18, 2)->nullable();
+
+            $table->string('karz_alan_senesi', 30)->nullable();
+            $table->string('gutaryan_senesi', 30)->nullable();
+
+            $table->string('kategoriyasy', 255)->nullable();
+            $table->string('maglumat', 255)->nullable();
+            $table->string('bellik', 255)->nullable();
+
+            $table->date('tolejek_senesi')->nullable();
+            $table->string('statusy', 255)->nullable();
+
+            $table->timestamps();
+
+            $table->index('pasport_belgisi');
+            $table->index('tiger_kody');
+            $table->index('magazyn');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::connection('pgsql')->dropIfExists('avshocrecat_report');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_20_122800_add_paid_local_fields_to_credits_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->decimal('paid_local', 18, 2)->nullable()->after('paid');
+            $table->unsignedBigInteger('paid_updated_by')->nullable()->after('paid_local');
+            $table->timestamp('paid_updated_at')->nullable()->after('paid_updated_by');
+            $table->text('paid_note')->nullable()->after('paid_updated_at');
+
+            $table->foreign('paid_updated_by')->references('id')->on('users')->nullOnDelete();
+
+            // pratik index
+            $table->index(['paid_updated_at']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->dropForeign(['paid_updated_by']);
+            $table->dropIndex(['paid_updated_at']);
+            $table->dropColumn(['paid_local', 'paid_updated_by', 'paid_updated_at', 'paid_note']);
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_20_123743_add_amount_local_fields_to_credits_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->decimal('amount_local', 18, 2)->nullable()->after('amount');
+            $table->unsignedBigInteger('amount_updated_by')->nullable()->after('amount_local');
+            $table->timestamp('amount_updated_at')->nullable()->after('amount_updated_by');
+            $table->text('amount_note')->nullable()->after('amount_updated_at');
+
+            $table->foreign('amount_updated_by')
+                ->references('id')->on('users')
+                ->nullOnDelete();
+
+            $table->index(['amount_updated_at']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->dropForeign(['amount_updated_by']);
+            $table->dropIndex(['amount_updated_at']);
+            $table->dropColumn([
+                'amount_local',
+                'amount_updated_by',
+                'amount_updated_at',
+                'amount_note',
+            ]);
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_22_170329_create_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('credit_payments', function (Blueprint $table) {
+            $table->id();
+
+            // credits.logicalref BIGINT (primary)
+            $table->unsignedBigInteger('credit_logicalref')->index();
+
+            $table->decimal('pay_amount', 18, 2);
+            $table->string('method', 10); // cash|card|mixed
+            $table->decimal('cash_amount', 18, 2)->default(0);
+            $table->decimal('card_amount', 18, 2)->default(0);
+
+            $table->decimal('old_amount_local', 18, 2)->nullable();
+            $table->decimal('new_amount_local', 18, 2)->nullable();
+
+            $table->decimal('old_paid_local', 18, 2)->nullable();
+            $table->decimal('new_paid_local', 18, 2)->nullable();
+
+            $table->text('note')->nullable();
+
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->foreign('credit_logicalref')
+                ->references('logicalref')
+                ->on('credits')
+                ->cascadeOnDelete();
+
+            $table->foreign('created_by')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+
+            $table->index(['created_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('credit_payments');
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_23_112947_change_amount_type_in_credits_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->decimal('amount', 18, 2)->nullable()->change();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credits', function (Blueprint $table) {
+            $table->double('amount')->nullable()->change();
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_23_113120_add_credit_payments_lookup_index.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->index(['credit_logicalref', 'id'], 'cp_credit_id_idx');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex('cp_credit_id_idx');
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_23_152556_add_change_amount_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->decimal('change_amount', 18, 2)->default(0)->after('pay_amount');
+            $table->index(['change_amount']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex(['change_amount']);
+            $table->dropColumn('change_amount');
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_24_141813_add_customer_snapshot_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->string('customer_name', 255)->nullable()->after('credit_logicalref');
+            $table->string('customer_phone', 50)->nullable()->after('customer_name');
+            $table->string('customer_passport', 50)->nullable()->after('customer_phone');
+            $table->string('customer_contract', 50)->nullable()->after('customer_passport');
+            $table->string('branch', 50)->nullable()->after('customer_contract');
+
+            $table->index(['customer_contract']);
+            $table->index(['customer_phone']);
+            $table->index(['customer_passport']);
+            $table->index(['branch']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex(['customer_contract']);
+            $table->dropIndex(['customer_phone']);
+            $table->dropIndex(['customer_passport']);
+            $table->dropIndex(['branch']);
+
+            $table->dropColumn([
+                'customer_name',
+                'customer_phone',
+                'customer_passport',
+                'customer_contract',
+                'branch',
+            ]);
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_01_24_143254_add_created_by_snapshot_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->string('created_by_name', 255)->nullable()->after('created_by');
+            $table->string('created_by_email', 255)->nullable()->after('created_by_name');
+            $table->string('created_by_phone', 50)->nullable()->after('created_by_email');
+
+            $table->index('created_by_name', 'cp_created_by_name_idx');
+            $table->index('created_by_email', 'cp_created_by_email_idx');
+            $table->index('created_by_phone', 'cp_created_by_phone_idx');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex('cp_created_by_name_idx');
+            $table->dropIndex('cp_created_by_email_idx');
+            $table->dropIndex('cp_created_by_phone_idx');
+
+            $table->dropColumn([
+                'created_by_name',
+                'created_by_email',
+                'created_by_phone',
+            ]);
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_02_25_124059_add_void_fields_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->timestamp('voided_at')->nullable()->after('created_at');
+            $table->unsignedBigInteger('voided_by')->nullable()->after('voided_at');
+            $table->text('void_reason')->nullable()->after('voided_by');
+
+            $table->foreign('voided_by')
+                ->references('id')->on('users')
+                ->nullOnDelete();
+
+            $table->index(['voided_at']);
+            $table->index(['voided_by']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropForeign(['voided_by']);
+            $table->dropIndex(['voided_at']);
+            $table->dropIndex(['voided_by']);
+
+            $table->dropColumn(['voided_at', 'voided_by', 'void_reason']);
+        });
+    }
+};
+
+===== FILE: database/migrations/2026_03_03_145132_add_correction_fields_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->unsignedBigInteger('corrected_by')->nullable()->after('voided_by');
+
+            $table->dateTime('corrected_at')->nullable()->after('corrected_by');
+
+            $table->string('correct_reason', 300)->nullable()->after('corrected_at');
+
+            $table->index('corrected_by');
+            $table->index('corrected_at');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex(['corrected_by']);
+            $table->dropIndex(['corrected_at']);
+
+            $table->dropColumn(['corrected_by', 'corrected_at', 'correct_reason']);
+        });
+    }
+};
+
+===== FILE: database/migrations/2026_03_07_172755_add_phone_amount_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->decimal('phone_amount', 18, 2)->default(0)->after('card_amount');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropColumn('phone_amount');
+        });
+    }
+};
+
+===== FILE: database/migrations/2026_03_10_155756_create_activity_logs_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('activity_logs', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('user_name', 255)->nullable();
+            $table->string('user_email', 255)->nullable();
+            $table->string('user_phone', 50)->nullable();
+            $table->string('user_role', 50)->nullable();
+
+            $table->string('action', 100); // payment_created, payment_voided, login_failed
+            $table->string('category', 50)->nullable(); // auth, payment, user, credit, profile, export
+            $table->string('severity', 20)->default('info'); // info, warning, critical
+            $table->boolean('is_suspicious')->default(false);
+
+            $table->string('subject_type', 255)->nullable(); // App\Models\CreditPayment
+            $table->string('subject_id', 100)->nullable();
+
+            $table->string('ip_address', 64)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('device_type', 50)->nullable();
+            $table->string('browser', 100)->nullable();
+            $table->string('platform', 100)->nullable();
+
+            $table->string('http_method', 10)->nullable();
+            $table->text('url')->nullable();
+            $table->string('route_name', 150)->nullable();
+
+            $table->boolean('is_success')->default(true);
+            $table->text('message')->nullable();
+
+            $table->json('old_values')->nullable();
+            $table->json('new_values')->nullable();
+            $table->json('extra')->nullable();
+
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->index('user_id');
+            $table->index('action');
+            $table->index('category');
+            $table->index('severity');
+            $table->index('is_suspicious');
+            $table->index('ip_address');
+            $table->index('subject_id');
+            $table->index('created_at');
+
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('activity_logs');
+    }
+};
+
+===== FILE: database/migrations/2026_03_10_155811_create_login_histories_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('login_histories', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->string('login_value', 255)->nullable(); // email veya phone
+            $table->string('status', 30); // success, failed, logout
+            $table->string('fail_reason', 100)->nullable(); // wrong_password, user_not_found, inactive_account
+
+            $table->string('ip_address', 64)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('device_type', 50)->nullable();
+            $table->string('browser', 100)->nullable();
+            $table->string('platform', 100)->nullable();
+
+            $table->boolean('is_suspicious')->default(false);
+            $table->text('message')->nullable();
+
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->index('user_id');
+            $table->index('status');
+            $table->index('fail_reason');
+            $table->index('ip_address');
+            $table->index('is_suspicious');
+            $table->index('created_at');
+
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('login_histories');
+    }
+};
+
+===== FILE: database/migrations/2026_03_10_155830_create_security_alerts_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::create('security_alerts', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->string('alert_type', 100); // multiple_failed_login, payment_voided, ip_changed
+            $table->string('risk_level', 20)->default('medium'); // low, medium, high, critical
+            $table->boolean('is_resolved')->default(false);
+
+            $table->string('ip_address', 64)->nullable();
+            $table->text('message')->nullable();
+            $table->json('meta')->nullable();
+
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('resolved_at')->nullable();
+
+            $table->index('user_id');
+            $table->index('alert_type');
+            $table->index('risk_level');
+            $table->index('is_resolved');
+            $table->index('created_at');
+
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('security_alerts');
+    }
+};
+
+===== FILE: database/migrations/2026_03_10_160342_add_corrected_from_payment_id_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->unsignedBigInteger('corrected_from_payment_id')->nullable()->after('correct_reason');
+            $table->index('corrected_from_payment_id');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropIndex(['corrected_from_payment_id']);
+            $table->dropColumn('corrected_from_payment_id');
+        });
+    }
+};
+
+===== FILE: database/migrations/2026_03_10_164908_add_corrected_by_fk_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+
+            $table->foreign('corrected_by')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+
+            $table->dropForeign(['corrected_by']);
+        });
+    }
+};
+
+
+===== FILE: database/migrations/2026_03_10_170054_add_corrected_from_payment_fk_to_credit_payments_table.php =====
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->foreign('corrected_from_payment_id')
+                ->references('id')
+                ->on('credit_payments')
+                ->nullOnDelete();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('credit_payments', function (Blueprint $table) {
+            $table->dropForeign(['corrected_from_payment_id']);
+        });
+    }
+};
