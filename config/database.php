@@ -78,6 +78,21 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'second_pgsql' => [
+            'driver' => 'pgsql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('SECOND_PGSQL_HOST'),
+            'port' => env('SECOND_PGSQL_PORT', '5432'),
+            'database' => env('SECOND_PGSQL_DATABASE'),
+            'username' => env('SECOND_PGSQL_USERNAME'),
+            'password' => env('SECOND_PGSQL_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'schema' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         // 'sqlsrv' => [
         //     'driver' => 'sqlsrv',
         //     'url' => env('DATABASE_URL'),

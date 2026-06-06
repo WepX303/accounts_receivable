@@ -65,4 +65,7 @@ return [
     'customers' => 'Müşteri',
     'rows_local_remote_mismatch' => 'Satır (yerel ≠ merkez)',
 
+    'deleted_customers' => 'Silinen müşteriler',
+    'state_deleted' => 'Silinen',
+
 ];

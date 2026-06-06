@@ -64,4 +64,7 @@ return [
     'customers' => 'Клиентов',
     'rows_local_remote_mismatch' => 'Строк (локально ≠ центр)',
 
+    'deleted_customers' => 'Удалённые клиенты',
+    'state_deleted' => 'Удалён',
+
 ];

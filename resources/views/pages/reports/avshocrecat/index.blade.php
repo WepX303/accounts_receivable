@@ -17,6 +17,13 @@
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
+                            <div class="col-auto">
+                                <a href="{{ URL::temporarySignedRoute('report.export', now()->addMinutes(3), ['q' => request('q')]) }}"
+                                    class="btn btn-success">
+                                    <i class="ri-file-excel-2-line"></i>
+                                    Excel Export
+                                </a>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -68,20 +75,32 @@
 
                                         $ktRaw = $r->kt_cykdajy;
                                         $dtRaw = $r->dt_girdeji;
+                                        $galyndyRaw = $r->galyndy;
 
                                         $kt =
                                             $ktRaw === null
                                                 ? null
                                                 : (float) str_replace([',', ' '], ['.', ''], trim((string) $ktRaw));
+
                                         $dt =
                                             $dtRaw === null
                                                 ? null
                                                 : (float) str_replace([',', ' '], ['.', ''], trim((string) $dtRaw));
 
+                                        $galyndy =
+                                            $galyndyRaw === null
+                                                ? null
+                                                : (float) str_replace(
+                                                    [',', ' '],
+                                                    ['.', ''],
+                                                    trim((string) $galyndyRaw),
+                                                );
+
                                         $rowClass = '';
 
-                                        if ($kt !== null && $dt !== null) {
-                                            $diff = abs($kt - $dt);
+                                        if ($kt !== null && $dt !== null && $galyndy !== null) {
+                                            $expectedGalyndy = $kt - $dt;
+                                            $diff = abs($expectedGalyndy - $galyndy);
 
                                             if ($diff > $tolerance) {
                                                 $rowClass = 'table-danger';
@@ -89,7 +108,7 @@
                                         }
                                     @endphp
 
-                                    <tr  class="{{ $rowClass }}">
+                                    <tr class="{{ $rowClass }}">
                                         {{-- Store / ID --}}
                                         <td class="id">
                                             <span class="fw-medium text-primary">

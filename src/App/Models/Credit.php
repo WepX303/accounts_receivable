@@ -31,6 +31,7 @@ class Credit extends Model
         'paid' => 'decimal:2',
         'amount_local' => 'decimal:2',
         'paid_local' => 'decimal:2',
+        'is_blocked' => 'integer',
 
         'paid_updated_at' => 'datetime',
         'amount_updated_at' => 'datetime',

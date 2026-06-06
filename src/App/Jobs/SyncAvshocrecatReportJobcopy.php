@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class SyncAvshocrecatReportJob implements ShouldQueue
+class SyncAvshocrecatReportJobcopy implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -19,13 +19,14 @@ class SyncAvshocrecatReportJob implements ShouldQueue
 
     public function handle(): void
     {
-        $pasport = (string) config('sync.pgsql.avshocrecat_pasport', '');
-        $pgTable = (string) config('sync.pgsql.avshocrecat_table');
+        $proc = config('sync.mssql.avshocrecat_proc');      // dbo.AVSHOCRECAT_TEST
+        $pasport = (string) config('sync.mssql.avshocrecat_pasport', '');
+        $pgTable = config('sync.pgsql.avshocrecat_table');     // avshocrecat_report
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
-        // 1) Call PostgreSQL function from second_pgsql
-        $rows = DB::connection('second_pgsql')->select(
-            "SELECT * FROM public.avshonewcrecat(?)",
+        // 1) Call MSSQL stored procedure
+        $rows = DB::connection('sqlsrv')->select(
+            "EXEC {$proc} @PASPORT = ?",
             [$pasport]
         );
 
@@ -112,12 +113,9 @@ class SyncAvshocrecatReportJob implements ShouldQueue
 
         $v = trim((string) $value);
 
+        // MSSQL CAST(date) generally returns YYYY-MM-DD
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
             return $v;
-        }
-
-        if (preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $v)) {
-            return \Carbon\Carbon::createFromFormat('d.m.Y', $v)->format('Y-m-d');
         }
 
         return null;

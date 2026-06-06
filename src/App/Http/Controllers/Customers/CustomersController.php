@@ -14,18 +14,9 @@ class CustomersController extends Controller
     public function __invoke(Request $request)
     {
 
-        // $request->validate([
-        //     'q' => 'nullable|string|max:100',
-        //     'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
-        // ], [
-        //     'q.string' => __('validations/validations.customers.q_string'),
-        //     'q.max' => __('validations/validations.customers.q_max'),
-        //     'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
-        // ]);
-
         $request->validate([
             'q' => 'nullable|string|max:100',
-            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
+            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,deleted,active,bermejek,paid_mismatch',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ], [
@@ -180,7 +171,11 @@ class CustomersController extends Controller
          *  MAIN LIST QUERY
          * =========================
          */
+        // $credit_users = Credit::query()
         $credit_users = Credit::query()
+            ->when($quick !== 'deleted', function ($query) {
+                $query->where('active', true);
+            })
 
             /* SEARCH */
             ->when($q !== '', function ($query) use ($q) {
@@ -231,7 +226,11 @@ class CustomersController extends Controller
             })
 
             /* THOSE WHO ARE BLOCKED */
-            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
+            // ->when($quick === 'blocked', fn($q) => $q->where('active', false))
+            ->when($quick === 'blocked', fn($q) => $q->where('is_blocked', 1))
+           
+            /* THOSE WHO ARE DELETED */
+            ->when($quick === 'deleted', fn($q) => $q->where('active', false))
 
             /* ACTIVE MEMBERS */
             ->when($quick === 'active', fn($q) => $q->where('active', true))

@@ -184,13 +184,18 @@
                                         <option value="blocked" @selected(request('quick_filter') === 'blocked')>
                                             {{ __('pages/customers_index.blocked') }}
                                         </option>
+
+                                        <option value="deleted" @selected(request('quick_filter') === 'deleted')>
+                                            {{ __('pages/customers_index.deleted_customers') }}
+                                        </option>
+
                                         <option value="active" @selected(request('quick_filter') === 'active')>
                                             {{ __('pages/customers_index.state_active') }}
                                         </option>
+
                                         <option value="bermejek" @selected(request('quick_filter') === 'bermejek')>
                                             {{ __('pages/customers_index.will_not_pay') }}
                                         </option>
-
                                     </optgroup>
 
                                 </select>
@@ -277,13 +282,26 @@
                                             <td class="customer_status">
                                                 <div class="fw-medium">
                                                     {{ $c->custstatus ?: __('pages/customers_index.unknown') }} /
-                                                    @if ($c->active)
+                                                    {{-- @if ($c->active)
                                                         <span class="badge bg-success-subtle text-success text-uppercase">
                                                             {{ __('pages/customers_index.state_active') }}
                                                         </span>
                                                     @else
                                                         <span class="badge bg-danger-subtle text-danger text-uppercase">
                                                             {{ __('pages/customers_index.state_blocked') }}
+                                                        </span>
+                                                    @endif --}}
+                                                    @if (!$c->active)
+                                                        <span class="badge bg-warning-subtle text-warning text-uppercase">
+                                                            {{ __('pages/customers_index.state_deleted') }}
+                                                        </span>
+                                                    @elseif ((int) $c->is_blocked === 1)
+                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">
+                                                            {{ __('pages/customers_index.state_blocked') }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success text-uppercase">
+                                                            {{ __('pages/customers_index.state_active') }}
                                                         </span>
                                                     @endif
                                                 </div>

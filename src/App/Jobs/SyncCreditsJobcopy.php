@@ -10,7 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class SyncCreditsJob implements ShouldQueue
+class SyncCreditsJobcopy implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -20,28 +20,33 @@ class SyncCreditsJob implements ShouldQueue
 
     public function handle(): void
     {
+        $mssqlTable = (string) config('sync.mssql.credits_table'); // dbo.CREDITS
         $pgTable = (string) config('sync.pgsql.credits_table'); // credits_table
         $chunkSize = (int) config('sync.chunk_size', 1000);
 
-        /** @var ConnectionInterface $second_pgsql */
-        $sourcePgsql = DB::connection('second_pgsql');
+        /** @var ConnectionInterface $sqlsrv */
+        $sqlsrv = DB::connection('sqlsrv');
         /** @var ConnectionInterface $pgsql */
         $pgsql = DB::connection('pgsql');
 
-        $stateKey = app()->environment() . '_credits_last_rv_hex';
+        // Secure the MSSQL DB context
+        $dbName = (string) config('database.connections.sqlsrv.database');
+        $sqlsrv->statement("USE [$dbName]");
+
+        // Environment-based state key (to prevent mixing of production and test environments)
+        $stateKey = app()->environment() . '_credits_last_rv';
 
         $stateRow = $pgsql->table('sync_state')->where('key', $stateKey)->first();
-        $lastRv = $stateRow?->value ?: '0000000000000000';
+        $lastRv = $stateRow?->value ? (int) $stateRow->value : 0;
 
-        $query = $sourcePgsql
-            ->table('credits')
-            // ->selectRaw("*, encode(rv, 'hex') as rv_hex")
-            ->selectRaw("*, encode(rv, 'hex') as rv_hex, (('x' || encode(rv, 'hex'))::bit(64)::bigint) as rv_bigint")
-            ->whereNotNull('rv')
-            ->whereRaw("rv > decode(?, 'hex')", [$lastRv])
-            ->orderBy('rv');
+        $query = $sqlsrv
+            ->table($mssqlTable)
+            ->selectRaw('*, CONVERT(bigint, CONVERT(binary(8), RV)) as rv_bigint')
+            ->whereRaw('CONVERT(bigint, CONVERT(binary(8), RV)) > ?', [$lastRv])
+            ->orderByRaw('rv_bigint');
 
         $maxRvSeen = $lastRv;
+
 
         $query->chunk($chunkSize, function ($rows) use (&$maxRvSeen, $pgTable, $pgsql) {
             if ($rows->isEmpty()) {
@@ -54,7 +59,7 @@ class SyncCreditsJob implements ShouldQueue
             $logicalRefs = [];
             foreach ($rows as $row) {
                 $r = (array) $row;
-                $lr = (int) ($r['logicalref'] ?? 0);
+                $lr = (int) ($r['LOGICALREF'] ?? 0);
                 if ($lr > 0) {
                     $logicalRefs[] = $lr;
                 }
@@ -87,20 +92,18 @@ class SyncCreditsJob implements ShouldQueue
             foreach ($rows as $row) {
                 $r = (array) $row;
 
-                $logicalref = (int) ($r['logicalref'] ?? 0);
+                $logicalref = (int) ($r['LOGICALREF'] ?? 0);
                 if ($logicalref <= 0) {
                     continue;
                 }
 
-                $rvHex = $r['rv_hex'] ?? null;
                 $rv = (int) ($r['rv_bigint'] ?? 0);
-
-                if ($rvHex && strcmp($rvHex, $maxRvSeen) > 0) {
-                    $maxRvSeen = $rvHex;
+                if ($rv > $maxRvSeen) {
+                    $maxRvSeen = $rv;
                 }
 
-                $amount = $r['amount'] ?? null;
-                $paid = $r['paid'] ?? null;
+                $amount = $r['AMOUNT'] ?? null;
+                $paid = $r['PAID'] ?? null;
 
                 $existing = $existingMap[$logicalref] ?? null;
                 $isExisting = (bool) $existing;
@@ -128,33 +131,32 @@ class SyncCreditsJob implements ShouldQueue
 
                 $payload[] = [
                     'logicalref' => $logicalref,
-                    'branch' => $r['branch'] ?? null,
-                    'name' => $r['name_'] ?? null,
-                    'passport' => $r['passport_'] ?? null,
-                    'phone' => $r['phone'] ?? null,
-                    'contract' => $r['contract_'] ?? null,
-                    'date_' => $r['date_'] ?? null,
+                    'branch' => $r['BRANCH'] ?? null,
+                    'name' => $r['NAME_'] ?? null,
+                    'passport' => $r['PASSPORT_'] ?? null,
+                    'phone' => $r['PHONE'] ?? null,
+                    'contract' => $r['CONTRACT_'] ?? null,
+                    'date_' => $r['DATE_'] ?? null,
 
                     'amount' => $amount,
                     'paid' => $paid,
 
-                    'willpaiddate' => $r['willpaiddate'] ?? null,
-                    'willpaidamount' => $r['willpaidamount'] ?? null,
-                    'note' => $r['note'] ?? null,
-                    'lastnoteddate' => $r['lastnoteddate'] ?? null,
-                    'status' => $r['status'] ?? null,
-                    'active' => isset($r['active']) ? (bool) $r['active'] : false,
-                    'is_blocked' => (int) ($r['is_blocked'] ?? 0),
-                    'initiator_i' => $r['initiator_i'] ?? null,
-                    'clientref' => $r['clientref'] ?? null,
-                    'custstatus' => $r['custstatus'] ?? null,
-                    'assurance' => $r['assurance'] ?? null,
-                    'ctype' => $r['ctype'] ?? null,
-                    'cardno' => $r['cardno'] ?? null,
-                    'fishno' => $r['fishno'] ?? null,
+                    'willpaiddate' => $r['WILLPAIDDATE'] ?? null,
+                    'willpaidamount' => $r['WILLPAIDAMOUNT'] ?? null,
+                    'note' => $r['NOTE'] ?? null,
+                    'lastnoteddate' => $r['LASTNOTEDDATE'] ?? null,
+                    'status' => $r['STATUS'] ?? null,
+                    'active' => isset($r['ACTIVE']) ? (bool) $r['ACTIVE'] : false,
+                    'initiator_i' => $r['INITIATOR_I'] ?? null,
+                    'clientref' => $r['CLIENTREF'] ?? null,
+                    'custstatus' => $r['CUSTSTATUS'] ?? null,
+                    'assurance' => $r['ASSURANCE'] ?? null,
+                    'ctype' => $r['CTYPE'] ?? null,
+                    'cardno' => $r['CARDNO'] ?? null,
+                    'fishno' => $r['FISHNO'] ?? null,
                     'manager' => $r['MANAGER'] ?? null,
-                    'confirmedby' => $r['confirmedby'] ?? null,
-                    'gstatus' => $r['gstatus'] ?? null,
+                    'confirmedby' => $r['CONFIRMEDBY'] ?? null,
+                    'gstatus' => $r['GSTATUS'] ?? null,
 
                     'rv_bigint' => $rv,
 
@@ -191,7 +193,6 @@ class SyncCreditsJob implements ShouldQueue
                     'lastnoteddate',
                     'status',
                     'active',
-                    'is_blocked',
                     'initiator_i',
                     'clientref',
                     'custstatus',

@@ -74,6 +74,10 @@ Route::middleware(['auth.token'])->group(function () {
     // Report: Admin, Cashier, Analyst, Operator
     Route::middleware(['role:SuperAdmin,Admin,Cashier,Analyst,Operator'])->group(function () {
         Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
+
+        Route::get('/reports/avshocrecat/export', [AvshocrecatReportController::class, 'export'])
+            ->middleware('signed')
+            ->name('report.export');
     });
 
     /**

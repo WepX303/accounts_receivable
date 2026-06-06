@@ -62,4 +62,7 @@ return [
     'customers' => 'Customers',
     'rows_local_remote_mismatch' => 'Rows (local ≠ remote)',
 
+    'deleted_customers' => 'Deleted customers',
+    'state_deleted' => 'Deleted',
+
 ];
