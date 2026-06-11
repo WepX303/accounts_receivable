@@ -35,20 +35,6 @@ class AuthController extends Controller
     // Login
     public function login(Request $request)
     {
-        dd([
-
-            'ip' => $request->ip(),
-
-            'ips' => $request->ips(),
-
-            'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'] ?? null,
-
-            'X_FORWARDED_FOR' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
-
-            'X_REAL_IP' => $_SERVER['HTTP_X_REAL_IP'] ?? null,
-
-        ]);
-        
         $request->validate([
             'login' => 'required',
             'password' => 'required',
