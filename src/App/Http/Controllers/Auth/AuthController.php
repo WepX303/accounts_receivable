@@ -192,27 +192,19 @@ class AuthController extends Controller
         //         true    // httpOnly
         //     )
 
-        $cookie = cookie()->forget('auth_token', '/', 'creditpos.xcess.it.com');
-
-        return redirect()->route('login')
-            ->withCookie($cookie)
-            ->withHeaders([
-                'Cache-Control' => 'no-cache, no-store, must-revalidate',
-                'Pragma' => 'no-cache',
-                'Expires' => '0',
-            
-            // cookie(
-            //     'auth_token',
-            //     $token,
-            //     60 * 24,
-            //     '/',
-            //     null,
-            //     app()->environment('production'),
-            //     true,
-            //     false,
-            //     'Lax'
-            // )
-        ]);
+        return redirect()->route('dashboard')->withCookie(
+            cookie(
+                'auth_token',
+                $token,
+                60 * 24,
+                '/',
+                null,
+                true,
+                true,
+                false,
+                'Lax'
+            )
+        );
     }
 
     // Logout
@@ -247,7 +239,8 @@ class AuthController extends Controller
             }
         }
         // Delete the cookie for all paths and domains and add a cache control header.
-        $cookie = cookie()->forget('auth_token');
+        // $cookie = cookie()->forget('auth_token');
+        $cookie = cookie()->forget('auth_token', '/', null);
 
         return redirect()->route('login')
             ->withCookie($cookie)
