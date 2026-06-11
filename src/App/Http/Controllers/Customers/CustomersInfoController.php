@@ -23,7 +23,9 @@ class CustomersInfoController extends Controller
         $q = trim((string) $request->get('q', ''));
         $id = $request->integer('id'); // null or int
 
+        // $credit_users_info = Credit::query()
         $credit_users_info = Credit::query()
+            ->where('active', true)
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%' . $q . '%';
                 $query->where(function ($qq) use ($like) {
@@ -50,7 +52,11 @@ class CustomersInfoController extends Controller
             $selected = $pageItems->firstWhere('logicalref', (int) $id);
             // otherwise fetch from the database (if the id is on another page)
             if (! $selected) {
-                $selected = Credit::query()->where('logicalref', (int) $id)->first();
+                // $selected = Credit::query()->where('logicalref', (int) $id)->first();
+                $selected = Credit::query()
+                    ->where('active', true)
+                    ->where('logicalref', (int) $id)
+                    ->first();
             }
         }
         // If there is no ID, select the first record
