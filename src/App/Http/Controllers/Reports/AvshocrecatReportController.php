@@ -175,7 +175,7 @@ class AvshocrecatReportController extends Controller
             return '';
         }
 
-        // CSV/Excel formula injection koruması
+        // CSV/Excel formula injection protection
         if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
             $value = "'" . $value;
         }

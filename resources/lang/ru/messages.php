@@ -28,6 +28,7 @@ return [
     'no_data_found' => 'Записи не найдены',
 
     'credit_date' => 'Дата кредита',
+    'next_payment_date' => 'Дата следующего платежа',
     'payment_status' => 'Статус оплаты',
     'day_info' => 'Информация по дням',
     'closed' => 'Закрыт',
@@ -56,14 +57,14 @@ return [
     'send_selected' => 'Отправить выбранным',
     'select_at_least_one_customer' => 'Пожалуйста, выберите хотя бы одного клиента.',
     'enter_sms_message' => 'Пожалуйста, введите текст SMS.',
-    'preview_feature_next_step' => 'Функция предпросмотра будет подключена на следующем шаге.',
-    'send_feature_next_step' => 'Функция отправки будет подключена на следующем шаге.',
-
+    'preview_filtered' => 'Все клиенты в фильтре',
     'invalid_selection' => 'Отправлен неверный выбор.',
     'sms_message_too_long' => 'Текст SMS слишком длинный.',
     'no_valid_customer_found' => 'Подходящий клиент не найден.',
     'preview_generated_successfully' => 'Предпросмотр SMS успешно создан.',
     'sms_preview' => 'Предпросмотр SMS',
+    'clear_preview' => 'Очистить предпросмотр',
+    'preview_cleared' => 'Предпросмотр очищен.',
 
     'no_customer_with_phone' => 'Не найдено подходящих клиентов с номером телефона.',
     'sms_api_request_failed' => 'Ошибка запроса к SMS API.',
@@ -93,5 +94,18 @@ return [
     'phone_is_empty' => 'Телефон пуст',
     'invalid_phone' => 'Недействительный номер телефона',
     'phone_contains_letters' => 'Телефон содержит буквы',
+
+    'total_preview_records_created' => 'Создан предварительный просмотр для :count записей.',
+    'only_first_records_shown' => 'На экране отображаются только первые :limit записей.',
+    'excel_export_contains_all_records' => 'Экспорт в Excel содержит все записи.',
+
+    'phone_status' => 'Статус телефона',
+    'has_phone' => 'Есть телефон',
+    'no_phone' => 'Нет телефона',
+    'multi_phone' => 'Несколько телефонов',
+
+    'payment_date_from' => 'Дата платежа (с)',
+    'payment_date_to' => 'Дата платежа (по)',
+
 
 ];

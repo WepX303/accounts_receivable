@@ -114,6 +114,7 @@ Route::middleware(['auth.token'])->group(function () {
         Route::post('/sms/send', [CustomerSmsController::class, 'send'])->name('sms.send');
         Route::get('/sms/export-preview', [CustomerSmsController::class, 'exportPreview'])
             ->name('sms.export.preview');
+        Route::delete('/sms/preview/clear', [CustomerSmsController::class, 'clearPreview'])->name('sms.preview.clear');
     });
 
     /**

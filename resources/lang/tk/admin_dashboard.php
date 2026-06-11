@@ -16,7 +16,7 @@ return [
     ],
 
     'net_collection' => 'Arassa ýygnalan',
-    'net_formula' => 'Net = Töleg - Gaýtarym',
+    'net_formula' => 'Arassa = Töleg - Gaýtargy',
 
     'tx_count' => 'Amal sany',
     'payment_count' => 'Töleg sany',

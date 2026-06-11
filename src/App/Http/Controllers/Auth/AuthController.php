@@ -55,14 +55,6 @@ class AuthController extends Controller
             ->orWhere('phonenumber', $login)
             ->first();
 
-        // if (! $user) {
-        //     $errorMessage = $isEmail
-        //         ? __('validations/validations.auth.email_not_found')
-        //         : ($isPhone ? __('validations/validations.auth.phone_not_found') : __('validations/validations.auth.invalid_login'));
-
-        //     return back()->withErrors(['login' => $errorMessage])->withInput();
-        // }
-
         if (! $user) {
             $errorMessage = $isEmail
                 ? __('validations/validations.auth.email_not_found')
@@ -98,11 +90,6 @@ class AuthController extends Controller
             return back()->withErrors(['login' => $errorMessage])->withInput();
         }
 
-        // Status control
-        // if (! $user->status) {
-        //     return back()->withErrors(['login' => __('validations/validations.auth.account_inactive')])->withInput();
-        // }
-
         if (! $user->status) {
             $this->writeLoginHistory($user, $login, 'failed', 'inactive_account', 'Inactive account login attempt', true);
 
@@ -137,10 +124,6 @@ class AuthController extends Controller
 
             return back()->withErrors(['login' => __('validations/validations.auth.account_inactive')])->withInput();
         }
-
-        // if (! Hash::check($request->password, $user->password)) {
-        //     return back()->withErrors(['password' => __('validations/validations.auth.wrong_password')])->withInput();
-        // }
 
         if (! Hash::check($request->password, $user->password)) {
             $this->writeLoginHistory($user, $login, 'failed', 'wrong_password', 'Wrong password', true);
@@ -229,15 +212,6 @@ class AuthController extends Controller
         $user = null;
 
         $token = $request->cookie('auth_token');
-
-        // if ($token) {
-        //     $user = User::where('token', $token)->first();
-        //     if ($user) {
-        //         $user->token = null;
-        //         $user->token_expires_at = null;
-        //         $user->save();
-        //     }
-        // }
 
         if ($token) {
             $user = User::where('token', $token)->first();

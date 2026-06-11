@@ -12,13 +12,6 @@ use App\Services\AuditLogger;
 class UserController extends Controller
 {
     // INDEX
-    // public function __invoke(Request $request)
-    // {
-    //     $users = User::orderBy('id', 'asc')->paginate(10);
-    //     $roles = array_map(fn($role) => $role->value, UserRoleEnum::cases());
-
-    //     return view('pages.users.index', compact('users', 'roles'));
-    // }
     public function __invoke(Request $request)
     {
         /** @var \App\Models\User|null $currentUser */
@@ -50,14 +43,12 @@ class UserController extends Controller
     // STORE
     public function store(Request $request)
     {
-
         /** @var \App\Models\User|null $currentUser */
         $currentUser = auth()->user();
 
         if (!$currentUser || !$currentUser->canManageUsers()) {
             return back()->with('warning', 'You do not have permission to create users.')->withInput();
         }
-
         $allowedRoles = collect(UserRoleEnum::cases())
             ->filter(function ($role) use ($currentUser) {
                 if ($currentUser->isSuperAdmin()) {
@@ -76,7 +67,6 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'phonenumber' => 'required|unique:users,phonenumber',
             'password' => 'required|min:6',
-            // 'role' => ['required', new Enum(UserRoleEnum::class)],
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'status' => 'required|boolean',
         ], [
@@ -192,7 +182,6 @@ class UserController extends Controller
             'lastname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
-            // 'role' => ['required', new Enum(UserRoleEnum::class)],
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'status' => 'required|boolean',
         ], [

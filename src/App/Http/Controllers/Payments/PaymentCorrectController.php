@@ -16,11 +16,6 @@ class PaymentCorrectController extends Controller
 {
     public function __invoke(Request $request, CreditPayment $payment)
     {
-        // Admin-only
-        // $user = Auth::user();
-        // if (!$user || $user->role !== UserRoleEnum::ADMIN) {
-        //     return back()->with('warning', __('validations/validations.payment_correct.admin_only'));
-        // }
 
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
@@ -108,7 +103,6 @@ class PaymentCorrectController extends Controller
         $reason = preg_replace('/\s+/', ' ', $reason);
 
         try {
-            // DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason) {
             DB::transaction(function () use ($payment, $user, $enteredAt, $now, $method, $received, $cashTotal, $cardTotal, $phoneTotal, $note, $reason, &$auditData) {
 
                 // lock payment row
@@ -226,7 +220,6 @@ class PaymentCorrectController extends Controller
                     'branch' => mb_substr((string)$c->branch, 0, 50),
 
                     // PAYMENT RECEIVED BY: ORIGINAL CASHIER TO REMAIN
-                    // 'created_by' => (int) ($p->created_by ?? 0),
                     'created_by' => $p->created_by,
                     'created_by_name' => mb_substr((string) ($p->created_by_name ?? 'N/A'), 0, 255),
                     'created_by_email' => mb_substr((string) ($p->created_by_email ?? ''), 0, 255),
@@ -286,11 +279,6 @@ class PaymentCorrectController extends Controller
                     ],
                 ];
             });
-            // } catch (\Throwable $e) {
-            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_correct.correction_failed');
-            //     return back()->with('warning', $msg)->withInput();
-            // }
-
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException
                 ? $e->getMessage()

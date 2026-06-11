@@ -278,21 +278,6 @@ class DashboardController extends Controller
                     'series' => $hours->map(fn($h) => (float)($rows[$h] ?? 0))->values(),
                 ];
             }
-            // elseif (in_array($period, ['week', 'last7'], true)) {
-            //     $days = collect(range(6, 0))->map(fn($i) => now()->subDays($i)->startOfDay());
-
-            //     $rows = CreditPayment::query()
-            //         ->notVoided()
-            //         ->whereBetween('created_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
-            //         ->selectRaw("DATE(created_at) as d, COALESCE(SUM(pay_amount - COALESCE(change_amount,0)),0) as total_net")
-            //         ->groupBy('d')
-            //         ->pluck('total_net', 'd');
-
-            //     $chartDaily = [
-            //         'labels' => $days->map(fn($d) => $d->format('d.m'))->values(),
-            //         'series' => $days->map(fn($d) => (float)($rows[$d->toDateString()] ?? 0))->values(),
-            //     ];
-            // } 
 
             elseif ($period === 'week') {
                 $weekStart = now()->startOfWeek()->startOfDay();

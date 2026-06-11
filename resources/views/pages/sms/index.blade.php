@@ -36,7 +36,7 @@
         <div class="col-lg-12">
 
             {{-- FILTER CARD --}}
-            <div class="card mb-4">
+            {{-- <div class="card mb-4">
                 <div class="card-body border border-dashed border-end-0 border-start-0">
                     <form method="GET" action="{{ route('sms.index') }}">
                         <div class="row g-3 align-items-end">
@@ -131,6 +131,169 @@
                         </div>
                     </form>
                 </div>
+            </div> --}}
+
+            {{-- FILTER CARD --}}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        {{ __('messages.filter') }}
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <form method="GET" action="{{ route('sms.index') }}">
+                        <div class="row g-3">
+
+                            {{-- Main filters --}}
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.branch') }}</label>
+                                <select name="branch" class="form-select">
+                                    <option value="">{{ __('messages.all') }}</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch }}" @selected(request('branch') == $branch)>
+                                            {{ $branch }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.status') }}</label>
+                                <select name="status_type" class="form-select">
+                                    <option value="all" @selected($statusType === 'all' || $statusType === '')>
+                                        {{ __('messages.all') }}
+                                    </option>
+                                    <option value="overdue" @selected($statusType === 'overdue')>
+                                        {{ __('messages.overdue') }}
+                                    </option>
+                                    <option value="due_today" @selected($statusType === 'due_today')>
+                                        {{ __('messages.due_today') }}
+                                    </option>
+                                    <option value="due_in_days" @selected($statusType === 'due_in_days')>
+                                        {{ __('messages.due_in_days') }}
+                                    </option>
+                                    <option value="unpaid" @selected($statusType === 'unpaid')>
+                                        {{ __('messages.unpaid') }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            {{-- <div class="col-xl-2 col-md-6">
+                                <label class="form-label">{{ __('messages.due_days') }}</label>
+                                <input type="number" min="1" name="due_days" class="form-control"
+                                    value="{{ request('due_days', 3) }}">
+                            </div> --}}
+
+                            <div class="col-xl-2 col-md-6" id="dueDaysWrapper">
+                                <label class="form-label">{{ __('messages.due_days') }}</label>
+                                <input type="number" min="1" name="due_days" id="dueDaysInput" class="form-control"
+                                    value="{{ request('due_days', 3) }}">
+                            </div>
+
+                            <div class="col-xl-4 col-md-6 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="ri-filter-3-line"></i>
+                                    {{ __('messages.filter') }}
+                                </button>
+
+                                <a href="{{ route('sms.index') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="ri-refresh-line"></i>
+                                    {{ __('messages.reset') }}
+                                </a>
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-2">
+                            </div>
+
+                            {{-- Search filters --}}
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.customer_name') }}</label>
+                                <input type="text" name="name" class="form-control" value="{{ request('name') }}"
+                                    placeholder="{{ __('messages.customer_name') }}">
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.phone') }}</label>
+                                <input type="text" name="phone" class="form-control" value="{{ request('phone') }}"
+                                    placeholder="{{ __('messages.phone') }}">
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.passport') }}</label>
+                                <input type="text" name="passport" class="form-control"
+                                    value="{{ request('passport') }}" placeholder="{{ __('messages.passport') }}">
+                            </div>
+
+                            <div class="col-xl-3 col-md-6">
+                                <label class="form-label">{{ __('messages.contract') }}</label>
+                                <input type="text" name="contract" class="form-control"
+                                    value="{{ request('contract') }}" placeholder="{{ __('messages.contract') }}">
+                            </div>
+
+                            {{-- Amount filters --}}
+                            <div class="col-xl-2 col-md-6">
+                                <label class="form-label">{{ __('messages.min_remaining') }}</label>
+                                <input type="number" step="0.01" min="0" name="min_remaining"
+                                    class="form-control" value="{{ request('min_remaining') }}">
+                            </div>
+
+                            <div class="col-xl-2 col-md-6">
+                                <label class="form-label">{{ __('messages.max_remaining') }}</label>
+                                <input type="number" step="0.01" min="0" name="max_remaining"
+                                    class="form-control" value="{{ request('max_remaining') }}">
+                            </div>
+
+                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
+                                <label class="form-label">
+                                    {{ __('messages.phone_status') }}
+                                </label>
+
+                                <select name="phone_status" class="form-select">
+                                    <option value="">
+                                        {{ __('messages.all') }}
+                                    </option>
+
+                                    <option value="has_phone"
+                                        {{ request('phone_status') == 'has_phone' ? 'selected' : '' }}>
+                                        {{ __('messages.has_phone') }}
+                                    </option>
+
+                                    <option value="no_phone"
+                                        {{ request('phone_status') == 'no_phone' ? 'selected' : '' }}>
+                                        {{ __('messages.no_phone') }}
+                                    </option>
+
+                                    <option value="multi_phone"
+                                        {{ request('phone_status') == 'multi_phone' ? 'selected' : '' }}>
+                                        {{ __('messages.multi_phone') }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-6 col-12">
+                                <label class="form-label">
+                                    {{ __('messages.payment_date_from') }}
+                                </label>
+
+                                <input type="date" name="payment_date_from" class="form-control"
+                                    value="{{ request('payment_date_from') }}">
+                            </div>
+
+                            <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-6 col-12">
+                                <label class="form-label">
+                                    {{ __('messages.payment_date_to') }}
+                                </label>
+
+                                <input type="date" name="payment_date_to" class="form-control"
+                                    value="{{ request('payment_date_to') }}">
+                            </div>
+
+
+                        </div>
+                    </form>
+                </div>
             </div>
 
             {{-- SELECTION INFO --}}
@@ -157,11 +320,30 @@
                     <div class="card-body pt-4">
                         {{-- <h5 class="mb-3">{{ __('messages.sms_preview') }}</h5> --}}
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">{{ __('messages.sms_preview') }}</h5>
+                            {{-- <h5 class="mb-0">{{ __('messages.sms_preview') }}</h5> --}}
+                            <h5 class="mb-0">
+                                {{ __('messages.sms_preview') }}
+                                <span class="badge bg-primary ms-2">
+                                    {{ count($previewRows) }}
+                                </span>
+                            </h5>
 
-                            <a href="{{ route('sms.export.preview', request()->query()) }}" class="btn btn-success btn-sm">
-                                {{ __('messages.export_excel') }}
-                            </a>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('sms.export.preview', request()->query()) }}"
+                                    class="btn btn-success btn-sm">
+                                    {{ __('messages.export_excel') }}
+                                </a>
+
+                                <form method="POST" action="{{ route('sms.preview.clear', request()->query()) }}"
+                                    class="d-inline mb-0">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        {{ __('messages.clear_preview') }}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         <br>
 
@@ -177,7 +359,7 @@
                                         <th style="min-width: 500px;">{{ __('messages.sms_message') }}</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                {{-- <tbody>
                                     @foreach ($previewRows as $row)
                                         <tr>
                                             <td>{{ $row['logicalref'] }}</td>
@@ -189,9 +371,30 @@
                                             </td>
                                         </tr>
                                     @endforeach
+                                </tbody> --}}
+                                <tbody>
+                                    @foreach (array_slice($previewRows, 0, 5) as $row)
+                                        <tr>
+                                            <td>{{ $row['logicalref'] }}</td>
+                                            <td>{{ $row['name'] ?: '-' }}</td>
+                                            <td>{{ $row['phone'] ?: '-' }}</td>
+                                            <td>{{ $row['contract'] ?: '-' }}</td>
+                                            <td>{{ $row['branch'] ?: '-' }}</td>
+                                            <td style="white-space: pre-wrap; min-width: 500px;">
+                                                {{ $row['message'] }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @if (count($previewRows) > 5)
+                            <div class="alert alert-info mt-3">
+                                {!! __('messages.total_preview_records_created', ['count' => count($previewRows)]) !!}
+                                {!! __('messages.only_first_records_shown', ['limit' => 5]) !!}
+                                {!! __('messages.excel_export_contains_all_records') !!}
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -240,6 +443,24 @@
             <form id="smsSelectionForm" method="POST" action="{{ route('sms.preview') }}">
                 @csrf
 
+
+                <input type="hidden" name="preview_mode" id="previewMode" value="selected">
+
+                <input type="hidden" name="branch" value="{{ request('branch') }}">
+                <input type="hidden" name="name" value="{{ request('name') }}">
+                <input type="hidden" name="phone" value="{{ request('phone') }}">
+                <input type="hidden" name="passport" value="{{ request('passport') }}">
+                <input type="hidden" name="contract" value="{{ request('contract') }}">
+                <input type="hidden" name="status_type" value="{{ request('status_type') }}">
+                <input type="hidden" name="due_days" value="{{ request('due_days') }}">
+                <input type="hidden" name="min_remaining" value="{{ request('min_remaining') }}">
+                <input type="hidden" name="max_remaining" value="{{ request('max_remaining') }}">
+
+                <input type="hidden" name="phone_status" value="{{ request('phone_status') }}">
+                <input type="hidden" name="payment_date_from" value="{{ request('payment_date_from') }}">
+                <input type="hidden" name="payment_date_to" value="{{ request('payment_date_to') }}">
+
+
                 <div class="card" id="smsList">
                     <div class="card-body pt-4">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
@@ -248,7 +469,11 @@
                                     {{ __('messages.select_all_on_page') }}
                                 </button>
 
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllPageBtn">
+                                <button type="button" class="btn btn-sm btn-outline-info" id="previewFilteredBtn">
+                                    {{ __('messages.preview_filtered') }}
+                                </button>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="clearAllPageBtn">
                                     {{ __('messages.clear_selection') }}
                                 </button>
                             </div>
@@ -270,7 +495,7 @@
                                             {{ __('messages.contract') }} <br> {{ __('messages.branch') }}
                                         </th>
                                         <th style="min-width: 130px;">{{ __('messages.credit_date') }} <br>
-                                            {{ __('messages.will_paid_date') }}</th>
+                                            {{ __('messages.next_payment_date') }}
                                         </th>
                                         <th style="min-width: 150px;">{{ __('messages.payment_status') }} <br>
                                             {{ __('messages.day_info') }} </th>
@@ -343,13 +568,17 @@
                                             <td class="customer_status">
                                                 <div class="fw-medium">
                                                     {{ $customer->custstatus ?: __('pages/customers_index.unknown') }} /
-                                                    @if ($customer->active)
-                                                        <span class="badge bg-success-subtle text-success text-uppercase">
-                                                            {{ __('pages/customers_index.state_active') }}
+                                                    @if (!$customer->active)
+                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">
+                                                            {{ __('pages/customers_index.state_deleted') }}
+                                                        </span>
+                                                    @elseif ((int) $customer->is_blocked === 1)
+                                                        <span class="badge bg-warning-subtle text-warning text-uppercase">
+                                                            {{ __('pages/customers_index.state_blocked') }}
                                                         </span>
                                                     @else
-                                                        <span class="badge bg-danger-subtle text-danger text-uppercase">
-                                                            {{ __('pages/customers_index.state_blocked') }}
+                                                        <span class="badge bg-success-subtle text-success text-uppercase">
+                                                            {{ __('pages/customers_index.state_active') }}
                                                         </span>
                                                     @endif
                                                 </div>
@@ -388,7 +617,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-xxl-3 col-xl-4 col-lg-6">
+                            {{-- <div class="col-xxl-3 col-xl-4 col-lg-6">
                                 <label class="form-label">{{ __('messages.schedule_type') }}</label>
                                 <select name="schedule_type" id="scheduleType" class="form-select">
                                     <option value="now"
@@ -412,7 +641,7 @@
                                         {{ __('messages.custom_schedule') }}
                                     </option>
                                 </select>
-                            </div>
+                            </div> --}}
 
                             <div class="col-xxl-3 col-xl-4 col-lg-6" id="customScheduleWrapper" style="display: none;">
                                 <label class="form-label">{{ __('messages.scheduled_at') }}</label>
@@ -423,13 +652,13 @@
                             <div class="col-12">
                                 <label class="form-label">{{ __('messages.available_variables') }}</label>
                                 <div class="small text-muted">
-                                    {name}, {contract}, {remaining}, {willpaiddate}, {branch}
+                                    {name} = {{ __('messages.customer_name') }}, {branch} = {{ __('messages.branch') }}, {contract} = {{ __('messages.contract') }}, {remaining} = {{ __('messages.remaining') }}, {willpaiddate} = {{ __('messages.will_paid_date') }}
                                 </div>
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label">{{ __('messages.sms_message') }}</label>
-                                <textarea name="message" id="smsMessageBox" rows="5" class="form-control"
+                                <textarea name="message" id="smsMessageBox" rows="2" class="form-control"
                                     placeholder="{{ __('messages.sms_message_placeholder') }}">{{ old('message', $previewMessage ?? '') }}</textarea>
                             </div>
 
@@ -438,9 +667,9 @@
                                     {{ __('messages.preview_selected') }}
                                 </button>
 
-                                <button type="button" class="btn btn-success" id="sendSelectionBtn">
+                                {{-- <button type="button" class="btn btn-success" id="sendSelectionBtn">
                                     {{ __('messages.send_selected') }}
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
                     </div>
@@ -460,9 +689,14 @@
             const smsTemplateType = document.getElementById('smsTemplateType');
             const smsMessageBox = document.getElementById('smsMessageBox');
             const previewSelectionBtn = document.getElementById('previewSelectionBtn');
-            const sendSelectionBtn = document.getElementById('sendSelectionBtn');
+            // const sendSelectionBtn = document.getElementById('sendSelectionBtn');
             const scheduleType = document.getElementById('scheduleType');
             const customScheduleWrapper = document.getElementById('customScheduleWrapper');
+
+            //hide due_x_days
+            const statusTypeSelect = document.querySelector('select[name="status_type"]');
+            const dueDaysWrapper = document.getElementById('dueDaysWrapper');
+            const dueDaysInput = document.getElementById('dueDaysInput');
 
             function updateSelectedCount() {
                 const checked = document.querySelectorAll('.customer-checkbox:checked').length;
@@ -500,6 +734,20 @@
                 updateHeaderCheckboxState();
             }
 
+            //hide due_x_days
+            function toggleDueDays() {
+                if (!statusTypeSelect || !dueDaysInput) {
+                    return;
+                }
+
+                if (statusTypeSelect.value === 'due_in_days') {
+                    dueDaysInput.disabled = false;
+                } else {
+                    dueDaysInput.disabled = true;
+                }
+            }
+            //
+
             function toggleCustomSchedule() {
                 if (!scheduleType || !customScheduleWrapper) {
                     return;
@@ -511,6 +759,7 @@
                     customScheduleWrapper.style.display = 'none';
                 }
             }
+
 
             customerCheckboxes.forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
@@ -543,7 +792,7 @@
 
                     if (value === 'due_3_days') {
                         smsMessageBox.value =
-                            'Hormatly {name}, sizin {contract} belgeli töleg möhleti {willpaiddate}. Tölegiňize 3 gün galdy. Galyndy: {remaining} TMT.';
+                            'Hormatly {name}, sizin {branch} magazynynyň {contract} belgeli töleg möhleti {willpaiddate}. Tölegiňize 3 gün galdy. Galyndy: {remaining} TMT.';
                     } else if (value === 'due_today') {
                         smsMessageBox.value =
                             'Hormatly {name}, sizin {contract} belgeli töleg möhleti şu gün ({willpaiddate}). Galyndy: {remaining} TMT.';
@@ -576,30 +825,56 @@
                         return;
                     }
 
+                    document.getElementById('previewMode').value = 'selected';
+
                     const form = document.getElementById('smsSelectionForm');
                     form.action = '{{ route('sms.preview') }}';
                 });
             }
 
-            if (sendSelectionBtn) {
-                sendSelectionBtn.addEventListener('click', function() {
-                    const checked = document.querySelectorAll('.customer-checkbox:checked').length;
+            const previewFilteredBtn = document.getElementById('previewFilteredBtn');
 
-                    if (checked === 0) {
-                        alert('{{ __('messages.select_at_least_one_customer') }}');
-                        return;
-                    }
+            if (previewFilteredBtn) {
+                previewFilteredBtn.addEventListener('click', function() {
 
                     if (!smsMessageBox.value.trim()) {
                         alert('{{ __('messages.enter_sms_message') }}');
                         return;
                     }
 
+                    document.getElementById('previewMode').value = 'filtered';
+
                     const form = document.getElementById('smsSelectionForm');
-                    form.action = '{{ route('sms.send') }}';
+                    form.action = '{{ route('sms.preview') }}';
                     form.submit();
                 });
             }
+
+            // if (sendSelectionBtn) {
+            //     sendSelectionBtn.addEventListener('click', function() {
+            //         const checked = document.querySelectorAll('.customer-checkbox:checked').length;
+
+            //         if (checked === 0) {
+            //             alert('{{ __('messages.select_at_least_one_customer') }}');
+            //             return;
+            //         }
+
+            //         if (!smsMessageBox.value.trim()) {
+            //             alert('{{ __('messages.enter_sms_message') }}');
+            //             return;
+            //         }
+
+            //         const form = document.getElementById('smsSelectionForm');
+            //         form.action = '{{ route('sms.send') }}';
+            //         form.submit();
+            //     });
+            // }
+
+            if (statusTypeSelect) {
+                statusTypeSelect.addEventListener('change', toggleDueDays);
+            }
+
+            toggleDueDays();
 
             toggleCustomSchedule();
             updateSelectedCount();

@@ -20,11 +20,30 @@ class PreviewCustomerSmsRequest extends FormRequest
         ) ?? false;
     }
 
+    // public function rules(): array
+    // {
+    //     return [
+    //         'selected_customers' => ['required', 'array', 'min:1'],
+    //         'selected_customers.*' => ['integer', 'distinct'],
+    //         'message' => ['required', 'string', 'max:1000'],
+    //         'schedule_type' => ['nullable', 'in:now,after_2m,after_5m,after_10m,custom'],
+    //         'scheduled_at' => ['nullable', 'date'],
+    //     ];
+    // }
+
     public function rules(): array
     {
         return [
-            'selected_customers' => ['required', 'array', 'min:1'],
+            'preview_mode' => ['nullable', 'in:selected,filtered'],
+
+            'selected_customers' => [
+                'required_if:preview_mode,selected',
+                'array',
+                'min:1',
+            ],
+
             'selected_customers.*' => ['integer', 'distinct'],
+
             'message' => ['required', 'string', 'max:1000'],
             'schedule_type' => ['nullable', 'in:now,after_2m,after_5m,after_10m,custom'],
             'scheduled_at' => ['nullable', 'date'],
@@ -43,6 +62,10 @@ class PreviewCustomerSmsRequest extends FormRequest
             'message.max' => __('messages.sms_message_too_long'),
             'schedule_type.in' => __('messages.invalid_schedule_type'),
             'scheduled_at.date' => __('messages.invalid_scheduled_at'),
+
+            //new
+            'preview_mode.in' => __('messages.invalid_selection'),
+            'selected_customers.required_if' => __('messages.select_at_least_one_customer'),
         ];
     }
 }

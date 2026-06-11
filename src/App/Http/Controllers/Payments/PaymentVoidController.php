@@ -15,11 +15,6 @@ class PaymentVoidController extends Controller
 {
     public function __invoke(Request $request, CreditPayment $payment)
     {
-        // Admin only
-        // $user = Auth::user();
-        // if (!$user || $user->role !== UserRoleEnum::ADMIN) {
-        //     return back()->with('warning', __('validations/validations.payment_void.admin_only'));
-        // }
 
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
@@ -39,7 +34,6 @@ class PaymentVoidController extends Controller
         }
 
         try {
-            // DB::transaction(function () use ($payment, $reason, $user) {
             DB::transaction(function () use ($payment, $reason, $user, &$auditData) {
 
                 /** @var CreditPayment $p */
@@ -72,7 +66,6 @@ class PaymentVoidController extends Controller
                 $paidLocal = (float) $c->paid_local;
                 $newPaidLocal = $paidLocal - $applied;
                 if ($newPaidLocal < 0) $newPaidLocal = 0;
-
 
                 // Credit update (paid_local is refunded)
                 $c->forceFill([
@@ -116,11 +109,6 @@ class PaymentVoidController extends Controller
                     'void_reason' => $reason,
                 ])->save();
             });
-            // } catch (\Throwable $e) {
-            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payment_void.void_failed');
-            //     return back()->with('warning', $msg);
-            // }
-
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException
                 ? $e->getMessage()
@@ -145,7 +133,6 @@ class PaymentVoidController extends Controller
 
             return back()->with('warning', $msg);
         }
-
 
         if (!empty($auditData)) {
             $audit->log(

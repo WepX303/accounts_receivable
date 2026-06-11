@@ -28,6 +28,7 @@ return [
     'no_data_found' => 'Maglumat tapylmady',
 
     'credit_date' => 'Karz senesi',
+    'next_payment_date' => 'Indiki töleg senesi',
     'payment_status' => 'Töleg ýagdaýy',
     'day_info' => 'Gün maglumat',
     'closed' => 'Ýapyk',
@@ -56,14 +57,15 @@ return [
     'send_selected' => 'Saýlananlara iber',
     'select_at_least_one_customer' => 'Iň azyndan bir müşderi saýlaň.',
     'enter_sms_message' => 'SMS habaryny giriziň.',
-    'preview_feature_next_step' => 'Öňünden görmek aýratynlygy indiki ädimde birikdiriler.',
-    'send_feature_next_step' => 'Iberiş aýratynlygy indiki ädimde birikdiriler.',
+    'preview_filtered' => 'Süzgüçdäki ähli müşderiler',
 
     'invalid_selection' => 'Nädogry saýlaw iberildi.',
     'sms_message_too_long' => 'SMS habary gaty uzyn.',
     'no_valid_customer_found' => 'Dogry müşderi tapylmady.',
     'preview_generated_successfully' => 'SMS öňünden görülişi üstünlikli taýýarlandy.',
     'sms_preview' => 'SMS öňünden görülişi',
+    'clear_preview' => 'Öňünden görşi arassala',
+    'preview_cleared' => 'Öňünden görüş arassalandy.',
 
     'no_customer_with_phone' => 'Telefon belgisi bolan dogry müşderi tapylmady.',
     'sms_api_request_failed' => 'SMS API islegi şowsuz boldy.',
@@ -93,5 +95,17 @@ return [
     'phone_is_empty' => 'Telefon boş',
     'invalid_phone' => 'Nädogry telefon',
     'phone_contains_letters' => 'Telefon içinde harplar bar',
+
+    'total_preview_records_created' => 'Jemi :count ýazgy üçin öňünden görüş döredildi.',
+    'only_first_records_shown' => 'Ekranda diňe ilkinji :limit ýazgy görkezilýär.',
+    'excel_export_contains_all_records' => 'Excel eksporty ähli ýazgylary öz içine alýar.',
+
+    'phone_status' => 'Telefon ýagdaýy',
+    'has_phone' => 'Telefonly',
+    'no_phone' => 'Telefonsyz',
+    'multi_phone' => 'Birnäçe telefon',
+
+    'payment_date_from' => 'Töleg senesi (Başlangyç)',
+    'payment_date_to' => 'Töleg senesi (Soňky)',
 
 ];

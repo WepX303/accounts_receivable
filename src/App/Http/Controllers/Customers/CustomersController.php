@@ -36,23 +36,6 @@ class CustomersController extends Controller
         }
 
         // Quick Filter
-        // $quick = (string) $request->get('quick_filter', 'all');
-
-        // // Date ranges (payment-based)
-        // [$from, $to] = match ($quick) {
-        //     'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
-        //     'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
-        //     'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
-        //     'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
-        //     'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
-        //     'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
-        //     'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
-        //     'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
-        //     'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
-        //     default => [null, null],
-        // };
-
-        // Quick Filter
         $quick = (string) $request->get('quick_filter', 'all');
 
         // Manual date range (payment date range)
@@ -102,23 +85,6 @@ class CustomersController extends Controller
                 default => __('pages/customers_index.today_paid'),
             };
         }
-
-        // [$periodFrom, $periodTo] = ($from && $to)
-        //     ? [$from->copy()->startOfDay(), $to->copy()->endOfDay()]
-        //     : [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()];
-
-        // $periodLabel = match ($quick) {
-        //     'paid_today' => __('pages/customers_index.today_paid'),
-        //     'paid_yesterday' => __('pages/customers_index.paid_yesterday'),
-        //     'paid_7d' => __('pages/customers_index.paid_last_7_days'),
-        //     'paid_14d' => __('pages/customers_index.paid_last_14_days'),
-        //     'paid_1m' => __('pages/customers_index.paid_last_1_month'),
-        //     'paid_3m' => __('pages/customers_index.paid_last_3_months'),
-        //     'paid_6m' => __('pages/customers_index.paid_last_6_months'),
-        //     'paid_9m' => __('pages/customers_index.paid_last_9_months'),
-        //     'paid_12m' => __('pages/customers_index.paid_last_12_months'),
-        //     default => __('pages/customers_index.today_paid'),
-        // };
 
         /**
          * =========================
@@ -226,7 +192,6 @@ class CustomersController extends Controller
             })
 
             /* THOSE WHO ARE BLOCKED */
-            // ->when($quick === 'blocked', fn($q) => $q->where('active', false))
             ->when($quick === 'blocked', fn($q) => $q->where('is_blocked', 1))
            
             /* THOSE WHO ARE DELETED */

@@ -27,7 +27,8 @@ return [
     'days_left' => 'Kalan Gün',
     'no_data_found' => 'Kayıt bulunamadı',
 
-    'credit_date' => 'Karz Tarihi',
+    'credit_date' => 'Taksit Tarihi',
+    'next_payment_date' => 'Sonraki ödeme tarihi',
     'payment_status' => 'Ödeme Durumu',
     'day_info' => 'Gün Bilgisi',
     'closed' => 'Kapalı',
@@ -56,13 +57,14 @@ return [
     'send_selected' => 'Seçilenlere Gönder',
     'select_at_least_one_customer' => 'Lütfen en az bir müşteri seçin.',
     'enter_sms_message' => 'Lütfen SMS mesajı girin.',
-    'preview_feature_next_step' => 'Önizleme özelliği bir sonraki adımda bağlanacak.',
-    'send_feature_next_step' => 'Gönderim özelliği bir sonraki adımda bağlanacak.',
+    'preview_filtered' => 'Filtredeki tüm müşteriler',
     'invalid_selection' => 'Geçersiz seçim gönderildi.',
     'sms_message_too_long' => 'SMS mesajı çok uzun.',
     'no_valid_customer_found' => 'Geçerli müşteri bulunamadı.',
     'preview_generated_successfully' => 'SMS önizleme başarıyla oluşturuldu.',
     'sms_preview' => 'SMS Önizleme',
+    'clear_preview' => 'Önizlemeyi temizle',
+    'preview_cleared' => 'Önizleme temizlendi.',
 
     'no_customer_with_phone' => 'Telefon numarası olan geçerli müşteri bulunamadı.',
     'sms_api_request_failed' => 'SMS API isteği başarısız oldu.',
@@ -93,5 +95,17 @@ return [
     'phone_is_empty' => 'Telefon numarası boş',
     'invalid_phone' => 'Geçersiz telefon',
     'phone_contains_letters' => 'Telefon içinde harf var',
+
+    'total_preview_records_created' => 'Toplam :count kayıt preview oluşturuldu.',
+    'only_first_records_shown' => 'Ekranda sadece ilk :limit kayıt gösteriliyor.',
+    'excel_export_contains_all_records' => 'Excel export tüm kayıtları içerir.',
+
+    'phone_status' => 'Telefon durumu',
+    'has_phone' => 'Telefonlu',
+    'no_phone' => 'Telefonsuz',
+    'multi_phone' => 'Birden fazla telefon',
+
+    'payment_date_from' => 'Ödeme tarihi (Başlangıç)',
+    'payment_date_to' => 'Ödeme tarihi (Bitiş)',
 
 ];

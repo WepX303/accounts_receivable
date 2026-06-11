@@ -13,7 +13,6 @@ class RoleMiddleware
         if (! $user) {
             abort(401);
         }
-
         // If there is an enum cast, $user->role becomes an enum object
         $userRole = is_object($user->role) ? $user->role->value : $user->role;
 

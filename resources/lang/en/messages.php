@@ -28,6 +28,7 @@ return [
     'no_data_found' => 'No records found',
 
     'credit_date' => 'Credit Date',
+    'next_payment_date' => 'Next payment date',
     'payment_status' => 'Payment Status',
     'day_info' => 'Day Info',
     'closed' => 'Closed',
@@ -56,14 +57,15 @@ return [
     'send_selected' => 'Send Selected',
     'select_at_least_one_customer' => 'Please select at least one customer.',
     'enter_sms_message' => 'Please enter an SMS message.',
-    'preview_feature_next_step' => 'Preview feature will be connected in the next step.',
-    'send_feature_next_step' => 'Send feature will be connected in the next step.',
-
+    'preview_filtered' => 'All customers in the filter',
     'invalid_selection' => 'Invalid selection submitted.',
     'sms_message_too_long' => 'SMS message is too long.',
     'no_valid_customer_found' => 'No valid customer found.',
     'preview_generated_successfully' => 'SMS preview generated successfully.',
     'sms_preview' => 'SMS Preview',
+    'clear_preview' => 'Clear preview',
+    'preview_cleared' => 'Preview cleared.',
+
 
     'no_customer_with_phone' => 'No valid customer with a phone number was found.',
     'sms_api_request_failed' => 'SMS API request failed.',
@@ -93,4 +95,16 @@ return [
     'phone_is_empty' => 'Phone is empty',
     'invalid_phone' => 'Invalid phone number',
     'phone_contains_letters' => 'Phone contains letters',
+
+    'total_preview_records_created' => 'A preview was created for :count records.',
+    'only_first_records_shown' => 'Only the first :limit records are displayed on the screen.',
+    'excel_export_contains_all_records' => 'The Excel export contains all records.',
+
+    'phone_status' => 'Phone status',
+    'has_phone' => 'Has phone',
+    'no_phone' => 'No phone',
+    'multi_phone' => 'Multiple phones',
+
+    'payment_date_from' => 'Payment date (From)',
+    'payment_date_to' => 'Payment date (To)',
 ];

@@ -21,7 +21,6 @@ class CustomersInfoController extends Controller
         ]);
 
         $q = trim((string) $request->get('q', ''));
-        // $id = $request->get('id');
         $id = $request->integer('id'); // null or int
 
         $credit_users_info = Credit::query()

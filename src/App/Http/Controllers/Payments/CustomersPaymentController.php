@@ -96,19 +96,6 @@ class CustomersPaymentController extends Controller
             }
         }
 
-        // if ($selected) {
-        //     $history = CreditPayment::query()
-        //         ->with([
-        //             'createdByUser:id,firstname,lastname',
-        //             'correctedByUser:id,firstname,lastname',
-        //             'voidedByUser:id,firstname,lastname',
-        //         ])
-        //         ->where('credit_logicalref', (int) $selected->logicalref)
-        //         ->orderByDesc('id')
-        //         ->limit(10)
-        //         ->get();
-        // }
-
         if ($selected) {
             $history = CreditPayment::query()
                 ->with([
@@ -126,14 +113,6 @@ class CustomersPaymentController extends Controller
                 ->orderBy('tolejek_senesi')
                 ->get();
         }
-
-        // return view('pages.payments.index', [
-        //     'customers' => $customers,
-        //     'selected' => $selected,
-        //     'history' => $history,
-        //     'q' => $q,
-        //     'emptyMode' => ! $shouldFetchList,
-        // ]);
 
         return view('pages.payments.index', [
             'customers' => $customers,
@@ -195,28 +174,6 @@ class CustomersPaymentController extends Controller
 
         $note = trim((string) $request->input('note', ''));
         $note = preg_replace('/\s+/', ' ', $note);
-
-        // $cashTotal = $this->toMoney($request->input('cash_total', '0'));
-        // $cardTotal = $this->toMoney($request->input('card_total', '0'));
-
-        // // Cash/card/mixed totals must match ‘received’
-        // if ($method === 'cash') {
-        //     $cashTotal = $received;
-        //     $cardTotal = 0.0;
-        // } elseif ($method === 'card') {
-        //     $cashTotal = 0.0;
-        //     $cardTotal = $received;
-        // } elseif ($method === 'phone') {
-        //     $cashTotal = 0.0;
-        //     $cardTotal = $received;
-        // } else {
-        //     if ($cashTotal < 0 || $cardTotal < 0) {
-        //         return back()->with('warning', __('validations/validations.payments.mixed_negative'))->withInput();
-        //     }
-        //     if (abs(($cashTotal + $cardTotal) - $received) > 0.01) {
-        //         return back()->with('warning', __('validations/validations.payments.mixed_sum_must_equal'))->withInput();
-        //     }
-        // }
 
         $cashTotal = $this->toMoney($request->input('cash_total', '0'));
         $cardTotal = $this->toMoney($request->input('card_total', '0'));
@@ -433,11 +390,6 @@ class CustomersPaymentController extends Controller
                     ],
                 ];
             });
-            // } catch (\Throwable $e) {
-            //     $msg = $e instanceof \RuntimeException ? $e->getMessage() : __('validations/validations.payments.payment_save_failed');
-
-            //     return back()->with('warning', $msg)->withInput();
-            // }
 
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException

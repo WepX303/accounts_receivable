@@ -107,4 +107,69 @@ class Credit extends Model
 
         return (float) $this->paid >= (float) $this->amount - 0.01;
     }
+
+
+    //new model
+    public function getSmsMonthlyPaymentAttribute(): float
+    {
+        $amount = (float) ($this->amount_local ?? $this->amount ?? 0);
+
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        return round($amount / 6, 2);
+    }
+
+    public function getSmsDueInstallmentCountAttribute(): int
+    {
+        if (! $this->date_) {
+            return 0;
+        }
+
+        $start = $this->date_->copy()->startOfDay();
+        $today = now()->startOfDay();
+
+        $count = 0;
+
+        for ($i = 1; $i <= 6; $i++) {
+            $dueDate = $start->copy()->addMonthsNoOverflow($i)->startOfDay();
+
+            if ($today->gte($dueDate)) {
+                $count = $i;
+            }
+        }
+
+        return $count;
+    }
+
+    public function getSmsExpectedPaidAttribute(): float
+    {
+        $amount = (float) ($this->amount_local ?? $this->amount ?? 0);
+
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        $expected = $this->sms_monthly_payment * $this->sms_due_installment_count;
+
+        return round(min($expected, $amount), 2);
+    }
+
+    public function getSmsActualPaidAttribute(): float
+    {
+        return round((float) ($this->paid_local ?? $this->paid ?? 0), 2);
+    }
+
+    public function getSmsOverdueAmountAttribute(): float
+    {
+        $overdue = $this->sms_expected_paid - $this->sms_actual_paid;
+
+        return round(max($overdue, 0), 2);
+    }
+
+    public function getSmsIsOverdueAttribute(): bool
+    {
+        return $this->sms_overdue_amount > 0.01;
+    }
 }
