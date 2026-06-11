@@ -7,9 +7,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Middleware to authenticate users based on auth_token cookie.
- */
 class AuthToken
 {
     public function handle(Request $request, Closure $next)
@@ -25,26 +22,27 @@ class AuthToken
             ->first();
 
         if (! $user) {
-            // Token is invalid or has expired
             return redirect()->route('login')
-                ->withCookie(cookie()->forget('auth_token'));
+                ->withCookie(cookie()->forget('auth_token', '/', null));
         }
 
         if (! $user->status) {
-            // User is inactive, logout and delete cookies
-            $cookie = cookie()->forget('auth_token');
+            $user->token = null;
+            $user->token_expires_at = null;
+            $user->save();
+
             Auth::logout();
 
             return redirect()->route('login')
-                ->withCookie($cookie)
+                ->withCookie(cookie()->forget('auth_token', '/', null))
                 ->withErrors([
                     'login' => 'Your account has been deactivated. Please contact the administrator.',
                 ]);
         }
 
-        // Provide a fresh user to Laravel auth
-        Auth::login($user->fresh());
-        view()->share('user', Auth::user());
+        Auth::setUser($user);
+
+        view()->share('user', $user);
 
         return $next($request);
     }
