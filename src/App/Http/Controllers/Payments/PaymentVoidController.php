@@ -48,7 +48,12 @@ class PaymentVoidController extends Controller
 
 
                 /** @var Credit $c */
+                // $c = Credit::query()
+                //     ->where('logicalref', (int) $p->credit_logicalref)
+                //     ->lockForUpdate()
+                //     ->firstOrFail();
                 $c = Credit::query()
+                    ->where('active', true)
                     ->where('logicalref', (int) $p->credit_logicalref)
                     ->lockForUpdate()
                     ->firstOrFail();

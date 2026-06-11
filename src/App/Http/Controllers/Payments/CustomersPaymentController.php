@@ -45,7 +45,11 @@ class CustomersPaymentController extends Controller
         $monthlyPayments = collect();
 
         if ($shouldFetchList) {
-            $listQuery = Credit::query()->with('paidUpdatedByUser');
+            // $listQuery = Credit::query()->with('paidUpdatedByUser');
+
+            $listQuery = Credit::query()
+                ->where('active', true)
+                ->with('paidUpdatedByUser');
 
             if (count($ids) > 0) {
                 $listQuery->whereIn('logicalref', $ids);
@@ -84,7 +88,12 @@ class CustomersPaymentController extends Controller
                 $selected = $pageItems->firstWhere('logicalref', $id);
 
                 if (! $selected) {
+                    // $selected = Credit::query()
+                    //     ->with('paidUpdatedByUser')
+                    //     ->where('logicalref', $id)
+                    //     ->first();
                     $selected = Credit::query()
+                        ->where('active', true)
                         ->with('paidUpdatedByUser')
                         ->where('logicalref', $id)
                         ->first();
@@ -229,7 +238,12 @@ class CustomersPaymentController extends Controller
 
             DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, $receiverPhoneNumber, &$auditData) {
                 /** @var \App\Models\Credit $c */
+                // $c = Credit::query()
+                //     ->where('logicalref', $customerId)
+                //     ->lockForUpdate()
+                //     ->firstOrFail();
                 $c = Credit::query()
+                    ->where('active', true)
                     ->where('logicalref', $customerId)
                     ->lockForUpdate()
                     ->firstOrFail();
@@ -390,7 +404,6 @@ class CustomersPaymentController extends Controller
                     ],
                 ];
             });
-
         } catch (\Throwable $e) {
             $msg = $e instanceof \RuntimeException
                 ? $e->getMessage()

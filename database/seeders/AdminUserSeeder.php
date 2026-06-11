@@ -27,7 +27,7 @@ class AdminUserSeeder extends Seeder
             'phonenumber' => $phone,
             'position' => 'Administrator',
 
-            'role' => UserRoleEnum::ADMIN->value,
+            'role' => UserRoleEnum::SUPER_ADMIN->value,
             'status' => true,
 
             'password' => Hash::make('12341234'),

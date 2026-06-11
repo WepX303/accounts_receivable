@@ -10,6 +10,10 @@ class CustomerPaymentStatementController extends Controller
 {
     public function show(\Illuminate\Http\Request $request, Credit $credit)
     {
+        if (! $credit->active) {
+            abort(404);
+        }
+
         $lang = (string) $request->get('lang', app()->getLocale());
 
         if (! in_array($lang, ['tk', 'ru', 'en', 'tr'], true)) {
