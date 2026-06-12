@@ -163,7 +163,10 @@ class CustomersController extends Controller
                 $query->whereExists(function ($sub) use ($from, $to, $table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereColumn(
+                            'credit_payments.credit_source_id',
+                            $table . '.source_id'
+                        )
                         ->whereNull('credit_payments.voided_at')
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
@@ -186,14 +189,17 @@ class CustomersController extends Controller
                 $query->whereNotExists(function ($sub) use ($table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereColumn(
+                            'credit_payments.credit_source_id',
+                            $table . '.source_id'
+                        )
                         ->whereNull('credit_payments.voided_at');
                 });
             })
 
             /* THOSE WHO ARE BLOCKED */
             ->when($quick === 'blocked', fn($q) => $q->where('is_blocked', 1))
-           
+
             /* THOSE WHO ARE DELETED */
             ->when($quick === 'deleted', fn($q) => $q->where('active', false))
 

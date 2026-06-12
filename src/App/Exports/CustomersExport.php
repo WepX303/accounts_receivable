@@ -61,7 +61,10 @@ class CustomersExport implements FromQuery, WithHeadings, WithMapping, WithChunk
                 $query->whereExists(function ($sub) use ($from, $to, $table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref')
+                        ->whereColumn(
+                            'credit_payments.credit_source_id',
+                            $table . '.source_id'
+                        )
                         ->whereBetween('credit_payments.created_at', [$from, $to]);
                 });
             })
@@ -72,7 +75,10 @@ class CustomersExport implements FromQuery, WithHeadings, WithMapping, WithChunk
                 $query->whereNotExists(function ($sub) use ($table) {
                     $sub->selectRaw('1')
                         ->from('credit_payments')
-                        ->whereColumn('credit_payments.credit_logicalref', $table . '.logicalref');
+                        ->whereColumn(
+                            'credit_payments.credit_source_id',
+                            $table . '.source_id'
+                        );
                 });
             })
             ->when($quick === 'blocked', fn($q) => $q->where('active', false))

@@ -468,15 +468,7 @@ class CustomerSmsController extends Controller
         PreviewCustomerSmsRequest $request,
         CustomerSmsTemplateService $templateService
     ) {
-        // $selectedIds = collect($request->input('selected_customers', []))
-        //     ->map(fn($id) => (int) $id)
-        //     ->unique()
-        //     ->values();
 
-        // $customers = Credit::query()
-        //     ->whereIn('logicalref', $selectedIds)
-        //     ->orderBy('logicalref')
-        //     ->get();
 
         $previewMode = $request->input('preview_mode', 'selected');
 
@@ -491,7 +483,7 @@ class CustomerSmsController extends Controller
                 ->values();
 
             $customers = Credit::query()
-                ->whereIn('logicalref', $selectedIds)
+                ->whereIn('source_id', $selectedIds)
                 ->orderBy('logicalref')
                 ->get();
         }
@@ -611,7 +603,7 @@ class CustomerSmsController extends Controller
             ->values();
 
         $customers = Credit::query()
-            ->whereIn('logicalref', $selectedIds)
+            ->whereIn('source_id', $selectedIds)
             ->orderBy('logicalref')
             ->get();
 

@@ -120,7 +120,7 @@ class PaymentCorrectController extends Controller
 
                 $c = Credit::query()
                     ->where('active', true)
-                    ->where('logicalref', (int) $p->credit_logicalref)
+                    ->where('source_id', (int) $p->credit_source_id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
@@ -217,8 +217,9 @@ class PaymentCorrectController extends Controller
                 // CreditPayment::create([
                 $newPayment = CreditPayment::create([
 
-                    'credit_logicalref' => (int)$c->logicalref,
-
+                    'credit_source_id' => (int) $c->source_id,
+                    'credit_logicalref' => (int) $c->logicalref,
+                    
                     'customer_name' => mb_substr((string)$c->name, 0, 255),
                     'customer_phone' => mb_substr((string)$c->phone, 0, 50),
                     'customer_passport' => mb_substr((string)$c->passport, 0, 50),
@@ -273,6 +274,7 @@ class PaymentCorrectController extends Controller
                         'paid_local_after' => $newPaidLocal,
                     ],
                     'extra' => [
+                        'credit_source_id' => (int) $c->source_id,
                         'credit_logicalref' => (int) $c->logicalref,
                         'method' => $method,
                         'cash_amount' => $cashTotal,

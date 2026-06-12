@@ -52,10 +52,9 @@ class CustomersInfoController extends Controller
             $selected = $pageItems->firstWhere('logicalref', (int) $id);
             // otherwise fetch from the database (if the id is on another page)
             if (! $selected) {
-                // $selected = Credit::query()->where('logicalref', (int) $id)->first();
                 $selected = Credit::query()
                     ->where('active', true)
-                    ->where('logicalref', (int) $id)
+                    ->where('source_id', (int) $id)
                     ->first();
             }
         }

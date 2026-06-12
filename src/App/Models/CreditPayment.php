@@ -13,6 +13,7 @@ class CreditPayment extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'credit_source_id',
         'credit_logicalref',
 
         'customer_name',
@@ -55,6 +56,7 @@ class CreditPayment extends Model
     ];
 
     protected $casts = [
+        'credit_source_id' => 'integer',
         'credit_logicalref' => 'integer',
         'created_by' => 'integer',
         'created_at' => 'datetime',
@@ -80,9 +82,13 @@ class CreditPayment extends Model
         'corrected_from_payment_id' => 'integer',
     ];
 
+    // public function credit()
+    // {
+    //     return $this->belongsTo(Credit::class, 'credit_logicalref', 'logicalref');
+    // }
     public function credit()
     {
-        return $this->belongsTo(Credit::class, 'credit_logicalref', 'logicalref');
+        return $this->belongsTo(Credit::class, 'credit_source_id', 'source_id');
     }
 
     public function createdByUser()

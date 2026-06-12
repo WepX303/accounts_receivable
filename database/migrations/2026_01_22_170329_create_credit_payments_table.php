@@ -16,6 +16,7 @@ return new class extends Migration
 
             // credits.logicalref BIGINT (primary)
             $table->unsignedBigInteger('credit_logicalref')->index();
+            $table->unsignedBigInteger('credit_source_id')->index();
 
             $table->decimal('pay_amount', 18, 2);
             $table->string('method', 10); // cash|card|mixed
@@ -33,8 +34,9 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('credit_logicalref')
-                ->references('logicalref')
+
+            $table->foreign('credit_source_id')
+                ->references('source_id')
                 ->on('credits')
                 ->cascadeOnDelete();
 

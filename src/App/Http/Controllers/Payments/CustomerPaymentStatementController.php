@@ -32,7 +32,7 @@ class CustomerPaymentStatementController extends Controller
                 'correctedByUser:id,firstname,lastname',
                 'voidedByUser:id,firstname,lastname',
             ])
-            ->where('credit_logicalref', (int) $credit->logicalref)
+            ->where('credit_source_id', (int) $credit->source_id)
             ->orderByDesc('id')
             ->get();
 

@@ -52,7 +52,7 @@ class CustomersPaymentController extends Controller
                 ->with('paidUpdatedByUser');
 
             if (count($ids) > 0) {
-                $listQuery->whereIn('logicalref', $ids);
+                $listQuery->whereIn('source_id', $ids);
             }
 
             if ($q !== '') {
@@ -85,7 +85,7 @@ class CustomersPaymentController extends Controller
             $pageItems = collect($customers->items());
 
             if ($id !== null) {
-                $selected = $pageItems->firstWhere('logicalref', $id);
+                $selected = $pageItems->firstWhere('source_id', $id);
 
                 if (! $selected) {
                     // $selected = Credit::query()
@@ -95,7 +95,8 @@ class CustomersPaymentController extends Controller
                     $selected = Credit::query()
                         ->where('active', true)
                         ->with('paidUpdatedByUser')
-                        ->where('logicalref', $id)
+                        // ->where('logicalref', $id)
+                        ->where('source_id', $id)
                         ->first();
                 }
             }
@@ -112,7 +113,7 @@ class CustomersPaymentController extends Controller
                     'correctedByUser:id,firstname,lastname',
                     'voidedByUser:id,firstname,lastname',
                 ])
-                ->where('credit_logicalref', (int) $selected->logicalref)
+                ->where('credit_source_id', (int) $selected->source_id)
                 ->orderByDesc('id')
                 ->limit(10)
                 ->get();
@@ -244,7 +245,7 @@ class CustomersPaymentController extends Controller
                 //     ->firstOrFail();
                 $c = Credit::query()
                     ->where('active', true)
-                    ->where('logicalref', $customerId)
+                    ->where('source_id', $customerId)
                     ->lockForUpdate()
                     ->firstOrFail();
 
@@ -342,8 +343,8 @@ class CustomersPaymentController extends Controller
                 // pay_amount = received, change_amount = change
                 // old_amount_local/new_amount_local = remaining (log)
                 CreditPayment::create([
+                    'credit_source_id' => (int) $c->source_id,
                     'credit_logicalref' => (int) $c->logicalref,
-
                     // SNAPSHOT (the owner should be clear from the payment record)
                     'customer_name' => mb_substr((string) $c->name, 0, 255),
                     'customer_phone' => mb_substr((string) $c->phone, 0, 50),
@@ -387,6 +388,7 @@ class CustomersPaymentController extends Controller
                         'remaining' => $newRemaining,
                     ],
                     'extra' => [
+                        'credit_source_id' => (int) $c->source_id,
                         'credit_logicalref' => (int) $c->logicalref,
                         'customer_name' => $c->name,
                         'customer_contract' => $c->contract,

@@ -9,7 +9,7 @@ class Credit extends Model
     protected $table = 'credits';
 
     protected $primaryKey = 'source_id';
-    
+
     public $incrementing = false;
 
     protected $keyType = 'int';
@@ -52,9 +52,15 @@ class Credit extends Model
         return $this->belongsTo(User::class, 'amount_updated_by');
     }
 
+    // public function payments()
+    // {
+    //     return $this->hasMany(CreditPayment::class, 'credit_logicalref', 'logicalref')
+    //         ->orderByDesc('id');
+    // }
     public function payments()
     {
-        return $this->hasMany(CreditPayment::class, 'credit_logicalref', 'logicalref')
+        return $this->hasMany(CreditPayment::class, 'credit_source_id', 'source_id')
+
             ->orderByDesc('id');
     }
 

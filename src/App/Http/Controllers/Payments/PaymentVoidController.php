@@ -47,14 +47,10 @@ class PaymentVoidController extends Controller
                 }
 
 
-                /** @var Credit $c */
-                // $c = Credit::query()
-                //     ->where('logicalref', (int) $p->credit_logicalref)
-                //     ->lockForUpdate()
-                //     ->firstOrFail();
+                /** @var Credit $c */                
                 $c = Credit::query()
                     ->where('active', true)
-                    ->where('logicalref', (int) $p->credit_logicalref)
+                    ->where('source_id', (int) $p->credit_source_id)
                     ->lockForUpdate()
                     ->firstOrFail();
 
@@ -99,6 +95,7 @@ class PaymentVoidController extends Controller
                         'paid_local_after' => $newPaidLocal,
                     ],
                     'extra' => [
+                        'credit_source_id' => (int) $c->source_id,
                         'credit_logicalref' => (int) $c->logicalref,
                         'applied' => $applied,
                         'void_reason' => $reason,
