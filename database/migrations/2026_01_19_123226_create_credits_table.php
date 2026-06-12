@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('credits', function (Blueprint $table) {
-            $table->bigInteger('logicalref')->primary();
+            $table->unsignedBigInteger('source_id')->primary();
+            $table->bigInteger('logicalref')->index();
 
             $table->string('branch')->nullable();
             $table->text('name')->nullable();

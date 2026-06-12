@@ -36,7 +36,8 @@ class SyncCreditsJob implements ShouldQueue
         $query = $sourcePgsql
             ->table('credits')
             // ->selectRaw("*, encode(rv, 'hex') as rv_hex")
-            ->selectRaw("*, encode(rv, 'hex') as rv_hex, (('x' || encode(rv, 'hex'))::bit(64)::bigint) as rv_bigint")
+            // ->selectRaw("*, encode(rv, 'hex') as rv_hex, (('x' || encode(rv, 'hex'))::bit(64)::bigint) as rv_bigint")
+            ->selectRaw("id as source_id, *, encode(rv, 'hex') as rv_hex, (('x' || encode(rv, 'hex'))::bit(64)::bigint) as rv_bigint")
             ->whereNotNull('rv')
             ->whereRaw("rv > decode(?, 'hex')", [$lastRv])
             ->orderBy('rv');
@@ -50,36 +51,38 @@ class SyncCreditsJob implements ShouldQueue
 
             $now = now();
 
-            // 1) Logicalref list
-            $logicalRefs = [];
+            $sourceIds = [];
             foreach ($rows as $row) {
                 $r = (array) $row;
-                $lr = (int) ($r['logicalref'] ?? 0);
-                if ($lr > 0) {
-                    $logicalRefs[] = $lr;
+                $sid = (int) ($r['source_id'] ?? 0);
+                if ($sid > 0) {
+                    $sourceIds[] = $sid;
                 }
             }
-            $logicalRefs = array_values(array_unique($logicalRefs));
-            if (empty($logicalRefs)) {
+
+            $sourceIds = array_values(array_unique($sourceIds));
+
+            if (empty($sourceIds)) {
                 return;
             }
 
             // 2) Retrieve existing records with local fields + timestamps
             $existingRows = $pgsql->table($pgTable)
                 ->select([
-                    'logicalref',
+                    'source_id',
                     'amount_local',
                     'paid_local',
                     'amount_updated_at',
                     'paid_updated_at',
                     'created_at',
                 ])
-                ->whereIn('logicalref', $logicalRefs)
+                ->whereIn('source_id', $sourceIds)
                 ->get();
 
             $existingMap = [];
             foreach ($existingRows as $er) {
-                $existingMap[(int) $er->logicalref] = $er;
+                // $existingMap[(int) $er->logicalref] = $er;
+                $existingMap[(int) $er->source_id] = $er;
             }
 
             $payload = [];
@@ -87,8 +90,10 @@ class SyncCreditsJob implements ShouldQueue
             foreach ($rows as $row) {
                 $r = (array) $row;
 
+                $sourceId = (int) ($r['source_id'] ?? 0);
                 $logicalref = (int) ($r['logicalref'] ?? 0);
-                if ($logicalref <= 0) {
+
+                if ($sourceId <= 0 || $logicalref <= 0) {
                     continue;
                 }
 
@@ -102,7 +107,8 @@ class SyncCreditsJob implements ShouldQueue
                 $amount = $r['amount'] ?? null;
                 $paid = $r['paid'] ?? null;
 
-                $existing = $existingMap[$logicalref] ?? null;
+                // $existing = $existingMap[$logicalref] ?? null;
+                $existing = $existingMap[$sourceId] ?? null;
                 $isExisting = (bool) $existing;
 
                 // SAME KEYS IN EVERY LINE: We set local fields to the default value by default.
@@ -127,6 +133,7 @@ class SyncCreditsJob implements ShouldQueue
                 }
 
                 $payload[] = [
+                    'source_id' => $sourceId,
                     'logicalref' => $logicalref,
                     'branch' => $r['branch'] ?? null,
                     'name' => $r['name_'] ?? null,
@@ -175,8 +182,9 @@ class SyncCreditsJob implements ShouldQueue
             // created_at will not be updated!
             $pgsql->table($pgTable)->upsert(
                 $payload,
-                ['logicalref'],
+                ['source_id'],
                 [
+                    'logicalref',
                     'branch',
                     'name',
                     'passport',

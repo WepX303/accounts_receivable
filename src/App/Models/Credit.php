@@ -8,8 +8,8 @@ class Credit extends Model
 {
     protected $table = 'credits';
 
-    protected $primaryKey = 'logicalref';
-
+    protected $primaryKey = 'source_id';
+    
     public $incrementing = false;
 
     protected $keyType = 'int';
