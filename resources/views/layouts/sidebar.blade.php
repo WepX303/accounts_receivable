@@ -97,11 +97,13 @@
                                         {{ __('menu.create_user') }}
                                     </a>
                                 </li>
+                                @if (in_array($role, ['SuperAdmin'], true))
                                 <li>
                                     <a class="dropdown-item" href="{{ route('commands.index') }}">
                                         {{ __('menu.commands') }}
                                     </a>
                                 </li>
+                                @endif
                                 @if (in_array($role, ['SuperAdmin'], true))
                                     <li class="nav-item">
                                         <a class="dropdown-item" href="{{ route('logs') }}">

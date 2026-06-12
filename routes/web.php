@@ -57,7 +57,7 @@ Route::middleware(['auth.token'])->group(function () {
 
     /**
      * CUSTOMER INFO / PAYMENTS / REPORT
-     * Admin + Cashier (+ Operator için isteniyor) + Analyst report istiyor
+     * SuperAdmin + Admin + Cashier (+ Operator için isteniyor) + Analyst report istiyor
      */
 
     // Customer info: Admin, Cashier, Operator
@@ -65,24 +65,23 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/customers/info', CustomersInfoController::class)->name('customers.info');
     });
 
-    // Payments (ödeme al): Admin, Cashier, Operator
+    // Payments: SuperAdmin + Admin, Cashier, Operator
     Route::middleware(['role:SuperAdmin,Admin,Cashier,Operator'])->group(function () {
         Route::get('/payments', CustomersPaymentController::class)->name('payments');
         Route::post('/payments', [CustomersPaymentController::class, 'store'])->name('payments.store');
     });
 
-    // Report: Admin, Cashier, Analyst, Operator
+    // Report: SuperAdmin + Admin, Cashier, Analyst, Operator
     Route::middleware(['role:SuperAdmin,Admin,Cashier,Analyst,Operator'])->group(function () {
         Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
 
         Route::get('/reports/avshocrecat/export', [AvshocrecatReportController::class, 'export'])
-            ->middleware('signed')
             ->name('report.export');
     });
 
     /**
      * CUSTOMERS LIST + EXPORT
-     * Manager/Analyst/Operator/Admin
+     * SuperAdmin + Admin + Manager + Analyst + Operator
      */
     Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers', CustomersController::class)->name('customers');
@@ -90,14 +89,14 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('payments.customer.statement');
     });
 
-    // Export: Admin + Operator + Manager + Analyst
+    // Export: SyeprAdmin + Admin  + Manager + Analyst + Operator
     Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
     });
 
     /**
      * PAYMENT EDIT ACTIONS (void/correct)
-     * Admin + Operator
+     * SuperAdmin + Admin
      */
     Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
         Route::post('/payments/{payment}/void', PaymentVoidController::class)->name('payments.void');
@@ -119,9 +118,9 @@ Route::middleware(['auth.token'])->group(function () {
 
     /**
      * COMMANDS
-     * Superadmin + Admin + Operator
+     * Superadmin
      */
-    Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
+    Route::middleware(['role:SuperAdmin'])->group(function () {
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
@@ -136,7 +135,8 @@ Route::middleware(['auth.token'])->group(function () {
     });
 
     /**
-     * SETTINGS (USERS MANAGEMENT) - SuperAdmin + Admin   
+     * SETTINGS (USERS MANAGEMENT)
+     * SuperAdmin + Admin   
      */
     Route::middleware(['role:SuperAdmin,Admin'])->group(function () {
         Route::prefix('users')->name('users.')->group(function () {

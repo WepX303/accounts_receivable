@@ -18,8 +18,7 @@
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <a href="{{ URL::temporarySignedRoute('report.export', now()->addMinutes(3), ['q' => request('q')]) }}"
-                                    class="btn btn-success">
+                                <a href="{{ route('report.export', ['q' => request('q')]) }}" class="btn btn-success">
                                     <i class="ri-file-excel-2-line"></i>
                                     Excel Export
                                 </a>
