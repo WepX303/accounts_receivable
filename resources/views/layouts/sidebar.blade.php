@@ -17,7 +17,7 @@
             <div class="collapse navbar-collapse d-lg-flex" id="topnav-menu-content">
                 <ul class="navbar-nav" id="navbar-nav">
 
-                    <!-- dashboard (herkes) -->
+                    <!-- dashboard -->
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('dashboard') }}" role="button">
                             <i class="ri-dashboard-line"></i> <span>{{ __('menu.dashboard') }}</span>
@@ -73,35 +73,15 @@
                         </li>
                     @endif
 
-                    <!-- SETTINGS (ADMIN ONLY) -->
-                    {{-- @if ($role === 'Admin')
-                        <li class="nav-item">
-                            <a class="nav-link menu-link" href="#sidebarSettings" data-bs-toggle="collapse"
-                                role="button" aria-expanded="false" aria-controls="sidebarSettings">
-                                <i class="ri-settings-3-line"></i> <span>{{ __('menu.settings') }}</span>
-                            </a>
-
-                            <div class="collapse menu-dropdown" id="sidebarSettings">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a class="nav-link menu-link" href="{{ route('users.index') }}" role="button">
-                                            <span>{{ __('menu.create_user') }}</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    @endif --}}
-
-                    {{-- Logs (Admin ) --}}
-                    @if (in_array($role, ['SuperAdmin'], true))
+                    {{-- Logs (SuperAdmin) --}}
+                    {{-- @if (in_array($role, ['SuperAdmin'], true))
                         <li class="nav-item">
                             <a href="{{ route('logs') }}" class="nav-link">
                                 <i class="ri-file-list-3-line"></i>
                                 <span>Logs</span>
                             </a>
                         </li>
-                    @endif
+                    @endif --}}
 
                     @if (in_array($role, ['SuperAdmin', 'Admin'], true))
                         <li class="nav-item dropdown">
@@ -122,6 +102,13 @@
                                         {{ __('menu.commands') }}
                                     </a>
                                 </li>
+                                @if (in_array($role, ['SuperAdmin'], true))
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="{{ route('logs') }}">
+                                            <span>Logs</span>
+                                        </a>
+                                    </li>
+                                @endif
                             </ul>
                         </li>
                     @endif
