@@ -314,37 +314,17 @@
                                                 {{ $c->phone ?? '-' }}
                                             </td>
                                             {{-- Branch | Contract --}}
-                                            {{-- <td class="branch_contract">
-                                                <div class="fw-medium">
-                                                    {{ $c->branch }} /
-
-                                                    @if (auth()->check() && in_array(auth()->user()->role?->value, ['SuperAdmin', 'Admin', 'Cashier', 'Operator']))
-                                                        <a href="{{ route('payments', ['id' => (string) $c->logicalref]) }}"
-                                                            class="text-decoration-underline text-primary">
-                                                            {{ $c->contract }}
-                                                        </a>
-                                                    @else
-                                                        {{ $c->contract }}
-                                                    @endif
-
-                                                </div>
-                                            </td> --}}
                                             <td class="branch_contract">
                                                 <div class="fw-medium d-flex align-items-center gap-2 flex-wrap">
                                                     <span>{{ $c->branch }} /</span>
 
                                                     @if (auth()->check() && in_array(auth()->user()->role?->value, ['SuperAdmin', 'Admin', 'Cashier', 'Operator']))
-                                                        <a href="{{ route('payments', ['id' => (string) $c->logicalref]) }}"
+                                                        <a href="{{ route('payments', ['id' => (string) $c->source_id]) }}" 
                                                             class="text-decoration-underline text-primary">
                                                             {{ $c->contract }}
                                                         </a>
-
-                                                        {{-- <a href="{{ route('payments.customer.statement', $c->logicalref) }}"
-                                                            target="_blank"
-                                                            class="btn btn-sm btn-outline-success py-0 px-2">
-                                                            <i class="ri-printer-line"></i>
-                                                        </a> --}}
-                                                        <a href="{{ route('payments.customer.statement', ['credit' => $c->logicalref, 'lang' => app()->getLocale()]) }}"
+                         
+                                                        <a href="{{ route('payments.customer.statement', ['credit' => $c->source_id, 'lang' => app()->getLocale()]) }}"
                                                             target="_blank"
                                                             class="btn btn-sm btn-outline-success py-0 px-2">
                                                             <i class="ri-printer-line"></i>

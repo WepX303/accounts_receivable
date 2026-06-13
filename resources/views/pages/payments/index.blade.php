@@ -65,14 +65,14 @@
                                     @forelse($list as $c)
                                         @php
                                             $isActive =
-                                                $selected && (string) $selected->logicalref === (string) $c->logicalref;
+                                                $selected && (string) $selected->source_id === (string) $c->source_id;
                                             $hasLocal = $c->amount_local !== null && $c->paid_local !== null;
                                             $totalLocal = $hasLocal ? (float) $c->amount_local : null;
                                             $paidLocal = $hasLocal ? (float) $c->paid_local : null;
                                             $remain = $hasLocal ? max($totalLocal - $paidLocal, 0) : null;
 
                                             $query = request()->query();
-                                            $query['id'] = (string) $c->logicalref;
+                                            $query['id'] = (string) $c->source_id;
                                             $rowUrl = route('payments', $query);
 
                                         @endphp
@@ -208,7 +208,7 @@
                                     <i class="ri-printer-line align-bottom me-1"></i>
                                     Töleg dökümi
                                 </a> --}}
-                                <a href="{{ route('payments.customer.statement', ['credit' => $selected->logicalref, 'lang' => app()->getLocale()]) }}"
+                                <a href="{{ route('payments.customer.statement', ['credit' => $selected->source_id, 'lang' => app()->getLocale()]) }}"
                                     target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
                                     <i class="ri-printer-line align-bottom me-1"></i>
                                     {{ __('pages/payments.payment_statement') }} </a>
@@ -535,7 +535,7 @@
                                     {{ __('pages/payments.form.payment_date_help') }}
                                 </div>
                             </div>
-                            <input type="hidden" name="customer_id" value="{{ (string) $selected->logicalref }}">
+                            <input type="hidden" name="customer_id" value="{{ (string) $selected->source_id }}">
 
                             <div class="mb-3">
                                 <label class="form-label">{{ __('pages/payments.form.received_amount') }}</label>

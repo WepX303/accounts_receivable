@@ -15,22 +15,22 @@
 
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <div class="btn-group btn-group-sm" role="group">
-                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->logicalref, 'lang' => 'tk']) }}"
+                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->source_id, 'lang' => 'tk']) }}"
                                 class="btn {{ ($lang ?? app()->getLocale()) === 'tk' ? 'btn-primary' : 'btn-outline-primary' }}">
                                 TK
                             </a>
 
-                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->logicalref, 'lang' => 'ru']) }}"
+                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->source_id, 'lang' => 'ru']) }}"
                                 class="btn {{ ($lang ?? app()->getLocale()) === 'ru' ? 'btn-primary' : 'btn-outline-primary' }}">
                                 RU
                             </a>
 
-                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->logicalref, 'lang' => 'en']) }}"
+                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->source_id, 'lang' => 'en']) }}"
                                 class="btn {{ ($lang ?? app()->getLocale()) === 'en' ? 'btn-primary' : 'btn-outline-primary' }}">
                                 EN
                             </a>
 
-                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->logicalref, 'lang' => 'tr']) }}"
+                            <a href="{{ route('payments.customer.statement', ['credit' => $credit->source_id, 'lang' => 'tr']) }}"
                                 class="btn {{ ($lang ?? app()->getLocale()) === 'tr' ? 'btn-primary' : 'btn-outline-primary' }}">
                                 TR
                             </a>
@@ -136,7 +136,7 @@
 
                                         $userName = $p->createdByUser
                                             ? $p->createdByUser->firstname . ' ' . $p->createdByUser->lastname
-                                            : ($p->created_by_name ?? '-');
+                                            : $p->created_by_name ?? '-';
 
                                         $methodKey = 'pages/payments.method_values.' . strtolower((string) $p->method);
                                         $methodText = __($methodKey);

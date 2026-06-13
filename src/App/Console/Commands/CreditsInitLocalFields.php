@@ -76,7 +76,6 @@ class CreditsInitLocalFields extends Command
                 }
 
                 // Tek bir UPDATE ile chunk güncelle
-                // $update = DB::connection('pgsql')->table($table)->whereIn('logicalref', $ids);
                 $update = DB::connection('pgsql')->table($table)->whereIn('source_id', $ids);
 
                 if ($onlyNull) {

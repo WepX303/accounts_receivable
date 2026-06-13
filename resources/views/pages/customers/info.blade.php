@@ -57,7 +57,7 @@
                                             $isActive =
                                                 isset($selected) &&
                                                 $selected &&
-                                                (int) $selected->logicalref === (int) $credit->logicalref;
+                                                (int) $selected->source_id === (int) $credit->source_id;
 
                                             // Center values (DB)
                                             $amountCenter = $credit->amount; // float/int/string olabilir
@@ -84,7 +84,7 @@
                                         @endphp
 
                                         <tr class="js-credit-row {{ $isActive ? 'table-active' : '' }}"
-                                            style="cursor:pointer;" data-id="{{ $credit->logicalref }}"
+                                            style="cursor:pointer;" data-id="{{ $credit->source_id }}"
                                             data-name="{{ e($credit->name ?? '') }}"
                                             data-branch="{{ e($credit->branch ?? '') }}"
                                             data-passport="{{ e($credit->passport ?? '') }}"
@@ -103,7 +103,7 @@
                                             <th scope="row">
                                                 <div class="form-check">
                                                     <input class="form-check-input js-row-check" type="checkbox"
-                                                        name="ids[]" value="{{ $credit->logicalref }}">
+                                                        name="ids[]" value="{{ $credit->source_id }}">
                                                 </div>
                                             </th>
 

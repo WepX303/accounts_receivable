@@ -511,7 +511,7 @@
                                         <tr>
                                             <td>
                                                 <input type="checkbox" name="selected_customers[]"
-                                                    value="{{ $customer->logicalref }}"
+                                                    value="{{ $customer->source_id }}"
                                                     class="form-check-input customer-checkbox"
                                                     data-phone="{{ $customer->phone }}">
                                             </td>
@@ -652,7 +652,9 @@
                             <div class="col-12">
                                 <label class="form-label">{{ __('messages.available_variables') }}</label>
                                 <div class="small text-muted">
-                                    {name} = {{ __('messages.customer_name') }}, {branch} = {{ __('messages.branch') }}, {contract} = {{ __('messages.contract') }}, {remaining} = {{ __('messages.remaining') }}, {willpaiddate} = {{ __('messages.will_paid_date') }}
+                                    {name} = {{ __('messages.customer_name') }}, {branch} = {{ __('messages.branch') }},
+                                    {contract} = {{ __('messages.contract') }}, {remaining} =
+                                    {{ __('messages.remaining') }}, {willpaiddate} = {{ __('messages.will_paid_date') }}
                                 </div>
                             </div>
 
