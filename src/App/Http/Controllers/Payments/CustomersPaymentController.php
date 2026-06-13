@@ -88,14 +88,9 @@ class CustomersPaymentController extends Controller
                 $selected = $pageItems->firstWhere('source_id', $id);
 
                 if (! $selected) {
-                    // $selected = Credit::query()
-                    //     ->with('paidUpdatedByUser')
-                    //     ->where('logicalref', $id)
-                    //     ->first();
                     $selected = Credit::query()
                         ->where('active', true)
                         ->with('paidUpdatedByUser')
-                        // ->where('logicalref', $id)
                         ->where('source_id', $id)
                         ->first();
                 }
@@ -239,10 +234,6 @@ class CustomersPaymentController extends Controller
 
             DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $paymentAtProvided, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, $receiverPhoneNumber, &$auditData) {
                 /** @var \App\Models\Credit $c */
-                // $c = Credit::query()
-                //     ->where('logicalref', $customerId)
-                //     ->lockForUpdate()
-                //     ->firstOrFail();
                 $c = Credit::query()
                     ->where('active', true)
                     ->where('source_id', $customerId)

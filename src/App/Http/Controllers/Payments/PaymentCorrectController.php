@@ -113,11 +113,6 @@ class PaymentCorrectController extends Controller
                 }
 
                 // lock credit
-                // $c = Credit::query()
-                //     ->where('logicalref', (int)$p->credit_logicalref)
-                //     ->lockForUpdate()
-                //     ->firstOrFail();
-
                 $c = Credit::query()
                     ->where('active', true)
                     ->where('source_id', (int) $p->credit_source_id)
