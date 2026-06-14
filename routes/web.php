@@ -13,6 +13,7 @@ use App\Http\Controllers\Reports\AvshocrecatReportController;
 use App\Http\Controllers\Admin\Settings\CommandCenterController;
 use App\Http\Controllers\Payments\CustomerPaymentStatementController;
 use App\Http\Controllers\Sms\CustomerSmsController;
+use App\Http\Controllers\Reports\PaymentCalendarReportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -74,7 +75,6 @@ Route::middleware(['auth.token'])->group(function () {
     // Report: SuperAdmin + Admin, Cashier, Analyst, Operator
     Route::middleware(['role:SuperAdmin,Admin,Cashier,Analyst,Operator'])->group(function () {
         Route::get('/report', [AvshocrecatReportController::class, 'index'])->name('report');
-
         Route::get('/reports/avshocrecat/export', [AvshocrecatReportController::class, 'export'])
             ->name('report.export');
     });
@@ -104,6 +104,18 @@ Route::middleware(['auth.token'])->group(function () {
     });
 
     /**
+     * REPORTS
+     * SuperAdmin + Analyst
+     */
+    Route::middleware(['role:SuperAdmin,Analyst'])->group(function () {
+        Route::get('/reports/payment-calendar', PaymentCalendarReportController::class)
+            ->name('reports.payment-calendar');
+        Route::get('/reports/payment-calendar/export', [PaymentCalendarReportController::class, 'export'])
+            ->name('reports.payment-calendar.export');
+    });
+
+
+    /**
      * SMS DISTRIBUTION
      * SuperAdmin + Admin + Operator
      */
@@ -124,13 +136,12 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
-
         Route::post('/sync-credits', [CommandCenterController::class, 'syncCredits'])
             ->name('sync-credits');
-
         Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])
             ->name('sync-avshocrecat');
     });
+
 
 
     /**

@@ -54,12 +54,38 @@
                     @endif
 
                     {{-- Report (Superadmin + Admin + Cashier + Analyst + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
+                    {{-- @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('report') }}">
                                 <i class="ri-folder-chart-line"></i>
                                 <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
                             </a>
+                        </li>
+                    @endif --}}
+                    {{-- Reports --}}
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
+                        <li class="nav-item dropdown">
+                            <a class="nav-link menu-link dropdown-toggle" href="#" id="reportsDropdown"
+                                role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-folder-chart-line"></i>
+                                <span>Reports</span>
+                            </a>
+
+                            <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('report') }}">
+                                        Monthly Payment Report
+                                    </a>
+                                </li>
+
+                                @if (in_array($role, ['SuperAdmin', 'Analyst'], true))
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.payment-calendar') }}">
+                                            Payment Calendar Report
+                                        </a>
+                                    </li>
+                                @endif
+                            </ul>
                         </li>
                     @endif
 
@@ -98,11 +124,11 @@
                                     </a>
                                 </li>
                                 @if (in_array($role, ['SuperAdmin'], true))
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('commands.index') }}">
-                                        {{ __('menu.commands') }}
-                                    </a>
-                                </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('commands.index') }}">
+                                            {{ __('menu.commands') }}
+                                        </a>
+                                    </li>
                                 @endif
                                 @if (in_array($role, ['SuperAdmin'], true))
                                     <li class="nav-item">
