@@ -91,6 +91,12 @@
                                             Overdue Payments Report
                                         </a>
                                     </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.collection-performance') }}">
+                                            Collection Performance Report
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>

@@ -18,6 +18,10 @@ use App\Http\Controllers\Reports\PaymentCalendarReportDetailController;
 use App\Http\Controllers\Reports\PaymentCalendarDetailsExportController;
 use App\Http\Controllers\Reports\OverduePaymentsReportController;
 use App\Http\Controllers\Reports\OverduePaymentsReportExportController;
+use App\Http\Controllers\Reports\CollectionPerformanceReportController;
+use App\Http\Controllers\Reports\CollectionPerformanceDetailsController;
+use App\Http\Controllers\Reports\CollectionPerformanceExportController;
+use App\Http\Controllers\Reports\CollectionPerformanceDetailsExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -120,6 +124,10 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.payment-calendar.details');
         Route::get('/reports/payment-calendar/details/export', PaymentCalendarDetailsExportController::class)
             ->name('reports.payment-calendar.details.export');
+        Route::get('/reports/collection-performance/export', CollectionPerformanceExportController::class)
+            ->name('reports.collection-performance.export');
+        Route::get('/reports/collection-performance/details/export', CollectionPerformanceDetailsExportController::class)
+            ->name('reports.collection-performance.details.export');
     });
 
 
@@ -144,14 +152,13 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
-        Route::post('/sync-credits', [CommandCenterController::class, 'syncCredits'])
-            ->name('sync-credits');
-        Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])
-            ->name('sync-avshocrecat');
-        Route::get('/reports/overdue-payments', OverduePaymentsReportController::class)
-            ->name('reports.overdue-payments');
-        Route::get('/reports/overdue-payments/export', OverduePaymentsReportExportController::class)
-            ->name('reports.overdue-payments.export');
+        Route::post('/sync-credits', [CommandCenterController::class, 'syncCredits'])->name('sync-credits');
+        Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])->name('sync-avshocrecat');
+        Route::get('/reports/overdue-payments', OverduePaymentsReportController::class)->name('reports.overdue-payments');
+        Route::get('/reports/overdue-payments/export', OverduePaymentsReportExportController::class)->name('reports.overdue-payments.export');
+        Route::get('/reports/collection-performance', CollectionPerformanceReportController::class)->name('reports.collection-performance');
+        Route::get('/reports/collection-performance/details', CollectionPerformanceDetailsController::class)
+            ->name('reports.collection-performance.details');
     });
 
 
