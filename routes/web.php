@@ -124,6 +124,12 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/commands', [CommandCenterController::class, 'index'])->name('commands.index');
         Route::post('/clear-all-caches', [CommandCenterController::class, 'clearAllCaches'])->name('clear-all-caches');
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
+
+        Route::post('/sync-credits', [CommandCenterController::class, 'syncCredits'])
+            ->name('sync-credits');
+
+        Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])
+            ->name('sync-avshocrecat');
     });
 
 

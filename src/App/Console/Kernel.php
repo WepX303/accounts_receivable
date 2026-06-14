@@ -40,5 +40,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CreditsInitLocalFields::class,
         \App\Console\Commands\SyncRunCommand::class,
         \App\Console\Commands\SendDailyPaymentReportCommand::class,
+        \App\Console\Commands\SyncAvshocrecatCommand::class,
+        \App\Console\Commands\SyncCreditsCommand::class,
     ];
 }

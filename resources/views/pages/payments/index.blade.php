@@ -182,9 +182,9 @@
                             <img src="{{ URL::asset('build/images/users/user.jpg') }}"
                                 class="avatar-lg rounded-circle img-thumbnail" alt="">
                             <h5 class="mt-3 mb-0">{{ $selected->name ?? '-' }}</h5>
-                            {{-- <div class="text-muted">{{ $selected->branch ?? '-' }} | {{ $selected->contract ?? '-' }}
-                            </div> --}}
-                            <div class="text-muted">
+                            <div class="text-muted">{{ $selected->branch ?? '-' }} | {{ $selected->contract ?? '-' }}
+                            </div>
+                            {{-- <div class="text-muted">
                                 {{ $selected->branch ?? '-' }} |
 
                                 @if (!empty($selected->contract))
@@ -195,7 +195,7 @@
                                 @else
                                     -
                                 @endif
-                            </div>
+                            </div> --}}
                             <div class="small text-muted">ClientRef: {{ $selected->clientref ?? '-' }}</div>
                             <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
                                 <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
