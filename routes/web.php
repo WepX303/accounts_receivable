@@ -22,6 +22,7 @@ use App\Http\Controllers\Reports\CollectionPerformanceReportController;
 use App\Http\Controllers\Reports\CollectionPerformanceDetailsController;
 use App\Http\Controllers\Reports\CollectionPerformanceExportController;
 use App\Http\Controllers\Reports\CollectionPerformanceDetailsExportController;
+use App\Http\Controllers\Reports\DailyCashClosingExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -128,6 +129,8 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.collection-performance.export');
         Route::get('/reports/collection-performance/details/export', CollectionPerformanceDetailsExportController::class)
             ->name('reports.collection-performance.details.export');
+        Route::get('/reports/daily-cash-closing', \App\Http\Controllers\Reports\DailyCashClosingReportController::class)
+            ->name('reports.daily-cash-closing');
     });
 
 
@@ -159,6 +162,8 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/reports/collection-performance', CollectionPerformanceReportController::class)->name('reports.collection-performance');
         Route::get('/reports/collection-performance/details', CollectionPerformanceDetailsController::class)
             ->name('reports.collection-performance.details');
+        Route::get('/reports/daily-cash-closing/export', DailyCashClosingExportController::class)
+            ->name('reports.daily-cash-closing.export');
     });
 
 

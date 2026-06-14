@@ -97,6 +97,12 @@
                                             Collection Performance Report
                                         </a>
                                     </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.daily-cash-closing') }}">
+                                            Daily Cash Closing Report
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>
