@@ -190,14 +190,34 @@
 
                                         <td>{{ $day['day_name'] }}</td>
 
-
-
-                                        <td class="text-end">
+                                        {{-- <td class="text-end">
                                             {{ number_format($day['expected'], 2) }} TMT
                                         </td>
 
                                         <td class="text-end">
                                             {{ number_format($day['received'], 2) }} TMT
+                                        </td> --}}
+
+                                        <td class="text-end">
+                                            @if ($day['expected'] > 0)
+                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'expected', 'date' => $day['date_key']]) }}"
+                                                    class="fw-semibold text-primary">
+                                                    {{ number_format($day['expected'], 2) }} TMT
+                                                </a>
+                                            @else
+                                                {{ number_format($day['expected'], 2) }} TMT
+                                            @endif
+                                        </td>
+
+                                        <td class="text-end">
+                                            @if ($day['received'] > 0)
+                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'received', 'date' => $day['date_key']]) }}"
+                                                    class="fw-semibold text-success">
+                                                    {{ number_format($day['received'], 2) }} TMT
+                                                </a>
+                                            @else
+                                                {{ number_format($day['received'], 2) }} TMT
+                                            @endif
                                         </td>
 
                                         <td class="text-end">

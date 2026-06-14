@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\Settings\CommandCenterController;
 use App\Http\Controllers\Payments\CustomerPaymentStatementController;
 use App\Http\Controllers\Sms\CustomerSmsController;
 use App\Http\Controllers\Reports\PaymentCalendarReportController;
+use App\Http\Controllers\Reports\PaymentCalendarReportDetailController;
+use App\Http\Controllers\Reports\PaymentCalendarDetailsExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -112,6 +114,10 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.payment-calendar');
         Route::get('/reports/payment-calendar/export', [PaymentCalendarReportController::class, 'export'])
             ->name('reports.payment-calendar.export');
+        Route::get('/reports/payment-calendar/details', PaymentCalendarReportDetailController::class)
+            ->name('reports.payment-calendar.details');
+        Route::get('/reports/payment-calendar/details/export', PaymentCalendarDetailsExportController::class)
+            ->name('reports.payment-calendar.details.export');
     });
 
 
