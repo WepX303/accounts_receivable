@@ -108,6 +108,11 @@
                                             Collection Trend Report
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.promise-to-pay') }}">
+                                            Promise To Pay Report
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>
