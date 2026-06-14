@@ -79,7 +79,7 @@
                                     </a>
                                 </li>
 
-                                @if (in_array($role, ['SuperAdmin', 'Analyst'], true))
+                                @if (in_array($role, ['SuperAdmin', 'Analyst', 'Admin'], true))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.payment-calendar') }}">
                                             Payment Calendar Report
@@ -116,6 +116,11 @@
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.recovery-effectiveness') }}">
                                             Recovery Effectiveness Report
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.customer-statement') }}">
+                                            Customer Statement
                                         </a>
                                     </li>
                                 @endif

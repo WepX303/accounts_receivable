@@ -28,6 +28,7 @@ use App\Http\Controllers\Reports\PromiseToPayReportController;
 use App\Http\Controllers\Reports\PromiseToPayExportController;
 use App\Http\Controllers\Reports\RecoveryEffectivenessReportController;
 use App\Http\Controllers\Reports\RecoveryEffectivenessExportController;
+use App\Http\Controllers\Reports\CustomerStatementReportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -119,9 +120,9 @@ Route::middleware(['auth.token'])->group(function () {
 
     /**
      * REPORTS
-     * SuperAdmin + Analyst
+     * SuperAdmin + Analyst + Admin
      */
-    Route::middleware(['role:SuperAdmin,Analyst'])->group(function () {
+    Route::middleware(['role:SuperAdmin,Analyst,Admin'])->group(function () {
         Route::get('/reports/payment-calendar', PaymentCalendarReportController::class)
             ->name('reports.payment-calendar');
         Route::get('/reports/payment-calendar/export', [PaymentCalendarReportController::class, 'export'])
@@ -136,6 +137,27 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.collection-performance.details.export');
         Route::get('/reports/daily-cash-closing', \App\Http\Controllers\Reports\DailyCashClosingReportController::class)
             ->name('reports.daily-cash-closing');
+        Route::get('/reports/overdue-payments', OverduePaymentsReportController::class)->name('reports.overdue-payments');
+        Route::get('/reports/overdue-payments/export', OverduePaymentsReportExportController::class)->name('reports.overdue-payments.export');
+        Route::get('/reports/collection-performance', CollectionPerformanceReportController::class)->name('reports.collection-performance');
+        Route::get('/reports/collection-performance/details', CollectionPerformanceDetailsController::class)
+            ->name('reports.collection-performance.details');
+        Route::get('/reports/daily-cash-closing/export', DailyCashClosingExportController::class)
+            ->name('reports.daily-cash-closing.export');
+        Route::get('/reports/collection-trend', CollectionTrendReportController::class)
+            ->name('reports.collection-trend');
+        Route::get('/reports/promise-to-pay', PromiseToPayReportController::class)
+            ->name('reports.promise-to-pay');
+        Route::get('/reports/promise-to-pay/export', PromiseToPayExportController::class)
+            ->name('reports.promise-to-pay.export');
+        Route::get('/reports/recovery-effectiveness', RecoveryEffectivenessReportController::class)
+            ->name('reports.recovery-effectiveness');
+        Route::get('/reports/recovery-effectiveness/export', RecoveryEffectivenessExportController::class)
+            ->name('reports.recovery-effectiveness.export');
+        Route::get('/reports/customer-statement', CustomerStatementReportController::class)
+            ->name('reports.customer-statement');
+        Route::get('/reports/customer-statement/export', [CustomerStatementReportController::class, 'export'])
+            ->name('reports.customer-statement.export');
     });
 
 
@@ -162,23 +184,6 @@ Route::middleware(['auth.token'])->group(function () {
         Route::post('/credits/resync-amount-local', [CommandCenterController::class, 'resyncAmountLocal'])->name('credits.resync-amount-local');
         Route::post('/sync-credits', [CommandCenterController::class, 'syncCredits'])->name('sync-credits');
         Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])->name('sync-avshocrecat');
-        Route::get('/reports/overdue-payments', OverduePaymentsReportController::class)->name('reports.overdue-payments');
-        Route::get('/reports/overdue-payments/export', OverduePaymentsReportExportController::class)->name('reports.overdue-payments.export');
-        Route::get('/reports/collection-performance', CollectionPerformanceReportController::class)->name('reports.collection-performance');
-        Route::get('/reports/collection-performance/details', CollectionPerformanceDetailsController::class)
-            ->name('reports.collection-performance.details');
-        Route::get('/reports/daily-cash-closing/export', DailyCashClosingExportController::class)
-            ->name('reports.daily-cash-closing.export');
-        Route::get('/reports/collection-trend', CollectionTrendReportController::class)
-            ->name('reports.collection-trend');
-        Route::get('/reports/promise-to-pay', PromiseToPayReportController::class)
-            ->name('reports.promise-to-pay');
-        Route::get('/reports/promise-to-pay/export', PromiseToPayExportController::class)
-            ->name('reports.promise-to-pay.export');
-        Route::get('/reports/recovery-effectiveness', RecoveryEffectivenessReportController::class)
-            ->name('reports.recovery-effectiveness');
-        Route::get('/reports/recovery-effectiveness/export', RecoveryEffectivenessExportController::class)
-            ->name('reports.recovery-effectiveness.export');
     });
 
 
