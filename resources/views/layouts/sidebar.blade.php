@@ -72,6 +72,7 @@
                             </a>
 
                             <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+
                                 <li>
                                     <a class="dropdown-item" href="{{ route('report') }}">
                                         Monthly Payment Report
@@ -84,7 +85,14 @@
                                             Payment Calendar Report
                                         </a>
                                     </li>
+
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.overdue-payments') }}">
+                                            Overdue Payments Report
+                                        </a>
+                                    </li>
                                 @endif
+
                             </ul>
                         </li>
                     @endif

@@ -16,6 +16,8 @@ use App\Http\Controllers\Sms\CustomerSmsController;
 use App\Http\Controllers\Reports\PaymentCalendarReportController;
 use App\Http\Controllers\Reports\PaymentCalendarReportDetailController;
 use App\Http\Controllers\Reports\PaymentCalendarDetailsExportController;
+use App\Http\Controllers\Reports\OverduePaymentsReportController;
+use App\Http\Controllers\Reports\OverduePaymentsReportExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -146,6 +148,10 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('sync-credits');
         Route::post('/sync-avshocrecat', [CommandCenterController::class, 'syncAvshocrecat'])
             ->name('sync-avshocrecat');
+        Route::get('/reports/overdue-payments', OverduePaymentsReportController::class)
+            ->name('reports.overdue-payments');
+        Route::get('/reports/overdue-payments/export', OverduePaymentsReportExportController::class)
+            ->name('reports.overdue-payments.export');
     });
 
 
