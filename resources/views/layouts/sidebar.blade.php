@@ -113,6 +113,11 @@
                                             Promise To Pay Report
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.recovery-effectiveness') }}">
+                                            Recovery Effectiveness Report
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>

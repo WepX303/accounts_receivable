@@ -26,6 +26,8 @@ use App\Http\Controllers\Reports\DailyCashClosingExportController;
 use App\Http\Controllers\Reports\CollectionTrendReportController;
 use App\Http\Controllers\Reports\PromiseToPayReportController;
 use App\Http\Controllers\Reports\PromiseToPayExportController;
+use App\Http\Controllers\Reports\RecoveryEffectivenessReportController;
+use App\Http\Controllers\Reports\RecoveryEffectivenessExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -173,6 +175,10 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.promise-to-pay');
         Route::get('/reports/promise-to-pay/export', PromiseToPayExportController::class)
             ->name('reports.promise-to-pay.export');
+        Route::get('/reports/recovery-effectiveness', RecoveryEffectivenessReportController::class)
+            ->name('reports.recovery-effectiveness');
+        Route::get('/reports/recovery-effectiveness/export', RecoveryEffectivenessExportController::class)
+            ->name('reports.recovery-effectiveness.export');
     });
 
 
