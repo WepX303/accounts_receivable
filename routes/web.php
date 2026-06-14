@@ -23,6 +23,7 @@ use App\Http\Controllers\Reports\CollectionPerformanceDetailsController;
 use App\Http\Controllers\Reports\CollectionPerformanceExportController;
 use App\Http\Controllers\Reports\CollectionPerformanceDetailsExportController;
 use App\Http\Controllers\Reports\DailyCashClosingExportController;
+use App\Http\Controllers\Reports\CollectionTrendReportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -164,6 +165,8 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.collection-performance.details');
         Route::get('/reports/daily-cash-closing/export', DailyCashClosingExportController::class)
             ->name('reports.daily-cash-closing.export');
+        Route::get('/reports/collection-trend', CollectionTrendReportController::class)
+            ->name('reports.collection-trend');
     });
 
 

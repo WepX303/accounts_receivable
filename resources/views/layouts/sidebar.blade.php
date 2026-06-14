@@ -103,6 +103,11 @@
                                             Daily Cash Closing Report
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.collection-trend') }}">
+                                            Collection Trend Report
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>
