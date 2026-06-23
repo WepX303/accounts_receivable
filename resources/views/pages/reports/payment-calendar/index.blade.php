@@ -40,7 +40,7 @@
     </div>
 
     {{-- Summary --}}
-    <div class="row row-cols-xxl-5 row-cols-xl-5 row-cols-lg-3 row-cols-md-2 row-cols-1 g-3">
+    <div class="row row-cols-xxl-6 row-cols-xl-3 row-cols-lg-3 row-cols-md-2 row-cols-1 g-3">
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
@@ -54,9 +54,9 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Received Payments</p>
-                    <h4 class="mb-0">{{ number_format($summary['received_total'], 2) }} TMT</h4>
-                    <p class="text-muted mt-3 mb-0">Total received net payments.</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">Paid Expected</p>
+                    <h4 class="mb-0">{{ number_format($summary['paid_expected_total'], 2) }} TMT</h4>
+                    <p class="text-muted mt-3 mb-0">Payments from customers expected to pay this month.</p>
                 </div>
             </div>
         </div>
@@ -73,6 +73,16 @@
                     <p class="text-muted mt-3 mb-0">
                         Received amount minus expected amount.
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card card-height-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-13 mb-2">Total Received</p>
+                    <h4 class="mb-0">{{ number_format($summary['total_received_total'], 2) }} TMT</h4>
+                    <p class="text-muted mt-3 mb-0">All net payments received in selected month.</p>
                 </div>
             </div>
         </div>
@@ -137,8 +147,12 @@
                                         <small class="text-muted">{{ $currentMonth->format('F Y') }}</small>
                                     </th>
                                     <th class="text-end">
-                                        Received<br>
-                                        <small class="text-muted">{{ $currentMonth->format('F Y') }}</small>
+                                        Paid Expected<br>
+                                        <small class="text-muted">Expected customers only</small>
+                                    </th>
+                                    <th class="text-end">
+                                        Total Received<br>
+                                        <small class="text-muted">All payments</small>
                                     </th>
                                     <th class="text-end">
                                         Change<br>
@@ -162,7 +176,7 @@
                                         if ($day['expected'] > 0 && $day['percent'] >= 100) {
                                             $statusClass = 'success';
                                             $statusText = 'Completed';
-                                        } elseif ($day['expected'] > 0 && $day['received'] > 0) {
+                                        } elseif ($day['expected'] > 0 && $day['paid_expected'] > 0) {
                                             $statusClass = 'warning';
                                             $statusText = 'Partially Paid';
                                         } elseif ($day['expected'] > 0 && $day['received'] <= 0 && $day['is_past']) {
@@ -210,13 +224,24 @@
                                         </td>
 
                                         <td class="text-end">
-                                            @if ($day['received'] > 0)
-                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'received', 'date' => $day['date_key']]) }}"
+                                            @if ($day['paid_expected'] > 0)
+                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'expected-paid', 'date' => $day['date_key']]) }}"
                                                     class="fw-semibold text-success">
-                                                    {{ number_format($day['received'], 2) }} TMT
+                                                    {{ number_format($day['paid_expected'], 2) }} TMT
                                                 </a>
                                             @else
-                                                {{ number_format($day['received'], 2) }} TMT
+                                                {{ number_format($day['paid_expected'], 2) }} TMT
+                                            @endif
+                                        </td>
+
+                                        <td class="text-end">
+                                            @if ($day['total_received'] > 0)
+                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'received', 'date' => $day['date_key']]) }}"
+                                                    class="fw-semibold text-primary">
+                                                    {{ number_format($day['total_received'], 2) }} TMT
+                                                </a>
+                                            @else
+                                                {{ number_format($day['total_received'], 2) }} TMT
                                             @endif
                                         </td>
 
@@ -261,7 +286,11 @@
                                     </th>
 
                                     <th class="text-end">
-                                        {{ number_format($summary['received_total'], 2) }} TMT
+                                        {{ number_format($summary['paid_expected_total'], 2) }} TMT
+                                    </th>
+
+                                    <th class="text-end">
+                                        {{ number_format($summary['total_received_total'], 2) }} TMT
                                     </th>
 
                                     <th class="text-end">

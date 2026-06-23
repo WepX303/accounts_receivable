@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Exports\PaymentCalendarReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Credit;
-use App\Exports\PaymentCalendarReportExport;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Models\CreditPayment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PaymentCalendarReportController extends Controller
 {
@@ -32,9 +32,6 @@ class PaymentCalendarReportController extends Controller
         |--------------------------------------------------------------------------
         | EXPECTED PAYMENTS
         |--------------------------------------------------------------------------
-        | Based on credits table, same business idea as SMS controller.
-        | Each credit has 6 monthly installments.
-        | Daily expected amount = amount_local / 6 for every due installment date.
         */
         $credits = Credit::query()
             ->where('active', true)
@@ -51,6 +48,7 @@ class PaymentCalendarReportController extends Controller
             ]);
 
         $expectedRows = collect();
+        $expectedCreditIdsByDate = collect();
 
         foreach ($credits as $credit) {
             $amount = (float) ($credit->amount_local ?? $credit->amount ?? 0);
@@ -70,22 +68,29 @@ class PaymentCalendarReportController extends Controller
             for ($i = 1; $i <= 6; $i++) {
                 $dueDate = $creditStartDate->copy()->addMonthsNoOverflow($i)->startOfDay();
 
-                if ($dueDate->betweenIncluded($start, $end)) {
-                    $dateKey = $dueDate->toDateString();
-
-                    $expectedRows[$dateKey] = (float) ($expectedRows[$dateKey] ?? 0) + $monthlyPayment;
+                if (! $dueDate->betweenIncluded($start, $end)) {
+                    continue;
                 }
+
+                $dateKey = $dueDate->toDateString();
+
+                $expectedRows[$dateKey] = (float) ($expectedRows[$dateKey] ?? 0) + $monthlyPayment;
+
+                if (! isset($expectedCreditIdsByDate[$dateKey])) {
+                    $expectedCreditIdsByDate[$dateKey] = collect();
+                }
+
+                $expectedCreditIdsByDate[$dateKey]->push((int) $credit->source_id);
             }
         }
 
         /*
         |--------------------------------------------------------------------------
-        | RECEIVED PAYMENTS
+        | TOTAL RECEIVED PAYMENTS
         |--------------------------------------------------------------------------
-        | Net received = pay_amount - change_amount
-        | Voided payments are excluded.
+        | This is all money received on that day.
         */
-        $receivedRows = CreditPayment::query()
+        $totalReceivedRows = CreditPayment::query()
             ->notVoided()
             ->selectRaw('DATE(created_at) as pay_date')
             ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as received_amount')
@@ -96,10 +101,11 @@ class PaymentCalendarReportController extends Controller
             ->groupBy(DB::raw('DATE(created_at)'))
             ->pluck('received_amount', 'pay_date');
 
-        $days = collect();
-
-        $cursor = $start->copy();
-
+        /*
+        |--------------------------------------------------------------------------
+        | CHANGE RETURNED
+        |--------------------------------------------------------------------------
+        */
         $changeRows = CreditPayment::query()
             ->notVoided()
             ->selectRaw('DATE(created_at) as pay_date')
@@ -111,28 +117,78 @@ class PaymentCalendarReportController extends Controller
             ->groupBy(DB::raw('DATE(created_at)'))
             ->pluck('change_amount', 'pay_date');
 
+        /*
+        |--------------------------------------------------------------------------
+        | PAID EXPECTED PAYMENTS
+        |--------------------------------------------------------------------------
+        | This is only payments from customers who were expected to pay on that day.
+        */
+        $paidExpectedRows = collect();
+
+        foreach ($expectedCreditIdsByDate as $dateKey => $creditIds) {
+            $ids = $creditIds
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($ids->isEmpty()) {
+                $paidExpectedRows[$dateKey] = 0;
+                continue;
+            }
+
+            $paidExpectedRows[$dateKey] = (float) CreditPayment::query()
+                ->notVoided()
+                ->whereIn('credit_source_id', $ids)
+                ->whereBetween('created_at', [
+                    Carbon::parse($dateKey)->startOfDay(),
+                    Carbon::parse($dateKey)->endOfDay(),
+                ])
+                ->sum(DB::raw('pay_amount - COALESCE(change_amount, 0)'));
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DAYS
+        |--------------------------------------------------------------------------
+        */
+        $days = collect();
+        $cursor = $start->copy();
+
         while ($cursor <= $end) {
             $dateKey = $cursor->toDateString();
 
             $expected = round((float) ($expectedRows[$dateKey] ?? 0), 2);
-            $received = round((float) ($receivedRows[$dateKey] ?? 0), 2);
-            $difference = round($received - $expected, 2);
 
-            $percent = $expected > 0
-                ? round(($received / $expected) * 100, 2)
-                : 0;
+            // Only payments from customers expected to pay on this date.
+            $paidExpected = round((float) ($paidExpectedRows[$dateKey] ?? 0), 2);
+
+            // All money received on this date.
+            $totalReceived = round((float) ($totalReceivedRows[$dateKey] ?? 0), 2);
 
             $change = round((float) ($changeRows[$dateKey] ?? 0), 2);
+
+            $difference = round($paidExpected - $expected, 2);
+
+            $percent = $expected > 0
+                ? round(($paidExpected / $expected) * 100, 2)
+                : 0;
 
             $days->push([
                 'date' => $cursor->copy(),
                 'date_key' => $dateKey,
                 'day_name' => $cursor->format('l'),
+
                 'expected' => $expected,
-                'received' => $received,
+                'paid_expected' => $paidExpected,
+                'total_received' => $totalReceived,
+
+                // Backward compatibility for old blade/export if needed.
+                'received' => $paidExpected,
+
                 'difference' => $difference,
                 'change' => $change,
                 'percent' => $percent,
+
                 'is_today' => $cursor->isToday(),
                 'is_past' => $cursor->isPast() && ! $cursor->isToday(),
                 'is_future' => $cursor->isFuture(),
@@ -143,14 +199,17 @@ class PaymentCalendarReportController extends Controller
 
         $summary = [
             'expected_total' => round((float) $days->sum('expected'), 2),
-            'received_total' => round((float) $days->sum('received'), 2),
+            'paid_expected_total' => round((float) $days->sum('paid_expected'), 2),
+            'total_received_total' => round((float) $days->sum('total_received'), 2),
             'difference_total' => round((float) $days->sum('difference'), 2),
             'change_total' => round((float) $days->sum('change'), 2),
-
         ];
 
+        // Backward compatibility for old blade/export if needed.
+        $summary['received_total'] = $summary['paid_expected_total'];
+
         $summary['percent_total'] = $summary['expected_total'] > 0
-            ? round(($summary['received_total'] / $summary['expected_total']) * 100, 2)
+            ? round(($summary['paid_expected_total'] / $summary['expected_total']) * 100, 2)
             : 0;
 
         return view('pages.reports.payment-calendar.index', [
@@ -161,6 +220,7 @@ class PaymentCalendarReportController extends Controller
             'nextMonth' => $currentMonth->copy()->addMonth()->format('Y-m'),
         ]);
     }
+
     public function export(Request $request)
     {
         $month = $request->get('month', now()->format('Y-m'));

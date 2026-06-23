@@ -6,6 +6,7 @@ use App\Models\Credit;
 use App\Models\CreditPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -64,9 +65,16 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             'Credit Date',
             'Due Date',
             'Expected Installment',
+            'Paid Today',
+            'Gross Today',
+            'Change Today',
+            'Missing Today',
+            'Payment Count',
+            'Payment Status',
+            'Last Payment At',
             'Total Debt',
-            'Paid',
-            'Remaining',
+            'Paid Total',
+            'Remaining Total',
             'Remote Amount',
             'Remote Paid',
             'Local Amount',
@@ -93,6 +101,17 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             ->where('is_blocked', 0)
             ->whereNotNull('date_')
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            ->whereRaw("
+                EXISTS (
+                    SELECT 1
+                    FROM generate_series(1, 6) AS installment_no
+                    WHERE (
+                        date_::date + (installment_no * INTERVAL '1 month')
+                    )::date = ?::date
+                )
+            ", [$targetDate->toDateString()])
+            ->orderBy('branch')
+            ->orderBy('name')
             ->get([
                 'source_id',
                 'logicalref',
@@ -115,6 +134,29 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
                 'note',
             ]);
 
+        $creditIds = $credits
+            ->pluck('source_id')
+            ->filter()
+            ->map(fn ($v) => (int) $v)
+            ->values();
+
+        $paymentsByCredit = CreditPayment::query()
+            ->notVoided()
+            ->whereIn('credit_source_id', $creditIds)
+            ->whereBetween('created_at', [
+                $targetDate->copy()->startOfDay(),
+                $targetDate->copy()->endOfDay(),
+            ])
+            ->selectRaw('credit_source_id')
+            ->selectRaw('COUNT(*) as payment_count')
+            ->selectRaw('COALESCE(SUM(pay_amount), 0) as gross_today')
+            ->selectRaw('COALESCE(SUM(change_amount), 0) as change_today')
+            ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as paid_today')
+            ->selectRaw('MAX(created_at) as last_payment_at')
+            ->groupBy('credit_source_id')
+            ->get()
+            ->keyBy('credit_source_id');
+
         $rows = collect();
 
         foreach ($credits as $c) {
@@ -125,44 +167,68 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
                 continue;
             }
 
-            $monthlyPayment = round($amount / 6, 2);
+            $installment = round($amount / 6, 2);
             $remaining = round(max($amount - $paid, 0), 2);
             $creditDate = Carbon::parse($c->date_)->startOfDay();
 
-            for ($i = 1; $i <= 6; $i++) {
-                $dueDate = $creditDate->copy()->addMonthsNoOverflow($i)->startOfDay();
+            $paymentAgg = $paymentsByCredit->get((int) $c->source_id);
 
-                if (! $dueDate->isSameDay($targetDate)) {
-                    continue;
-                }
+            $paidToday = round((float) ($paymentAgg->paid_today ?? 0), 2);
+            $grossToday = round((float) ($paymentAgg->gross_today ?? 0), 2);
+            $changeToday = round((float) ($paymentAgg->change_today ?? 0), 2);
+            $paymentCount = (int) ($paymentAgg->payment_count ?? 0);
 
-                $rows->push([
-                    $c->source_id,
-                    $c->logicalref,
-                    $c->name,
-                    $c->contract,
-                    $c->phone,
-                    $c->passport,
-                    $c->branch,
-                    $c->clientref,
-                    $c->assurance,
-                    $c->manager,
-                    $c->status,
-                    $creditDate->format('Y-m-d'),
-                    $dueDate->format('Y-m-d'),
-                    $monthlyPayment,
-                    round($amount, 2),
-                    round($paid, 2),
-                    $remaining,
-                    $c->amount !== null ? round((float) $c->amount, 2) : null,
-                    $c->paid !== null ? round((float) $c->paid, 2) : null,
-                    $c->amount_local !== null ? round((float) $c->amount_local, 2) : null,
-                    $c->paid_local !== null ? round((float) $c->paid_local, 2) : null,
-                    $c->willpaiddate ? Carbon::parse($c->willpaiddate)->format('Y-m-d') : null,
-                    $c->willpaidamount,
-                    $c->note,
-                ]);
+            if ($this->type === 'expected-paid' && $paidToday <= 0) {
+                continue;
             }
+
+            $missingToday = round(max($installment - $paidToday, 0), 2);
+
+            $paymentStatus = 'Unpaid';
+
+            if ($paidToday >= $installment && $installment > 0) {
+                $paymentStatus = 'Paid';
+            } elseif ($paidToday > 0 && $paidToday < $installment) {
+                $paymentStatus = 'Partial';
+            }
+
+            $dueDate = $targetDate->copy();
+
+            $rows->push([
+                $c->source_id,
+                $c->logicalref,
+                $c->name,
+                $c->contract,
+                $c->phone,
+                $c->passport,
+                $c->branch,
+                $c->clientref,
+                $c->assurance,
+                $c->manager,
+                $c->status,
+                $creditDate->format('Y-m-d'),
+                $dueDate->format('Y-m-d'),
+                $installment,
+                $paidToday,
+                $grossToday,
+                $changeToday,
+                $missingToday,
+                $paymentCount,
+                $paymentStatus,
+                ! empty($paymentAgg?->last_payment_at)
+                    ? Carbon::parse($paymentAgg->last_payment_at)->format('Y-m-d H:i:s')
+                    : null,
+                round($amount, 2),
+                round($paid, 2),
+                $remaining,
+                $c->amount !== null ? round((float) $c->amount, 2) : null,
+                $c->paid !== null ? round((float) $c->paid, 2) : null,
+                $c->amount_local !== null ? round((float) $c->amount_local, 2) : null,
+                $c->paid_local !== null ? round((float) $c->paid_local, 2) : null,
+                $c->willpaiddate ? Carbon::parse($c->willpaiddate)->format('Y-m-d') : null,
+                $c->willpaidamount,
+                $c->note,
+            ]);
         }
 
         $rows = $rows
@@ -186,14 +252,21 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             '',
             '',
             '',
-            round((float) $rows->sum(fn ($r) => (float) $r[13]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[14]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[15]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[16]), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[13] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[14] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[15] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[16] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[17] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[18] ?? 0)), 2),
             '',
             '',
-            '',
-            '',
+            round((float) $rows->sum(fn ($r) => (float) ($r[21] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[22] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[23] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[24] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[25] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[26] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[27] ?? 0)), 2),
             '',
             '',
             '',
@@ -282,12 +355,12 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             '',
             '',
             '',
-            round((float) $rows->sum(fn ($r) => (float) $r[13]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[14]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[15]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[16]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[17]), 2),
-            round((float) $rows->sum(fn ($r) => (float) $r[18]), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[13] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[14] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[15] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[16] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[17] ?? 0)), 2),
+            round((float) $rows->sum(fn ($r) => (float) ($r[18] ?? 0)), 2),
             '',
             '',
             '',

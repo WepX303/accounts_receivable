@@ -13,7 +13,7 @@ class PaymentCalendarDetailsExportController extends Controller
     public function __invoke(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:expected,received',
+            'type' => 'required|in:expected,expected-paid,received',
             'date' => 'required|date',
         ]);
 
