@@ -139,7 +139,14 @@ class CustomerSmsController extends Controller
         }
 
         if ($request->filled('branch')) {
-            $query->where('branch', $request->string('branch')->toString());
+            $branches = collect($request->input('branch', []))
+                ->filter()
+                ->values()
+                ->all();
+
+            if (!empty($branches)) {
+                $query->whereIn('branch', $branches);
+            }
         }
 
         if ($request->filled('name')) {
@@ -263,163 +270,23 @@ class CustomerSmsController extends Controller
         return $query;
     }
 
-    // public function index(Request $request): View
-    // {
-
-    //     $query = Credit::query()
-    //         ->where('active', true)
-    //         ->where('is_blocked', 0)
-    //         ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)');
-
-    //     // Eğer user min/max filtre vermediyse → default 10 uygula
-    //     if (!$request->filled('min_remaining') && !$request->filled('max_remaining')) {
-    //         $query->whereRaw(
-    //             '(COALESCE(amount_local, amount, 0) - COALESCE(paid_local, paid, 0)) >= ?',
-    //             [10]
-    //         );
-    //     }
-
-    //     if ($request->filled('branch')) {
-    //         $query->where('branch', $request->string('branch')->toString());
-    //     }
-
-    //     if ($request->filled('name')) {
-    //         $name = trim($request->string('name')->toString());
-    //         $query->where('name', 'like', "%{$name}%");
-    //     }
-
-    //     if ($request->filled('phone')) {
-    //         $phone = trim($request->string('phone')->toString());
-    //         $query->where('phone', 'like', "%{$phone}%");
-    //     }
-
-    //     if ($request->filled('passport')) {
-    //         $passport = trim($request->string('passport')->toString());
-    //         $query->where('passport', 'like', "%{$passport}%");
-    //     }
-
-    //     if ($request->filled('contract')) {
-    //         $contract = trim($request->string('contract')->toString());
-    //         $query->where('contract', 'like', "%{$contract}%");
-    //     }
-
-    //     $statusType = $request->string('status_type')->toString();
-
-    //     if ($statusType === 'overdue') {
-    //         $today = now()->toDateString();
-
-    //         $query->whereRaw("
-    //     (
-    //         LEAST(
-    //             GREATEST(FLOOR((?::date - date_::date) / 30), 0),
-    //             6
-    //         )
-    //         * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2)
-    //     ) > COALESCE(paid_local, paid, 0)
-    // ", [$today]);
-    //     }
-
-    //     if ($statusType === 'due_today') {
-    //         $today = now()->toDateString();
-
-    //         $query->whereRaw("
-    //     date_ IS NOT NULL
-    //     AND (
-    //         date_::date + (
-    //             LEAST(
-    //                 GREATEST(FLOOR((?::date - date_::date) / 30), 0),
-    //                 5
-    //             ) + 1
-    //         ) * INTERVAL '1 month'
-    //     )::date = ?::date
-    //     AND (
-    //         LEAST(
-    //             GREATEST(FLOOR((?::date - date_::date) / 30), 0),
-    //             6
-    //         )
-    //         * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2)
-    //     ) <= COALESCE(paid_local, paid, 0)
-    // ", [$today, $today, $today]);
-    //     }
-
-
-    //     if ($statusType === 'due_in_days') {
-    //         $days = (int) $request->input('due_days', 3);
-
-    //         if ($days < 1) {
-    //             $days = 1;
-    //         }
-
-    //         $today = now()->toDateString();
-    //         $toDate = now()->copy()->addDays($days)->toDateString();
-
-    //         $query->whereRaw("
-    //     date_ IS NOT NULL
-    //     AND (
-    //         date_::date + (
-    //             LEAST(
-    //                 GREATEST(FLOOR((?::date - date_::date) / 30), 0),
-    //                 5
-    //             ) + 1
-    //         ) * INTERVAL '1 month'
-    //     )::date BETWEEN ?::date AND ?::date
-    //     AND (
-    //         LEAST(
-    //             GREATEST(FLOOR((?::date - date_::date) / 30), 0),
-    //             6
-    //         )
-    //         * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2)
-    //     ) <= COALESCE(paid_local, paid, 0)
-    // ", [$today, $today, $toDate, $today]);
-    //     }
-
-
-
-    //     if ($statusType === 'unpaid') {
-    //         $query->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)');
-    //     }
-
-    //     if ($request->filled('min_remaining')) {
-    //         $minRemaining = (float) $request->input('min_remaining');
-    //         $query->whereRaw('(COALESCE(amount_local, amount, 0) - COALESCE(paid_local, paid, 0)) >= ?', [$minRemaining]);
-    //     }
-
-    //     if ($request->filled('max_remaining')) {
-    //         $maxRemaining = (float) $request->input('max_remaining');
-    //         $query->whereRaw('(COALESCE(amount_local, amount, 0) - COALESCE(paid_local, paid, 0)) <= ?', [$maxRemaining]);
-    //     }
-
-    //     $customers = $query
-    //         ->orderByRaw('CASE WHEN willpaiddate IS NULL THEN 1 ELSE 0 END')
-    //         ->orderBy('willpaiddate', 'asc')
-    //         ->orderBy('logicalref', 'desc')
-    //         ->paginate(20)
-    //         ->appends($request->query());
-
-    //     $customers->getCollection()->transform(function (Credit $customer) {
-    //         $statusData = $this->buildCustomerStatusData($customer);
-
-    //         $customer->status_label = $statusData['status_label'];
-    //         $customer->status_class = $statusData['status_class'];
-    //         $customer->day_info = $statusData['day_info'];
-
-    //         return $customer;
-    //     });
-
     public function index(Request $request): View
     {
+        if (! $request->has('preview')) {
+            session()->forget([
+                'sms_preview_rows',
+                'sms_preview_message',
+                'sms_schedule_type',
+                'sms_scheduled_at',
+                'sms_export_skipped_rows',
+            ]);
+        }
+
         $query = $this->baseSmsQuery();
 
         $query = $this->applySmsFilters($query, $request);
 
         $statusType = $request->string('status_type')->toString();
-
-        // $customers = $query
-        //     ->orderByRaw('CASE WHEN willpaiddate IS NULL THEN 1 ELSE 0 END')
-        //     ->orderBy('willpaiddate', 'asc')
-        //     ->orderBy('logicalref', 'desc')
-        //     ->paginate(20)
-        //     ->appends($request->query());
 
         $customers = $query
             ->orderByRaw('CASE WHEN willpaiddate IS NULL THEN 1 ELSE 0 END')
@@ -469,7 +336,6 @@ class CustomerSmsController extends Controller
         CustomerSmsTemplateService $templateService
     ) {
 
-
         $previewMode = $request->input('preview_mode', 'selected');
 
         if ($previewMode === 'filtered') {
@@ -516,8 +382,13 @@ class CustomerSmsController extends Controller
         session()->put('sms_scheduled_at', $request->input('scheduled_at'));
         session()->forget('sms_export_skipped_rows');
 
+        $query = array_merge(
+            request()->query(),
+            ['preview' => 1]
+        );
+
         return redirect()
-            ->route('sms.index', request()->query())
+            ->route('sms.index', $query)
             ->with('success', __('messages.preview_generated_successfully'));
     }
     public function exportPreview(

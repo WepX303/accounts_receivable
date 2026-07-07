@@ -36,104 +36,6 @@
         <div class="col-lg-12">
 
             {{-- FILTER CARD --}}
-            {{-- <div class="card mb-4">
-                <div class="card-body border border-dashed border-end-0 border-start-0">
-                    <form method="GET" action="{{ route('sms.index') }}">
-                        <div class="row g-3 align-items-end">
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.branch') }}</label>
-                                <select name="branch" class="form-select">
-                                    <option value="">{{ __('messages.all') }}</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch }}"
-                                            {{ request('branch') == $branch ? 'selected' : '' }}>
-                                            {{ $branch }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-xxl-3 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.customer_name') }}</label>
-                                <input type="text" name="name" class="form-control" value="{{ request('name') }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.phone') }}</label>
-                                <input type="text" name="phone" class="form-control" value="{{ request('phone') }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.passport') }}</label>
-                                <input type="text" name="passport" class="form-control"
-                                    value="{{ request('passport') }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.contract') }}</label>
-                                <input type="text" name="contract" class="form-control"
-                                    value="{{ request('contract') }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.status') }}</label>
-                                <select name="status_type" class="form-select">
-                                    <option value="all"
-                                        {{ $statusType === 'all' || $statusType === '' ? 'selected' : '' }}>
-                                        {{ __('messages.all') }}
-                                    </option>
-                                    <option value="overdue" {{ $statusType === 'overdue' ? 'selected' : '' }}>
-                                        {{ __('messages.overdue') }}
-                                    </option>
-                                    <option value="due_today" {{ $statusType === 'due_today' ? 'selected' : '' }}>
-                                        {{ __('messages.due_today') }}
-                                    </option>
-                                    <option value="due_in_days" {{ $statusType === 'due_in_days' ? 'selected' : '' }}>
-                                        {{ __('messages.due_in_days') }}
-                                    </option>
-                                    <option value="unpaid" {{ $statusType === 'unpaid' ? 'selected' : '' }}>
-                                        {{ __('messages.unpaid') }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.due_days') }}</label>
-                                <input type="number" min="1" name="due_days" class="form-control"
-                                    value="{{ request('due_days', 3) }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.min_remaining') }}</label>
-                                <input type="number" step="0.01" min="0" name="min_remaining"
-                                    class="form-control" value="{{ request('min_remaining') }}">
-                            </div>
-
-                            <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-12">
-                                <label class="form-label">{{ __('messages.max_remaining') }}</label>
-                                <input type="number" step="0.01" min="0" name="max_remaining"
-                                    class="form-control" value="{{ request('max_remaining') }}">
-                            </div>
-
-                            <div class="col-xxl-3 col-xl-4 col-lg-6 col-md-12 col-12 d-flex gap-2">
-                                <button type="submit"
-                                    class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-1">
-                                    {{ __('messages.filter') }}
-                                </button>
-
-                                <a href="{{ route('sms.index') }}"
-                                    class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1">
-                                    {{ __('messages.reset') }}
-                                </a>
-                            </div>
-
-                        </div>
-                    </form>
-                </div>
-            </div> --}}
-
-            {{-- FILTER CARD --}}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -146,16 +48,38 @@
                         <div class="row g-3">
 
                             {{-- Main filters --}}
-                            <div class="col-xl-3 col-md-6">
+                            <div class="col-xl-4 col-md-6">
                                 <label class="form-label">{{ __('messages.branch') }}</label>
-                                <select name="branch" class="form-select">
-                                    <option value="">{{ __('messages.all') }}</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch }}" @selected(request('branch') == $branch)>
-                                            {{ $branch }}
-                                        </option>
-                                    @endforeach
-                                </select>
+
+                                @php
+                                    $selectedBranches = (array) request('branch', []);
+                                @endphp
+
+                                <div class="dropdown w-100">
+                                    <button
+                                        class="btn btn-light border dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center"
+                                        type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                        aria-expanded="false">
+
+                                        <span id="branchDropdownText">
+                                            @if (count($selectedBranches))
+                                                {{ implode(', ', $selectedBranches) }}
+                                            @else
+                                                {{ __('messages.all') }}
+                                            @endif
+                                        </span>
+                                    </button>
+
+                                    <div class="dropdown-menu w-100 p-2" style="max-height: 260px; overflow-y: auto;">
+                                        @foreach ($branches as $branch)
+                                            <label class="dropdown-item d-flex align-items-center gap-2">
+                                                <input type="checkbox" name="branch[]" value="{{ $branch }}"
+                                                    class="form-check-input branch-checkbox" @checked(in_array($branch, $selectedBranches))>
+                                                <span>{{ $branch }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="col-xl-3 col-md-6">
@@ -185,7 +109,7 @@
                                     value="{{ request('due_days', 3) }}">
                             </div> --}}
 
-                            <div class="col-xl-2 col-md-6" id="dueDaysWrapper">
+                            <div class="col-xl-1 col-md-6" id="dueDaysWrapper">
                                 <label class="form-label">{{ __('messages.due_days') }}</label>
                                 <input type="number" min="1" name="due_days" id="dueDaysInput" class="form-control"
                                     value="{{ request('due_days', 3) }}">
@@ -359,19 +283,6 @@
                                         <th style="min-width: 500px;">{{ __('messages.sms_message') }}</th>
                                     </tr>
                                 </thead>
-                                {{-- <tbody>
-                                    @foreach ($previewRows as $row)
-                                        <tr>
-                                            <td>{{ $row['logicalref'] }}</td>
-                                            <td>{{ $row['name'] ?: '-' }}</td>
-                                            <td>{{ $row['phone'] ?: '-' }}</td>
-                                            <td>{{ $row['contract'] ?: '-' }}</td>
-                                            <td>{{ $row['branch'] ?: '-' }}</td>
-                                            <td style="white-space: pre-wrap; min-width: 500px;">{{ $row['message'] }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody> --}}
                                 <tbody>
                                     @foreach (array_slice($previewRows, 0, 5) as $row)
                                         <tr>
@@ -446,7 +357,9 @@
 
                 <input type="hidden" name="preview_mode" id="previewMode" value="selected">
 
-                <input type="hidden" name="branch" value="{{ request('branch') }}">
+                @foreach ((array) request('branch', []) as $selectedBranch)
+                    <input type="hidden" name="branch[]" value="{{ $selectedBranch }}">
+                @endforeach
                 <input type="hidden" name="name" value="{{ request('name') }}">
                 <input type="hidden" name="phone" value="{{ request('phone') }}">
                 <input type="hidden" name="passport" value="{{ request('passport') }}">
@@ -545,7 +458,6 @@
                                                 <br> {{ $customer->day_info }}
                                             </td>
 
-                                            {{-- <td>{{ $customer->day_info }}</td> --}}
 
                                             <td>
                                                 {{ number_format((float) ($customer->amount_local ?? ($customer->amount ?? 0)), 2, '.', ' ') }}
@@ -616,32 +528,6 @@
                                     <option value="overdue">{{ __('messages.template_overdue') }}</option>
                                 </select>
                             </div>
-
-                            {{-- <div class="col-xxl-3 col-xl-4 col-lg-6">
-                                <label class="form-label">{{ __('messages.schedule_type') }}</label>
-                                <select name="schedule_type" id="scheduleType" class="form-select">
-                                    <option value="now"
-                                        {{ old('schedule_type', $previewScheduleType ?? 'after_2m') === 'now' ? 'selected' : '' }}>
-                                        {{ __('messages.send_now') }}
-                                    </option>
-                                    <option value="after_2m"
-                                        {{ old('schedule_type', $previewScheduleType ?? 'after_2m') === 'after_2m' ? 'selected' : '' }}>
-                                        {{ __('messages.send_after_2m') }}
-                                    </option>
-                                    <option value="after_5m"
-                                        {{ old('schedule_type', $previewScheduleType ?? 'after_2m') === 'after_5m' ? 'selected' : '' }}>
-                                        {{ __('messages.send_after_5m') }}
-                                    </option>
-                                    <option value="after_10m"
-                                        {{ old('schedule_type', $previewScheduleType ?? 'after_2m') === 'after_10m' ? 'selected' : '' }}>
-                                        {{ __('messages.send_after_10m') }}
-                                    </option>
-                                    <option value="custom"
-                                        {{ old('schedule_type', $previewScheduleType ?? 'after_2m') === 'custom' ? 'selected' : '' }}>
-                                        {{ __('messages.custom_schedule') }}
-                                    </option>
-                                </select>
-                            </div> --}}
 
                             <div class="col-xxl-3 col-xl-4 col-lg-6" id="customScheduleWrapper" style="display: none;">
                                 <label class="form-label">{{ __('messages.scheduled_at') }}</label>
@@ -835,6 +721,20 @@
             }
 
             const previewFilteredBtn = document.getElementById('previewFilteredBtn');
+            const branchCheckboxes = document.querySelectorAll('.branch-checkbox');
+            const branchDropdownText = document.getElementById('branchDropdownText');
+
+            function updateBranchDropdownText() {
+                if (!branchDropdownText) return;
+
+                const selected = Array.from(branchCheckboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                branchDropdownText.textContent = selected.length ?
+                    selected.join(', ') :
+                    '{{ __('messages.all') }}';
+            }
 
             if (previewFilteredBtn) {
                 previewFilteredBtn.addEventListener('click', function() {
@@ -852,25 +752,6 @@
                 });
             }
 
-            // if (sendSelectionBtn) {
-            //     sendSelectionBtn.addEventListener('click', function() {
-            //         const checked = document.querySelectorAll('.customer-checkbox:checked').length;
-
-            //         if (checked === 0) {
-            //             alert('{{ __('messages.select_at_least_one_customer') }}');
-            //             return;
-            //         }
-
-            //         if (!smsMessageBox.value.trim()) {
-            //             alert('{{ __('messages.enter_sms_message') }}');
-            //             return;
-            //         }
-
-            //         const form = document.getElementById('smsSelectionForm');
-            //         form.action = '{{ route('sms.send') }}';
-            //         form.submit();
-            //     });
-            // }
 
             if (statusTypeSelect) {
                 statusTypeSelect.addEventListener('change', toggleDueDays);
@@ -878,9 +759,18 @@
 
             toggleDueDays();
 
+            branchCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', updateBranchDropdownText);
+            });
+
+            updateBranchDropdownText();
+
             toggleCustomSchedule();
             updateSelectedCount();
             updateHeaderCheckboxState();
+
         });
     </script>
+
+
 @endsection
