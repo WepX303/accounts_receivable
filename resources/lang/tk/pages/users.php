@@ -13,6 +13,11 @@ return [
     'th_phone' => 'Telefon',
     'th_position' => 'Wezipe',
     'th_role' => 'Rol',
+    'th_branches' => 'Şahamçalar',
+    'branches' => 'Rugsat berlen şahamçalar',
+    'all_branches' => 'Ähli şahamçalar',
+    'no_branches' => 'Şahamça tapylmady.',
+    'branches_hint' => 'Hiç zat saýlanmasa, ulanyjy ähli şahamçalary görýär. Super Admin hemişe ählisini görýär.',
     'th_status' => 'Ýagdaý',
     'th_action' => 'Amal',
 

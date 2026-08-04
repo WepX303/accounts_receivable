@@ -36,6 +36,7 @@
                                         <th data-sort="phonenumber">{{ __('pages/users.th_phone') }}</th>
                                         <th data-sort="position">{{ __('pages/users.th_position') }}</th>
                                         <th data-sort="role">{{ __('pages/users.th_role') }}</th>
+                                        <th data-sort="branches">{{ __('pages/users.th_branches') }}</th>
                                         <th data-sort="status">{{ __('pages/users.th_status') }}</th>
                                         <th data-sort="action">{{ __('pages/users.th_action') }}</th>
                                     </tr>
@@ -54,6 +55,21 @@
                                             <td class="position">{{ $user->position }}</td>
                                             {{-- <td class="role">{{ $user->role }}</td> --}}
                                             <td class="role">{{ $user->role->label() }}</td>
+                                            <td class="branches">
+                                                @if ($user->isSuperAdmin())
+                                                    <span class="badge bg-secondary-subtle text-secondary">
+                                                        {{ __('pages/users.all_branches') }}
+                                                    </span>
+                                                @elseif (empty($user->branches))
+                                                    <span class="badge bg-warning-subtle text-warning">
+                                                        {{ __('pages/users.all_branches') }}
+                                                    </span>
+                                                @else
+                                                    @foreach ($user->branches as $userBranch)
+                                                        <span class="badge bg-primary-subtle text-primary">{{ $userBranch }}</span>
+                                                    @endforeach
+                                                @endif
+                                            </td>
                                             <td class="status">
                                                 @if ($user->status)
                                                     <span class="badge bg-success-subtle text-success text-uppercase">
@@ -96,6 +112,7 @@
                                                                 data-phonenumber="{{ $user->phonenumber }}"
                                                                 data-position="{{ $user->position }}"
                                                                 data-role="{{ $user->role?->value }}"
+                                                                data-branches="{{ json_encode($user->branches ?? []) }}"
                                                                 data-status="{{ $user->status }}">
                                                                 <i class="ri-pencil-fill fs-16"></i>
                                                             </a>
@@ -127,7 +144,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">
+                                            <td colspan="9" class="text-center">
                                                 {{ __('pages/users.no_users_found') }}
                                             </td>
                                         </tr>
@@ -241,6 +258,47 @@
                                         </div>
 
                                         <div class="mb-3">
+                                            <label class="form-label">{{ __('pages/users.branches') }}</label>
+
+                                            <div class="dropdown w-100">
+                                                <button
+                                                    class="btn btn-light border dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center"
+                                                    type="button" data-bs-toggle="dropdown"
+                                                    data-bs-auto-close="outside" aria-expanded="false">
+                                                    <span id="userBranchLabel" class="text-truncate">
+                                                        {{ __('pages/users.all_branches') }}
+                                                    </span>
+                                                </button>
+
+                                                <div class="dropdown-menu w-100 p-2"
+                                                    style="max-height: 240px; overflow-y: auto;">
+                                                    <div class="d-flex gap-2 px-2 pb-2 border-bottom mb-2">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-outline-secondary flex-grow-1"
+                                                            id="userBranchClear">
+                                                            {{ __('pages/users.all_branches') }}
+                                                        </button>
+                                                    </div>
+
+                                                    @forelse ($branches as $branch)
+                                                        <label class="dropdown-item d-flex align-items-center gap-2">
+                                                            <input type="checkbox" name="branches[]"
+                                                                value="{{ $branch }}"
+                                                                class="form-check-input user-branch-checkbox">
+                                                            <span>{{ $branch }}</span>
+                                                        </label>
+                                                    @empty
+                                                        <div class="text-muted px-2">
+                                                            {{ __('pages/users.no_branches') }}
+                                                        </div>
+                                                    @endforelse
+                                                </div>
+                                            </div>
+
+                                            <div class="form-text">{{ __('pages/users.branches_hint') }}</div>
+                                        </div>
+
+                                        <div class="mb-3">
                                             <label class="form-label">{{ __('pages/users.status') }}</label>
                                             <select name="status"
                                                 class="form-control @error('status') is-invalid @enderror" required>
@@ -341,13 +399,44 @@
                 edit_user: @json(__('pages/users.edit_user')),
             };
 
+            const allBranchesText = @json(__('pages/users.all_branches'));
+
             const modal = document.getElementById('showModal');
             const form = modal.querySelector('form');
             const modalTitle = modal.querySelector('.modal-title');
             const submitButton = modal.querySelector('button[type="submit"]');
+            const branchBoxes = modal.querySelectorAll('.user-branch-checkbox');
+            const branchLabel = document.getElementById('userBranchLabel');
+            const branchClearBtn = document.getElementById('userBranchClear');
+
+            function updateBranchLabel() {
+                if (!branchLabel) return;
+
+                const selected = Array.from(branchBoxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                // Nothing ticked means the account is not restricted at all.
+                branchLabel.textContent = selected.length ? selected.join(', ') : allBranchesText;
+            }
+
+            function setBranches(values) {
+                const wanted = Array.isArray(values) ? values : [];
+                branchBoxes.forEach(cb => cb.checked = wanted.includes(cb.value));
+                updateBranchLabel();
+            }
+
+            branchBoxes.forEach(cb => cb.addEventListener('change', updateBranchLabel));
+
+            if (branchClearBtn) {
+                branchClearBtn.addEventListener('click', function() {
+                    setBranches([]);
+                });
+            }
 
             document.getElementById('create-btn').addEventListener('click', function() {
                 form.reset();
+                setBranches([]);
                 form.action = "{{ route('users.store') }}";
                 form.method = "POST";
                 submitButton.textContent = t.create_user;
@@ -366,6 +455,13 @@
                     const role = this.dataset.role;
                     const status = this.dataset.status;
 
+                    let branches = [];
+                    try {
+                        branches = JSON.parse(this.dataset.branches || '[]') || [];
+                    } catch (e) {
+                        branches = [];
+                    }
+
                     form.firstname.value = firstname;
                     form.lastname.value = lastname;
                     form.email.value = email;
@@ -373,6 +469,7 @@
                     form.position.value = position;
                     form.role.value = role;
                     form.status.value = status ? 1 : 0;
+                    setBranches(branches);
 
                     form.action = "/users/" + id;
                     let methodInput = form.querySelector('input[name="_method"]');
@@ -388,6 +485,8 @@
                     modalTitle.textContent = t.edit_user;
                 });
             });
+
+            updateBranchLabel();
 
         });
     </script>

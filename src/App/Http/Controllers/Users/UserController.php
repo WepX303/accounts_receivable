@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Users;
 
 use App\Enums\UserRoleEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Credit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -37,7 +38,11 @@ class UserController extends Controller
             ->values()
             ->all();
 
-        return view('pages.users.index', compact('users', 'roles'));
+        return view('pages.users.index', [
+            'users' => $users,
+            'roles' => $roles,
+            'branches' => $this->assignableBranches(),
+        ]);
     }
 
     // STORE
@@ -68,6 +73,8 @@ class UserController extends Controller
             'phonenumber' => 'required|unique:users,phonenumber',
             'password' => 'required|min:6',
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
+            'branches' => 'nullable|array',
+            'branches.*' => 'nullable|string|max:100',
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -119,6 +126,7 @@ class UserController extends Controller
             'phonenumber' => $request->phonenumber,
             'position' => $request->position,
             'role' => UserRoleEnum::from($request->role)->value,
+            'branches' => $this->resolveBranches($request),
             'status' => $request->status,
             'password' => Hash::make($request->password),
         ]);
@@ -135,6 +143,7 @@ class UserController extends Controller
                 'phonenumber' => $user->phonenumber,
                 'position' => $user->position,
                 'role' => $user->role?->value ?? $user->role,
+                'branches' => $user->branches,
                 'status' => $user->status,
             ],
             extra: null,
@@ -183,6 +192,8 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phonenumber' => 'required|unique:users,phonenumber,' . $user->id,
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
+            'branches' => 'nullable|array',
+            'branches.*' => 'nullable|string|max:100',
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -237,6 +248,7 @@ class UserController extends Controller
             'phonenumber',
             'position',
             'role',
+            'branches',
             'status',
         ]);
 
@@ -253,6 +265,8 @@ class UserController extends Controller
         ]);
 
         $data['role'] = UserRoleEnum::from($request->role)->value;
+        $data['branches'] = $this->resolveBranches($request);
+
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
@@ -267,6 +281,7 @@ class UserController extends Controller
             'email',
             'phonenumber',
             'position',
+            'branches',
             'status',
         ]);
 
@@ -282,8 +297,23 @@ class UserController extends Controller
             message: 'User updated',
             isSuccess: true,
             severity: 'warning',
-            isSuspicious: ($old['role'] !== $new['role']) || ((bool) $old['status'] !== (bool) $new['status'])
+            isSuspicious: ($old['role'] !== $new['role'])
+                || ((bool) $old['status'] !== (bool) $new['status'])
+                || ($old['branches'] !== $new['branches'])
         );
+
+        if ($old['branches'] !== $new['branches']) {
+            $audit->alert(
+                alertType: 'user_branches_changed',
+                riskLevel: 'high',
+                message: 'A user branch access list was changed',
+                meta: [
+                    'user_id' => $user->id,
+                    'old_branches' => $old['branches'],
+                    'new_branches' => $new['branches'],
+                ]
+            );
+        }
 
         if ($old['role'] !== $new['role']) {
             $audit->alert(
@@ -346,6 +376,7 @@ class UserController extends Controller
             'phonenumber',
             'position',
             'role',
+            'branches',
             'status',
         ]);
 
@@ -374,5 +405,44 @@ class UserController extends Controller
         );
 
         return redirect()->route('users.index')->with('success', __('validations/validations.users.deleted'));
+    }
+
+    /**
+     * Branches the signed-in user is allowed to hand out.
+     *
+     * The query is branch-scoped already, so a Super Admin sees every branch
+     * while a restricted Admin can only pass on what they hold themselves.
+     */
+    private function assignableBranches(): array
+    {
+        return Credit::query()
+            ->whereNotNull('branch')
+            ->where('branch', '!=', '')
+            ->distinct()
+            ->orderBy('branch')
+            ->pluck('branch')
+            ->all();
+    }
+
+    /**
+     * Clean up the submitted branch list and drop anything the signed-in user
+     * is not entitled to assign. An empty result is stored as null, which means
+     * "every branch".
+     *
+     * @return string[]|null
+     */
+    private function resolveBranches(Request $request): ?array
+    {
+        $assignable = $this->assignableBranches();
+
+        $branches = collect($request->input('branches', []))
+            ->map(fn ($b) => trim((string) $b))
+            ->filter()
+            ->unique()
+            ->filter(fn ($b) => in_array($b, $assignable, true))
+            ->values()
+            ->all();
+
+        return $branches === [] ? null : $branches;
     }
 }

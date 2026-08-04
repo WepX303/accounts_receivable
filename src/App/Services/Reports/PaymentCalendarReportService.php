@@ -88,7 +88,11 @@ class PaymentCalendarReportService
      */
     public function availableBranches(): Collection
     {
-        return Cache::remember('payment_calendar:branches', now()->addMinutes(30), function () {
+        // Keyed by the viewer's branch access — the list is scoped, so one cache
+        // shared across users would hand out branches they cannot open.
+        $key = 'payment_calendar:branches:' . (auth()->user()?->branchCacheKey() ?? 'guest');
+
+        return Cache::remember($key, now()->addMinutes(30), function () {
             return Credit::query()
                 ->whereNotNull('branch')
                 ->where('branch', '!=', '')

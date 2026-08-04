@@ -13,6 +13,11 @@ return [
     'th_phone' => 'Phone Number',
     'th_position' => 'Position',
     'th_role' => 'Role',
+    'th_branches' => 'Branches',
+    'branches' => 'Allowed Branches',
+    'all_branches' => 'All branches',
+    'no_branches' => 'No branches found.',
+    'branches_hint' => 'If none are selected the user sees every branch. A Super Admin always sees all of them.',
     'th_status' => 'Status',
     'th_action' => 'Action',
 

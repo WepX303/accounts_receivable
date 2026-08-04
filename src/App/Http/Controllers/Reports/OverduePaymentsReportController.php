@@ -30,7 +30,11 @@ class OverduePaymentsReportController extends Controller
         $minDays = $request->filled('min_days') ? (int) $request->get('min_days') : null;
         $sort = (string) $request->get('sort', 'overdue_desc');
 
-        $branches = Cache::remember('overdue_report:branches', now()->addMinutes(30), function () {
+        // Keyed by the viewer's branch access — the list is scoped, so one cache
+        // shared across users would hand out branches they cannot open.
+        $branchCacheKey = 'overdue_report:branches:' . (auth()->user()?->branchCacheKey() ?? 'guest');
+
+        $branches = Cache::remember($branchCacheKey, now()->addMinutes(30), function () {
             return Credit::query()
                 ->whereNotNull('branch')
                 ->where('branch', '!=', '')

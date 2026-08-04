@@ -13,6 +13,11 @@ return [
     'th_phone' => 'Telefon',
     'th_position' => 'Pozisyon',
     'th_role' => 'Rol',
+    'th_branches' => 'Şubeler',
+    'branches' => 'İzin Verilen Şubeler',
+    'all_branches' => 'Tüm şubeler',
+    'no_branches' => 'Şube bulunamadı.',
+    'branches_hint' => 'Hiçbiri seçilmezse kullanıcı tüm şubeleri görür. Süper Admin her zaman tümünü görür.',
     'th_status' => 'Durum',
     'th_action' => 'İşlem',
 

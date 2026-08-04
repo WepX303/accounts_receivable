@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -135,6 +136,7 @@ class CreditPayment extends Model
 
     protected static function booted()
     {
+        static::addGlobalScope(new BranchScope);
 
         $bump = function () {
             if (!Cache::has('admin_dashboard:v')) {

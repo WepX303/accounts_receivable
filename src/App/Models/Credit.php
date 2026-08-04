@@ -2,10 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\BranchScope;
 use Illuminate\Database\Eloquent\Model;
 
 class Credit extends Model
 {
+    protected static function booted()
+    {
+        static::addGlobalScope(new BranchScope);
+    }
+
     protected $table = 'credits';
 
     protected $primaryKey = 'source_id';

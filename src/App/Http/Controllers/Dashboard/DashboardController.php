@@ -148,6 +148,9 @@ class DashboardController extends Controller
             'period' => $period,
             'start' => $start->toDateString(),
             'end' => $end->toDateString(),
+            // The figures below are branch-scoped, so the viewer's access has to
+            // be part of the key or the first request would poison the rest.
+            'branches' => auth()->user()?->branchCacheKey() ?? 'guest',
         ]));
 
         $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($start, $end, $period) {

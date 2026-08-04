@@ -21,6 +21,7 @@ class User extends Authenticatable
         'phonenumber',
         'position',
         'role',
+        'branches',
         'status',
         'password',
         'token',
@@ -36,12 +37,76 @@ class User extends Authenticatable
 
     protected $casts = [
         'role' => UserRoleEnum::class,
+        'branches' => 'array',
         'token_expires_at' => 'datetime',
     ];
 
     public function getFullNameAttribute(): string
     {
         return trim("{$this->firstname} {$this->lastname}");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Branch access
+    |--------------------------------------------------------------------------
+    | An empty branch list means "every branch", so accounts that predate this
+    | feature keep working unchanged. A Super Admin is never restricted — that
+    | is what keeps an assignment mistake from locking everyone out.
+    */
+
+    /**
+     * The branches this user may see, or null when unrestricted.
+     *
+     * @return string[]|null
+     */
+    public function allowedBranches(): ?array
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        $branches = collect($this->branches ?? [])
+            ->map(fn ($b) => trim((string) $b))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $branches === [] ? null : $branches;
+    }
+
+    public function isBranchRestricted(): bool
+    {
+        return $this->allowedBranches() !== null;
+    }
+
+    public function canAccessBranch(?string $branch): bool
+    {
+        $allowed = $this->allowedBranches();
+
+        if ($allowed === null) {
+            return true;
+        }
+
+        return $branch !== null && in_array($branch, $allowed, true);
+    }
+
+    /**
+     * Stable identifier for the user's branch access, for cache keys that hold
+     * branch-dependent data.
+     */
+    public function branchCacheKey(): string
+    {
+        $allowed = $this->allowedBranches();
+
+        if ($allowed === null) {
+            return 'all';
+        }
+
+        sort($allowed);
+
+        return md5(implode('|', $allowed));
     }
 
     public function isSuperAdmin(): bool

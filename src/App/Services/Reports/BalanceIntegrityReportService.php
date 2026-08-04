@@ -65,6 +65,21 @@ class BalanceIntegrityReportService
         return $this->dateTo;
     }
 
+    /**
+     * Branches the signed-in user may see, or null when unrestricted.
+     *
+     * This service reaches for the query builder rather than the Eloquent
+     * models, so the BranchScope global scope never fires here and the
+     * restriction has to be applied by hand. Returns null in console context,
+     * which is what keeps scheduled runs seeing everything.
+     *
+     * @return string[]|null
+     */
+    private function viewerBranches(): ?array
+    {
+        return auth()->user()?->allowedBranches();
+    }
+
     public function rows(): Collection
     {
         $baseline = DB::table('credit_payments')
@@ -92,6 +107,10 @@ class BalanceIntegrityReportService
             ->leftJoinSub($voided, 'v', fn ($j) => $j->on('v.credit_source_id', '=', 'c.source_id'))
             ->whereNotNull('c.paid_local')
             ->when($this->branch !== '', fn ($q) => $q->where('c.branch', $this->branch))
+            ->when(
+                $this->viewerBranches() !== null,
+                fn ($q) => $q->whereIn('c.branch', $this->viewerBranches())
+            )
             ->when($this->dateFrom !== null, fn ($q) => $q->where('c.paid_updated_at', '>=', $this->dateFrom))
             ->when($this->dateTo !== null, fn ($q) => $q->where('c.paid_updated_at', '<=', $this->dateTo))
             ->when($this->q !== '', function ($q) {
@@ -211,6 +230,10 @@ class BalanceIntegrityReportService
         return DB::table('credits')
             ->whereNotNull('branch')
             ->where('branch', '!=', '')
+            ->when(
+                $this->viewerBranches() !== null,
+                fn ($q) => $q->whereIn('branch', $this->viewerBranches())
+            )
             ->distinct()
             ->orderBy('branch')
             ->pluck('branch');
