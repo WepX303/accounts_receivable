@@ -24,6 +24,7 @@
     $desc = 'margin:0 0 12px 0; font-size:13px; line-height:19px; color:#6b7280;';
     $totalCell = 'padding:10px 14px; border:1px solid #e5e7eb; background-color:#f1f5f9; font-size:14px; line-height:20px; font-weight:700; color:#0f172a;';
     $totalCellR = $totalCell . ' text-align:right; white-space:nowrap;';
+    $sub = 'display:block; font-size:11px; line-height:15px; font-weight:400; color:#9ca3af;';
 
     $hasPayments = $s['tx_count'] > 0;
     $auditCount = $audit['voids']['count'] + $audit['corrections']['count'] + $audit['backdated']['count'];
@@ -55,12 +56,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $t('header.title') }} — {{ $meta['date_label'] }}</title>
+    <style>
+        /* Clients that keep <style> get tighter tables on a phone. The layout
+           below is built to fit without this too, for the ones that strip it. */
+        @media only screen and (max-width: 600px) {
+            .wrap { padding: 12px 6px !important; }
+            .card { border-radius: 0 !important; }
+            .pad { padding: 18px 14px !important; }
+            table td, table th { padding: 8px 8px !important; font-size: 13px !important; }
+            .sub { font-size: 11px !important; }
+            .hero-amount { font-size: 26px !important; }
+        }
+    </style>
 </head>
 
 <body style="margin:0; padding:0; background-color:#f3f4f6; font-family:Arial, Helvetica, sans-serif; color:#111827;">
 
-    <div style="width:100%; background-color:#f3f4f6; padding:28px 12px;">
-        <div style="max-width:860px; margin:0 auto; background-color:#ffffff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
+    <div class="wrap" style="width:100%; background-color:#f3f4f6; padding:28px 12px;">
+        <div class="card" style="max-width:860px; margin:0 auto; background-color:#ffffff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden;">
 
             {{-- ============================ HEADER ============================ --}}
             <div style="background-color:#0f172a; padding:26px 30px;">
@@ -84,7 +97,7 @@
                 </p>
             </div>
 
-            <div style="padding:26px 30px 32px 30px;">
+            <div class="pad" style="padding:26px 30px 32px 30px;">
 
                 {{-- ============================= HERO ============================= --}}
                 <table role="presentation" style="width:100%; border-collapse:collapse; background-color:#0b3b2e; border-radius:8px; margin-bottom:22px;">
@@ -93,7 +106,7 @@
                             <p style="margin:0; font-size:13px; line-height:18px; color:#a7f3d0; text-transform:uppercase; letter-spacing:0.5px;">
                                 {{ $t('hero.net_collected') }}
                             </p>
-                            <p style="margin:6px 0 0 0; font-size:34px; line-height:42px; color:#ffffff; font-weight:700;">
+                            <p class="hero-amount" style="margin:6px 0 0 0; font-size:34px; line-height:42px; color:#ffffff; font-weight:700;">
                                 {{ $money($s['net']) }} <span style="font-size:20px;">{{ $cur }}</span>
                             </p>
                             <p style="margin:8px 0 0 0; font-size:14px; line-height:20px; color:#d1fae5;">
@@ -349,44 +362,60 @@
                     <thead>
                         <tr>
                             <th style="{{ $th }}">{{ $t('table.branch') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.count') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.gross') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.change') }}</th>
                             <th style="{{ $thR }}">{{ $t('table.net') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.cash') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.card') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.phone') }}</th>
+                            <th style="{{ $thR }}">{{ $t('table.cash') }} / {{ $t('table.card') }} / {{ $t('table.phone') }}</th>
                             <th style="{{ $thR }}">{{ $t('table.share') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($report['branches'] as $b)
                             <tr>
-                                <td style="{{ $cell }} font-weight:600;">{{ $b['branch'] }}</td>
-                                <td style="{{ $cellR }}">{{ $int($b['tx_count']) }}</td>
-                                <td style="{{ $cellR }}">{{ $money($b['gross']) }}</td>
-                                <td style="{{ $cellR }}">{{ $money($b['change']) }}</td>
-                                <td style="{{ $cellR }} font-weight:700;">{{ $money($b['net']) }}</td>
-                                <td style="{{ $cellR }}">{{ $money($b['cash']) }}</td>
-                                <td style="{{ $cellR }}">{{ $money($b['card']) }}</td>
-                                <td style="{{ $cellR }}">{{ $money($b['phone']) }}</td>
+                                <td style="{{ $cell }}">
+                                    <span style="font-weight:700;">{{ $b['branch'] }}</span>
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $int($b['tx_count']) }} {{ $t('hero.transactions') }}
+                                    </span>
+                                </td>
+                                <td style="{{ $cellR }}">
+                                    <span style="font-weight:700;">{{ $money($b['net']) }}</span>
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($b['gross']) }} − {{ $money($b['change']) }}
+                                    </span>
+                                </td>
+                                <td style="{{ $cellR }}">
+                                    {{ $money($b['cash']) }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($b['card']) }} / {{ $money($b['phone']) }}
+                                    </span>
+                                </td>
                                 <td style="{{ $cellR }} color:#6b7280;">{{ $pct($b['share']) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
+                                <td colspan="4" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
                             </tr>
                         @endforelse
+
                         @if (count($report['branches']) > 0)
                             <tr>
-                                <td style="{{ $totalCell }}">{{ $t('table.total') }}</td>
-                                <td style="{{ $totalCellR }}">{{ $int($s['tx_count']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['gross']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['change']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['net']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['cash']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['card']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($s['phone']) }}</td>
+                                <td style="{{ $totalCell }}">
+                                    {{ $t('table.total') }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $int($s['tx_count']) }} {{ $t('hero.transactions') }}
+                                    </span>
+                                </td>
+                                <td style="{{ $totalCellR }}">
+                                    {{ $money($s['net']) }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($s['gross']) }} − {{ $money($s['change']) }}
+                                    </span>
+                                </td>
+                                <td style="{{ $totalCellR }}">
+                                    {{ $money($s['cash']) }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($s['card']) }} / {{ $money($s['phone']) }}
+                                    </span>
+                                </td>
                                 <td style="{{ $totalCellR }}">100.0%</td>
                             </tr>
                         @endif
@@ -427,21 +456,21 @@
                         <thead>
                             <tr>
                                 <th style="{{ $th }}">{{ $t('table.customer') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.contract') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.branch') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.method') }}</th>
-                                <th style="{{ $thR }}">{{ $t('table.time') }}</th>
                                 <th style="{{ $thR }}">{{ $t('table.net') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($report['top_payments'] as $p)
                                 <tr>
-                                    <td style="{{ $cell }}">{{ $p['customer'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $p['contract'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $p['branch'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $methodLabel($p['method']) }}</td>
-                                    <td style="{{ $cellR }} color:#6b7280;">{{ $p['time'] }}</td>
+                                    <td style="{{ $cell }}">
+                                        {{ $p['customer'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $p['contract'] }} · {{ $p['branch'] }}</span>
+                                    </td>
+                                    <td style="{{ $cell }} color:#6b7280;">
+                                        {{ $methodLabel($p['method']) }}
+                                        <span class="sub" style="{{ $sub }}">{{ $p['time'] }}</span>
+                                    </td>
                                     <td style="{{ $cellR }} font-weight:700;">{{ $money($p['net']) }} {{ $cur }}</td>
                                 </tr>
                             @endforeach
@@ -570,29 +599,29 @@
                         <thead>
                             <tr>
                                 <th style="{{ $th }}">{{ $t('table.customer') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.contract') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.branch') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.payment_at') }}</th>
                                 <th style="{{ $thR }}">{{ $t('table.amount') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.actor') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.reason') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($audit['voids']['rows'] as $r)
                                 <tr>
-                                    <td style="{{ $cell }}">{{ $r['customer'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['contract'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['branch'] }}</td>
+                                    <td style="{{ $cell }}">
+                                        {{ $r['customer'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['contract'] }} · {{ $r['branch'] }}</span>
+                                    </td>
                                     <td style="{{ $cell }} color:#6b7280;">{{ $r['payment_at'] }}</td>
                                     <td style="{{ $cellR }} color:#b91c1c; font-weight:700;">− {{ $money($r['net']) }}</td>
-                                    <td style="{{ $cell }}">{{ $r['actor'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['reason'] }}</td>
+                                    <td style="{{ $cell }}">
+                                        {{ $r['actor'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['reason'] }}</span>
+                                    </td>
                                 </tr>
                             @endforeach
                             @if ($audit['voids']['count'] > count($audit['voids']['rows']))
                                 <tr>
-                                    <td colspan="7" style="{{ $cell }} color:#6b7280; font-style:italic;">
+                                    <td colspan="4" style="{{ $cell }} color:#6b7280; font-style:italic;">
                                         {{ $t('table.more', ['count' => $audit['voids']['count'] - count($audit['voids']['rows'])]) }}
                                     </td>
                                 </tr>
@@ -617,24 +646,22 @@
                         <thead>
                             <tr>
                                 <th style="{{ $th }}">{{ $t('table.customer') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.contract') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.payment_date') }}</th>
                                 <th style="{{ $thR }}">{{ $t('table.amount_change') }}</th>
-                                <th style="{{ $thR }}">{{ $t('table.diff') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.method_change') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.actor') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.reason') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($audit['corrections']['rows'] as $r)
                                 <tr>
-                                    <td style="{{ $cell }}">{{ $r['customer'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['contract'] }}</td>
-                                    <td style="{{ $cell }} white-space:nowrap;">
+                                    <td style="{{ $cell }}">
+                                        {{ $r['customer'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['contract'] }} · {{ $r['branch'] }}</span>
+                                    </td>
+                                    <td style="{{ $cell }}">
                                         @if ($r['date_moved'])
                                             <span style="color:#6b7280; text-decoration:line-through;">{{ $r['old_payment_at'] }}</span>
-                                            <span style="color:#b45309; font-weight:700;"> → {{ $r['new_payment_at'] }}</span>
+                                            <span class="sub" style="{{ $sub }} color:#b45309; font-weight:700;">→ {{ $r['new_payment_at'] }}</span>
                                         @else
                                             <span style="color:#6b7280;">{{ $r['new_payment_at'] }}</span>
                                         @endif
@@ -646,25 +673,22 @@
                                         @else
                                             <span style="color:#6b7280;">{{ $money($r['new_net']) }}</span>
                                         @endif
+                                        <span class="sub" style="{{ $sub }} color:{{ abs($r['diff']) <= 0.001 ? '#9ca3af' : ($r['diff'] > 0 ? '#047857' : '#b91c1c') }};">
+                                            {{ ($r['diff'] > 0 ? '+' : '') . $money($r['diff']) }}
+                                            @if ($r['method_changed'])
+                                                · {{ $methodLabel($r['old_method']) }} → {{ $methodLabel($r['new_method']) }}
+                                            @endif
+                                        </span>
                                     </td>
-                                    <td style="{{ $cellR }} color:{{ abs($r['diff']) <= 0.001 ? '#6b7280' : ($r['diff'] > 0 ? '#047857' : '#b91c1c') }}; font-weight:700;">
-                                        {{ ($r['diff'] > 0 ? '+' : '') . $money($r['diff']) }}
+                                    <td style="{{ $cell }}">
+                                        {{ $r['actor'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['reason'] }}</span>
                                     </td>
-                                    <td style="{{ $cell }} color:#6b7280; white-space:nowrap;">
-                                        @if ($r['method_changed'])
-                                            <span style="text-decoration:line-through;">{{ $methodLabel($r['old_method']) }}</span>
-                                            <span style="color:#b45309; font-weight:700;"> → {{ $methodLabel($r['new_method']) }}</span>
-                                        @else
-                                            {{ $methodLabel($r['new_method']) }}
-                                        @endif
-                                    </td>
-                                    <td style="{{ $cell }}">{{ $r['actor'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['reason'] }}</td>
                                 </tr>
                             @endforeach
                             @if ($audit['corrections']['count'] > count($audit['corrections']['rows']))
                                 <tr>
-                                    <td colspan="8" style="{{ $cell }} color:#6b7280; font-style:italic;">
+                                    <td colspan="4" style="{{ $cell }} color:#6b7280; font-style:italic;">
                                         {{ $t('table.more', ['count' => $audit['corrections']['count'] - count($audit['corrections']['rows'])]) }}
                                     </td>
                                 </tr>
@@ -684,33 +708,37 @@
                         <thead>
                             <tr>
                                 <th style="{{ $th }}">{{ $t('table.customer') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.contract') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.backdated_day') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.payment_at') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.entered_at') }}</th>
-                                <th style="{{ $thR }}">{{ $t('table.days_back') }}</th>
                                 <th style="{{ $thR }}">{{ $t('table.amount') }}</th>
-                                <th style="{{ $th }}">{{ $t('table.actor') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($audit['backdated']['rows'] as $r)
                                 <tr>
-                                    <td style="{{ $cell }}">{{ $r['customer'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['contract'] }}</td>
-                                    <td style="{{ $cell }} font-weight:700; color:#b45309; white-space:nowrap;">
-                                        {{ \Illuminate\Support\Str::before($r['payment_at'], ' ') }}
+                                    <td style="{{ $cell }}">
+                                        {{ $r['customer'] }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['contract'] }}</span>
                                     </td>
-                                    <td style="{{ $cell }}">{{ $r['payment_at'] }}</td>
-                                    <td style="{{ $cell }} color:#6b7280;">{{ $r['entered_at'] }}</td>
-                                    <td style="{{ $cellR }} color:#b45309; font-weight:700;">{{ $r['days_back'] }}</td>
-                                    <td style="{{ $cellR }}">{{ $money($r['net']) }}</td>
-                                    <td style="{{ $cell }}">{{ $r['actor'] }}</td>
+                                    <td style="{{ $cell }} font-weight:700; color:#b45309;">
+                                        {{ \Illuminate\Support\Str::before($r['payment_at'], ' ') }}
+                                        <span class="sub" style="{{ $sub }}">{{ $r['payment_at'] }}</span>
+                                    </td>
+                                    <td style="{{ $cell }} color:#6b7280;">
+                                        {{ $r['entered_at'] }}
+                                        <span class="sub" style="{{ $sub }} color:#b45309;">
+                                            +{{ $r['days_back'] }} {{ $t('table.days_back') }}
+                                        </span>
+                                    </td>
+                                    <td style="{{ $cellR }}">
+                                        <span style="font-weight:700;">{{ $money($r['net']) }}</span>
+                                        <span class="sub" style="{{ $sub }}">{{ $r['actor'] }}</span>
+                                    </td>
                                 </tr>
                             @endforeach
                             @if ($audit['backdated']['count'] > count($audit['backdated']['rows']))
                                 <tr>
-                                    <td colspan="8" style="{{ $cell }} color:#6b7280; font-style:italic;">
+                                    <td colspan="4" style="{{ $cell }} color:#6b7280; font-style:italic;">
                                         {{ $t('table.more', ['count' => $audit['backdated']['count'] - count($audit['backdated']['rows'])]) }}
                                     </td>
                                 </tr>
@@ -748,55 +776,66 @@
                     <thead>
                         <tr>
                             <th style="{{ $th }}">{{ $t('table.branch') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.contracts') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.total_debt') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.collected') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.collected_pct') }}</th>
                             <th style="{{ $thR }}">{{ $t('portfolio.open_balance') }}</th>
                             <th style="{{ $thR }}">{{ $t('portfolio.overdue_amount') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.overdue_pct') }}</th>
                             <th style="{{ $thR }}">{{ $t('portfolio.never_paid') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($pf['rows'] as $b)
                             <tr>
-                                <td style="{{ $cell }} font-weight:600;">{{ $b['branch'] }}</td>
-                                <td style="{{ $cellR }}">{{ $int($b['credit_count']) }}</td>
-                                <td style="{{ $cellR }} color:#6b7280;">{{ $money($b['total_amount']) }}</td>
-                                <td style="{{ $cellR }} color:#047857;">{{ $money($b['paid_amount']) }}</td>
-                                <td style="{{ $cellR }} color:#6b7280;">{{ $pct($b['collected_pct']) }}</td>
-                                <td style="{{ $cellR }} font-weight:700;">{{ $money($b['open_balance']) }}</td>
-                                <td style="{{ $cellR }} color:#b91c1c; font-weight:700;">{{ $money($b['overdue_amount']) }}</td>
-                                <td style="{{ $cellR }} color:#b91c1c;">{{ $pct($b['overdue_share']) }}</td>
-                                <td style="{{ $cellR }} color:#b45309;">
-                                    {{ $int($b['never_paid_count']) }}
-                                    <span style="display:block; font-size:11px; line-height:15px; color:#9ca3af;">
-                                        {{ $money($b['never_paid_amount']) }}
+                                <td style="{{ $cell }}">
+                                    <span style="font-weight:700;">{{ $b['branch'] }}</span>
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $int($b['credit_count']) }} {{ $t('portfolio.contracts') }}
                                     </span>
+                                </td>
+                                <td style="{{ $cellR }}">
+                                    <span style="font-weight:700;">{{ $money($b['open_balance']) }}</span>
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($b['total_amount']) }} · {{ $pct($b['collected_pct']) }} {{ $t('portfolio.collected') }}
+                                    </span>
+                                </td>
+                                <td style="{{ $cellR }}">
+                                    <span style="font-weight:700; color:#b91c1c;">{{ $money($b['overdue_amount']) }}</span>
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $pct($b['overdue_share']) }} · {{ $int($b['overdue_credit_count']) }}
+                                    </span>
+                                </td>
+                                <td style="{{ $cellR }}">
+                                    <span style="font-weight:700; color:#b45309;">{{ $int($b['never_paid_count']) }}</span>
+                                    <span class="sub" style="{{ $sub }}">{{ $money($b['never_paid_amount']) }}</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
+                                <td colspan="4" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
                             </tr>
                         @endforelse
 
                         @if (count($pf['rows']) > 0)
                             <tr>
-                                <td style="{{ $totalCell }}">{{ $t('table.total') }}</td>
-                                <td style="{{ $totalCellR }}">{{ $int($pf['total']['credit_count']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['total_amount']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['paid_amount']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $pct($pf['total']['collected_pct']) }}</td>
-                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['open_balance']) }}</td>
-                                <td style="{{ $totalCellR }} color:#b91c1c;">{{ $money($pf['total']['overdue_amount']) }}</td>
-                                <td style="{{ $totalCellR }} color:#b91c1c;">{{ $pct($pf['total']['overdue_share']) }}</td>
+                                <td style="{{ $totalCell }}">
+                                    {{ $t('table.total') }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $int($pf['total']['credit_count']) }} {{ $t('portfolio.contracts') }}
+                                    </span>
+                                </td>
+                                <td style="{{ $totalCellR }}">
+                                    {{ $money($pf['total']['open_balance']) }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $money($pf['total']['total_amount']) }} · {{ $pct($pf['total']['collected_pct']) }} {{ $t('portfolio.collected') }}
+                                    </span>
+                                </td>
+                                <td style="{{ $totalCellR }} color:#b91c1c;">
+                                    {{ $money($pf['total']['overdue_amount']) }}
+                                    <span class="sub" style="{{ $sub }}">
+                                        {{ $pct($pf['total']['overdue_share']) }} · {{ $int($pf['total']['overdue_credit_count']) }}
+                                    </span>
+                                </td>
                                 <td style="{{ $totalCellR }} color:#b45309;">
                                     {{ $int($pf['total']['never_paid_count']) }}
-                                    <span style="display:block; font-size:11px; line-height:15px; font-weight:400; color:#9ca3af;">
-                                        {{ $money($pf['total']['never_paid_amount']) }}
-                                    </span>
+                                    <span class="sub" style="{{ $sub }}">{{ $money($pf['total']['never_paid_amount']) }}</span>
                                 </td>
                             </tr>
                         @endif
