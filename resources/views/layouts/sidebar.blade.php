@@ -123,6 +123,16 @@
                                             {{ __('pages/reports.customer_statement.table_title') }}
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.void-correction') }}">
+                                            {{ __('pages/reports.void_correction.title') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('reports.balance-integrity') }}">
+                                            {{ __('pages/reports.balance_integrity.title') }}
+                                        </a>
+                                    </li>
                                 @endif
 
                             </ul>

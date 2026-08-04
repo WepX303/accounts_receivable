@@ -29,6 +29,10 @@ use App\Http\Controllers\Reports\PromiseToPayExportController;
 use App\Http\Controllers\Reports\RecoveryEffectivenessReportController;
 use App\Http\Controllers\Reports\RecoveryEffectivenessExportController;
 use App\Http\Controllers\Reports\CustomerStatementReportController;
+use App\Http\Controllers\Reports\VoidCorrectionReportController;
+use App\Http\Controllers\Reports\VoidCorrectionExportController;
+use App\Http\Controllers\Reports\BalanceIntegrityReportController;
+use App\Http\Controllers\Reports\BalanceIntegrityExportController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Logs\LogsController;
@@ -158,6 +162,14 @@ Route::middleware(['auth.token'])->group(function () {
             ->name('reports.customer-statement');
         Route::get('/reports/customer-statement/export', [CustomerStatementReportController::class, 'export'])
             ->name('reports.customer-statement.export');
+        Route::get('/reports/void-correction', VoidCorrectionReportController::class)
+            ->name('reports.void-correction');
+        Route::get('/reports/void-correction/export', VoidCorrectionExportController::class)
+            ->name('reports.void-correction.export');
+        Route::get('/reports/balance-integrity', BalanceIntegrityReportController::class)
+            ->name('reports.balance-integrity');
+        Route::get('/reports/balance-integrity/export', BalanceIntegrityExportController::class)
+            ->name('reports.balance-integrity.export');
     });
 
 
