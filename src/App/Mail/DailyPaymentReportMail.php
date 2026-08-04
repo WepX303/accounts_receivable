@@ -12,29 +12,28 @@ class DailyPaymentReportMail extends Mailable
 
     public array $report;
 
-    public function __construct(array $report)
+    public function __construct(array $report, ?string $locale = null)
     {
         $this->report = $report;
+
+        // Rendering happens outside the request cycle (scheduler / queue), so the
+        // language cannot be inherited from the session. Mailable::locale() wraps
+        // both the subject and the view in the chosen locale.
+        $this->locale($locale ?: (string) config('report.daily_report_locale', config('app.locale')));
     }
 
     public function build(): static
     {
+        $summary = $this->report['summary'] ?? [];
+
+        $subject = __('emails/daily_payment_report.subject', [
+            'date' => $this->report['meta']['date_label'] ?? '-',
+            'net' => number_format((float) ($summary['net'] ?? 0), 2),
+            'currency' => $this->report['meta']['currency'] ?? 'TMT',
+        ]);
+
         return $this
-            ->subject('Daily Payment Report - ' . $this->report['date'])
+            ->subject($subject)
             ->view('emails.daily_payment_report');
     }
-
-    // public function build(): static
-    // {
-    //     return $this
-    //         ->subject('Daily Payment Report - ' . $this->report['date'])
-    //         ->view('emails.daily_payment_report')
-    //         ->attach(public_path('images/email-logo.png'), [
-    //             'as' => 'logo.png',
-    //             'mime' => 'image/png',
-    //         ])
-    //         ->with([
-    //             'logo_cid' => 'logo.png',
-    //         ]);
-    // }
 }
