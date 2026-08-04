@@ -394,10 +394,10 @@
                                 {{ $name }}
                             </td>
                         </tr>
-                        @foreach ($rows as [$label, $value, $style])
+                        @foreach ($rows as [$rowLabel, $rowValue, $rowStyle])
                             <tr>
-                                <td style="{{ $cardKey }} width:58%;">{{ $label }}</td>
-                                <td style="{{ $cardVal }} {{ $style }}">{{ $value }}</td>
+                                <td style="{{ $cardKey }} width:58%;">{{ $rowLabel }}</td>
+                                <td style="{{ $cardVal }} {{ $rowStyle }}">{{ $rowValue }}</td>
                             </tr>
                         @endforeach
                     </table>
@@ -465,98 +465,53 @@
                 <h2 style="{{ $h2 }}">{{ $t('schedule.title') }}</h2>
                 <p style="{{ $desc }}">{{ $t('schedule.desc') }}</p>
 
-                <h3 style="margin:16px 0 6px 0; font-size:15px; line-height:22px; color:#0f172a; font-weight:700;">
-                    {{ $t('schedule.due_title') }}
-                </h3>
-                <table role="presentation" style="{{ $table }}">
-                    <tr>
-                        <td style="{{ $label }} width:60%;">{{ $t('schedule.due_credits') }}</td>
-                        <td style="{{ $cellR }} font-weight:700;">{{ $int($sch['due']['credit_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.due_expected') }}</td>
-                        <td style="{{ $cellR }}">{{ $money($sch['due']['expected']) }} {{ $cur }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_credits') }}</td>
-                        <td style="{{ $cellR }} background-color:#ecfdf5; font-weight:700; color:#047857;">
-                            {{ $int($sch['due']['paid_credit_count']) }}
-                            <span style="font-weight:400; color:#6b7280;">
-                                / {{ $t('schedule.payments_suffix', ['count' => $int($sch['due']['paid_payment_count'])]) }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_amount') }}</td>
-                        <td style="{{ $cellR }} background-color:#ecfdf5; font-weight:700; color:#047857;">
-                            {{ $money($sch['due']['paid_amount']) }} {{ $cur }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.due_unpaid_credits') }}</td>
-                        <td style="{{ $cellR }} color:#b91c1c; font-weight:700;">{{ $int($sch['due']['unpaid_credit_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }} background-color:#fef2f2;">{{ $t('schedule.due_missing') }}</td>
-                        <td style="{{ $cellR }} background-color:#fef2f2; font-weight:700; color:#b91c1c;">
-                            {{ $money($sch['due']['missing']) }} {{ $cur }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.due_rate') }}</td>
-                        <td style="{{ $cellR }} font-weight:700;">{{ $pct($sch['due']['rate']) }}</td>
-                    </tr>
-                </table>
+                @php
+                    $scheduleCards = [
+                        [$t('schedule.due_title'), true, [
+                            [$t('schedule.due_credits'), $int($sch['due']['credit_count']), ''],
+                            [$t('schedule.due_expected'), $money($sch['due']['expected']) . ' ' . $cur, 'color:#6b7280;'],
+                            [$t('schedule.due_paid_credits'), $int($sch['due']['paid_credit_count'])
+                                . '  (' . $t('schedule.payments_suffix', ['count' => $int($sch['due']['paid_payment_count'])]) . ')', 'color:#047857;'],
+                            [$t('schedule.due_paid_amount'), $money($sch['due']['paid_amount']) . ' ' . $cur, 'font-size:15px; color:#047857;'],
+                            [$t('schedule.due_unpaid_credits'), $int($sch['due']['unpaid_credit_count']), 'color:#b91c1c;'],
+                            [$t('schedule.due_missing'), $money($sch['due']['missing']) . ' ' . $cur, 'font-size:15px; color:#b91c1c;'],
+                            [$t('schedule.due_rate'), $pct($sch['due']['rate']), ''],
+                        ]],
+                        [$t('schedule.not_due_title'), false, [
+                            [$t('schedule.not_due_credits'), $int($sch['not_due']['credit_count']), ''],
+                            [$t('schedule.not_due_payments'), $int($sch['not_due']['payment_count']), ''],
+                            [$t('schedule.not_due_amount'), $money($sch['not_due']['amount']) . ' ' . $cur, 'font-size:15px;'],
+                            [$t('schedule.early_title'), $int($sch['not_due']['early']['credit_count'])
+                                . '  (' . $money($sch['not_due']['early']['amount']) . ' ' . $cur . ')', 'color:#047857;'],
+                            [$t('schedule.late_title'), $int($sch['not_due']['late']['credit_count'])
+                                . '  (' . $money($sch['not_due']['late']['amount']) . ' ' . $cur . ')', 'color:#b45309;'],
+                        ]],
+                    ];
+                @endphp
 
-                <h3 style="margin:22px 0 4px 0; font-size:15px; line-height:22px; color:#0f172a; font-weight:700;">
-                    {{ $t('schedule.not_due_title') }}
-                </h3>
-                <p style="{{ $desc }}">{{ $t('schedule.not_due_desc') }}</p>
-                <table role="presentation" style="{{ $table }}">
-                    <tr>
-                        <td style="{{ $label }} width:60%;">{{ $t('schedule.not_due_credits') }}</td>
-                        <td style="{{ $cellR }} font-weight:700;">{{ $int($sch['not_due']['credit_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.not_due_payments') }}</td>
-                        <td style="{{ $cellR }}">{{ $int($sch['not_due']['payment_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.not_due_amount') }}</td>
-                        <td style="{{ $cellR }} font-weight:700;">{{ $money($sch['not_due']['amount']) }} {{ $cur }}</td>
-                    </tr>
-                </table>
+                @foreach ($scheduleCards as [$cardName, $isPrimary, $rows])
+                    <table role="presentation"
+                        style="width:100%; border-collapse:collapse; border:1px solid {{ $isPrimary ? '#0f172a' : '#e5e7eb' }}; margin-bottom:14px;">
+                        <tr>
+                            <td colspan="2"
+                                style="{{ $cardHead }} background-color:{{ $isPrimary ? '#0f172a' : '#f8fafc' }}; color:{{ $isPrimary ? '#ffffff' : '#0f172a' }};">
+                                {{ $cardName }}
+                            </td>
+                        </tr>
+                        @foreach ($rows as [$rowLabel, $rowValue, $rowStyle])
+                            <tr>
+                                <td style="{{ $cardKey }} width:58%;">{{ $rowLabel }}</td>
+                                <td style="{{ $cardVal }} {{ $rowStyle }}">{{ $rowValue }}</td>
+                            </tr>
+                        @endforeach
+                    </table>
+                @endforeach
 
-                <table role="presentation" style="{{ $table }}">
-                    <thead>
-                        <tr>
-                            <th style="{{ $th }}">&nbsp;</th>
-                            <th style="{{ $thR }}">{{ $t('schedule.not_due_credits') }}</th>
-                            <th style="{{ $thR }}">{{ $t('schedule.not_due_payments') }}</th>
-                            <th style="{{ $thR }}">{{ $t('schedule.not_due_amount') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="{{ $cell }}">
-                                <span style="font-weight:700; color:#047857;">{{ $t('schedule.early_title') }}</span>
-                                <span style="display:block; font-size:12px; line-height:17px; color:#6b7280;">{{ $t('schedule.early_desc') }}</span>
-                            </td>
-                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['early']['credit_count']) }}</td>
-                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['early']['payment_count']) }}</td>
-                            <td style="{{ $cellR }} font-weight:700; color:#047857;">{{ $money($sch['not_due']['early']['amount']) }} {{ $cur }}</td>
-                        </tr>
-                        <tr>
-                            <td style="{{ $cell }}">
-                                <span style="font-weight:700; color:#b45309;">{{ $t('schedule.late_title') }}</span>
-                                <span style="display:block; font-size:12px; line-height:17px; color:#6b7280;">{{ $t('schedule.late_desc') }}</span>
-                            </td>
-                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['late']['credit_count']) }}</td>
-                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['late']['payment_count']) }}</td>
-                            <td style="{{ $cellR }} font-weight:700; color:#b45309;">{{ $money($sch['not_due']['late']['amount']) }} {{ $cur }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <p style="{{ $desc }}">
+                    {{ $t('schedule.not_due_desc') }}
+                    {{ $t('schedule.early_desc') }}
+                    {{ $t('schedule.late_desc') }}
+                </p>
 
                 {{-- ============================ AUDIT ============================ --}}
                 <h2 style="{{ $h2 }}">{{ $t('audit.title') }}</h2>
@@ -786,10 +741,10 @@
                                 {{ $card['name'] }}
                             </td>
                         </tr>
-                        @foreach ($card['rows'] as [$label, $value, $style])
+                        @foreach ($card['rows'] as [$rowLabel, $rowValue, $rowStyle])
                             <tr>
-                                <td style="{{ $cardKey }} width:58%;">{{ $label }}</td>
-                                <td style="{{ $cardVal }} {{ $style }}">{{ $value }}</td>
+                                <td style="{{ $cardKey }} width:58%;">{{ $rowLabel }}</td>
+                                <td style="{{ $cardVal }} {{ $rowStyle }}">{{ $rowValue }}</td>
                             </tr>
                         @endforeach
                     </table>
