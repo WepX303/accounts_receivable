@@ -1,6 +1,12 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
+    @php
+        // Carried into every link on this page so month navigation, the export
+        // and the day drill-downs all stay on the selected branches.
+        $branchQuery = count($selectedBranches) ? ['branch' => $selectedBranches] : [];
+    @endphp
+
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -13,27 +19,102 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <a href="{{ route('reports.payment-calendar', ['month' => $previousMonth]) }}"
+                        <a href="{{ route('reports.payment-calendar', array_merge(['month' => $previousMonth], $branchQuery)) }}"
                             class="btn btn-light border">
                             {{ __('pages/reports.payment_calendar.previous_month') }}
                         </a>
 
-                        <form method="GET" action="{{ route('reports.payment-calendar') }}">
-                            <input type="month" name="month" class="form-control"
-                                value="{{ $currentMonth->format('Y-m') }}" onchange="this.form.submit()">
-                        </form>
-
-                        <a href="{{ route('reports.payment-calendar', ['month' => $nextMonth]) }}"
+                        <a href="{{ route('reports.payment-calendar', array_merge(['month' => $nextMonth], $branchQuery)) }}"
                             class="btn btn-light border">
                             {{ __('pages/reports.payment_calendar.next_month') }}
                         </a>
 
-                        <a href="{{ route('reports.payment-calendar.export', ['month' => $currentMonth->format('Y-m')]) }}"
+                        <a href="{{ route('reports.payment-calendar.export', array_merge(['month' => $currentMonth->format('Y-m')], $branchQuery)) }}"
                             class="btn btn-success">
                             <i class="ri-file-excel-2-line"></i>
                             {{ __('pages/reports.common.export_excel') }}
                         </a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filters --}}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('reports.payment-calendar') }}" class="row g-3 align-items-end">
+
+                        <div class="col-xl-3 col-md-6">
+                            <label class="form-label">{{ __('pages/reports.common.period') }}</label>
+                            <input type="month" name="month" class="form-control"
+                                value="{{ $currentMonth->format('Y-m') }}">
+                        </div>
+
+                        <div class="col-xl-5 col-md-6">
+                            <label class="form-label">{{ __('pages/reports.common.branches') }}</label>
+
+                            <div class="dropdown w-100">
+                                <button
+                                    class="btn btn-light border dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center"
+                                    type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                                    aria-expanded="false">
+                                    <span id="branchDropdownText" class="text-truncate">
+                                        @if (count($selectedBranches))
+                                            {{ implode(', ', $selectedBranches) }}
+                                        @else
+                                            {{ __('pages/reports.common.all_branches') }}
+                                        @endif
+                                    </span>
+                                </button>
+
+                                <div class="dropdown-menu w-100 p-2" style="max-height: 280px; overflow-y: auto;">
+                                    <div class="d-flex gap-2 px-2 pb-2 border-bottom mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1"
+                                            id="branchSelectAll">
+                                            {{ __('pages/reports.common.all') }}
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1"
+                                            id="branchClear">
+                                            {{ __('pages/reports.common.clear') }}
+                                        </button>
+                                    </div>
+
+                                    @foreach ($branches as $branch)
+                                        <label class="dropdown-item d-flex align-items-center gap-2">
+                                            <input type="checkbox" name="branch[]" value="{{ $branch }}"
+                                                class="form-check-input branch-checkbox"
+                                                @checked(in_array($branch, $selectedBranches, true))>
+                                            <span>{{ $branch }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="ri-filter-3-line"></i>
+                                {{ __('pages/reports.common.apply') }}
+                            </button>
+
+                            <a href="{{ route('reports.payment-calendar', ['month' => $currentMonth->format('Y-m')]) }}"
+                                class="btn btn-light border flex-grow-1">
+                                {{ __('pages/reports.common.clear_filters') }}
+                            </a>
+                        </div>
+
+                        @if (count($selectedBranches))
+                            <div class="col-12">
+                                <span class="text-muted">{{ __('pages/reports.common.branches') }}:</span>
+                                @foreach ($selectedBranches as $branch)
+                                    <span class="badge bg-primary-subtle text-primary">{{ $branch }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                    </form>
                 </div>
             </div>
         </div>
@@ -214,7 +295,7 @@
 
                                         <td class="text-end">
                                             @if ($day['expected'] > 0)
-                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'expected', 'date' => $day['date_key']]) }}"
+                                                <a href="{{ route('reports.payment-calendar.details', array_merge(['type' => 'expected', 'date' => $day['date_key']], $branchQuery)) }}"
                                                     class="fw-semibold text-primary">
                                                     {{ number_format($day['expected'], 2) }} TMT
                                                 </a>
@@ -225,7 +306,7 @@
 
                                         <td class="text-end">
                                             @if ($day['paid_expected'] > 0)
-                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'expected-paid', 'date' => $day['date_key']]) }}"
+                                                <a href="{{ route('reports.payment-calendar.details', array_merge(['type' => 'expected-paid', 'date' => $day['date_key']], $branchQuery)) }}"
                                                     class="fw-semibold text-success">
                                                     {{ number_format($day['paid_expected'], 2) }} TMT
                                                 </a>
@@ -236,7 +317,7 @@
 
                                         <td class="text-end">
                                             @if ($day['total_received'] > 0)
-                                                <a href="{{ route('reports.payment-calendar.details', ['type' => 'received', 'date' => $day['date_key']]) }}"
+                                                <a href="{{ route('reports.payment-calendar.details', array_merge(['type' => 'received', 'date' => $day['date_key']], $branchQuery)) }}"
                                                     class="fw-semibold text-primary">
                                                     {{ number_format($day['total_received'], 2) }} TMT
                                                 </a>
@@ -318,4 +399,43 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.branch-checkbox');
+            const label = document.getElementById('branchDropdownText');
+            const allBtn = document.getElementById('branchSelectAll');
+            const clearBtn = document.getElementById('branchClear');
+            const allText = @json(__('pages/reports.common.all_branches'));
+
+            function updateLabel() {
+                if (!label) return;
+
+                const selected = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                // No selection means every branch, so show that rather than an
+                // empty box.
+                label.textContent = selected.length ? selected.join(', ') : allText;
+            }
+
+            checkboxes.forEach(cb => cb.addEventListener('change', updateLabel));
+
+            if (allBtn) {
+                allBtn.addEventListener('click', function() {
+                    checkboxes.forEach(cb => cb.checked = true);
+                    updateLabel();
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    checkboxes.forEach(cb => cb.checked = false);
+                    updateLabel();
+                });
+            }
+
+            updateLabel();
+        });
+    </script>
 @endsection

@@ -1,6 +1,12 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
+    @php
+        // Kept in sync with the branch filter chosen on the calendar page.
+        $selectedBranches = $selectedBranches ?? [];
+        $branchQuery = count($selectedBranches) ? ['branch' => $selectedBranches] : [];
+    @endphp
+
     <div class="row mb-3">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
@@ -30,21 +36,30 @@
                                         {{ __('pages/reports.common.report_date') }}:
                                         <span class="fw-semibold">{{ $date->format('d.m.Y') }}</span>
                                     </div>
+
+                                    <div class="text-muted mt-1">
+                                        {{ __('pages/reports.common.branches') }}:
+                                        @forelse ($selectedBranches as $selectedBranch)
+                                            <span class="badge bg-primary-subtle text-primary">{{ $selectedBranch }}</span>
+                                        @empty
+                                            <span class="fw-semibold">{{ __('pages/reports.common.all_branches') }}</span>
+                                        @endforelse
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('reports.payment-calendar', ['month' => $date->format('Y-m')]) }}"
+                            <a href="{{ route('reports.payment-calendar', array_merge(['month' => $date->format('Y-m')], $branchQuery)) }}"
                                class="btn btn-light border">
                                 <i class="ri-arrow-left-line me-1"></i>
                                 {{ __('pages/reports.payment_calendar.details.back_to_calendar') }}
                             </a>
 
-                            <a href="{{ route('reports.payment-calendar.details.export', [
+                            <a href="{{ route('reports.payment-calendar.details.export', array_merge([
                                 'type' => $type,
                                 'date' => $date->toDateString(),
-                            ]) }}"
+                            ], $branchQuery)) }}"
                                class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
                                 {{ __('pages/reports.common.export_excel') }}
@@ -62,6 +77,9 @@
             <form method="GET" action="{{ route('reports.payment-calendar.details') }}">
                 <input type="hidden" name="type" value="{{ $type }}">
                 <input type="hidden" name="date" value="{{ $date->toDateString() }}">
+                @foreach ($selectedBranches as $selectedBranch)
+                    <input type="hidden" name="branch[]" value="{{ $selectedBranch }}">
+                @endforeach
 
                 <div class="row g-3 align-items-end">
                     <div class="col-md-9">
@@ -80,10 +98,10 @@
                                 {{ __('pages/reports.common.search') }}
                             </button>
 
-                            <a href="{{ route('reports.payment-calendar.details', [
+                            <a href="{{ route('reports.payment-calendar.details', array_merge([
                                 'type' => $type,
                                 'date' => $date->toDateString(),
-                            ]) }}"
+                            ], $branchQuery)) }}"
                                class="btn btn-light border w-100">
                                 {{ __('pages/reports.common.clear') }}
                             </a>

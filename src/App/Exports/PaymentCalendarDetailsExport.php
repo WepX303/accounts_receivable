@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Credit;
 use App\Models\CreditPayment;
+use App\Services\Reports\PaymentCalendarReportService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +16,19 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
 {
+    /** @var string[] Empty means all branches. */
+    private array $branches;
+
+    /**
+     * @param  string[]  $branches  Empty means all branches.
+     */
     public function __construct(
         private string $type,
-        private string $date
-    ) {}
+        private string $date,
+        array $branches = []
+    ) {
+        $this->branches = PaymentCalendarReportService::normalizeBranches($branches);
+    }
 
     public function headings(): array
     {
@@ -101,6 +111,7 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             ->where('is_blocked', 0)
             ->whereNotNull('date_')
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            ->when($this->branches !== [], fn ($q) => $q->whereIn('branch', $this->branches))
             ->whereRaw("
                 EXISTS (
                     SELECT 1
@@ -283,6 +294,7 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
         $rows = CreditPayment::query()
             ->notVoided()
             ->whereBetween('created_at', [$start, $end])
+            ->when($this->branches !== [], fn ($q) => $q->whereIn('branch', $this->branches))
             ->orderBy('branch')
             ->orderBy('customer_name')
             ->get([

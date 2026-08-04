@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Reports;
 use App\Http\Controllers\Controller;
 use App\Models\Credit;
 use App\Models\CreditPayment;
+use App\Services\Reports\PaymentCalendarReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -17,11 +18,19 @@ class PaymentCalendarReportDetailController extends Controller
             'date' => ['required', 'date'],
             'type' => ['required', 'in:expected,expected-paid,received'],
             'q' => ['nullable', 'string', 'max:100'],
+            'branch' => ['nullable', 'array'],
+            'branch.*' => ['nullable', 'string', 'max:100'],
         ]);
 
         $date = Carbon::parse($data['date'])->startOfDay();
         $type = $data['type'];
         $q = trim((string) $request->get('q', ''));
+
+        // Carried over from the calendar so the detail list shows the same
+        // branches the totals were built from. Empty means all.
+        $selectedBranches = PaymentCalendarReportService::normalizeBranches(
+            $request->input('branch', [])
+        );
 
         if ($type === 'received') {
             $rows = CreditPayment::query()
@@ -30,6 +39,7 @@ class PaymentCalendarReportDetailController extends Controller
                     $date->copy()->startOfDay(),
                     $date->copy()->endOfDay(),
                 ])
+                ->when($selectedBranches !== [], fn ($query) => $query->whereIn('branch', $selectedBranches))
                 ->when($q !== '', function ($query) use ($q) {
                     $like = '%' . $q . '%';
 
@@ -46,7 +56,7 @@ class PaymentCalendarReportDetailController extends Controller
                 ->paginate(50)
                 ->appends($request->query());
 
-            return view('pages.reports.payment-calendar.details', compact('rows', 'date', 'type', 'q'));
+            return view('pages.reports.payment-calendar.details', compact('rows', 'date', 'type', 'q', 'selectedBranches'));
         }
 
         $credits = Credit::query()
@@ -54,6 +64,7 @@ class PaymentCalendarReportDetailController extends Controller
             ->where('is_blocked', 0)
             ->whereNotNull('date_')
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            ->when($selectedBranches !== [], fn ($query) => $query->whereIn('branch', $selectedBranches))
             ->whereRaw("
                 EXISTS (
                     SELECT 1
@@ -193,6 +204,6 @@ class PaymentCalendarReportDetailController extends Controller
             ]
         );
 
-        return view('pages.reports.payment-calendar.details', compact('rows', 'date', 'type', 'q'));
+        return view('pages.reports.payment-calendar.details', compact('rows', 'date', 'type', 'q', 'selectedBranches'));
     }
 }
