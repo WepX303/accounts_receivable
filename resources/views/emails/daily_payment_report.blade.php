@@ -5,6 +5,7 @@
     $s = $report['summary'];
     $cmp = $report['comparison'];
     $audit = $report['audit'];
+    $sch = $report['schedule'];
     $portfolio = $report['portfolio'];
     $cur = $meta['currency'];
 
@@ -166,12 +167,6 @@
                                     <li style="color:#047857;">{{ $t('highlights.audit_clean') }}</li>
                                 @endif
 
-                                <li>{{ $t('highlights.overdue', [
-                                    'amount' => $money($portfolio['overdue_amount']),
-                                    'currency' => $cur,
-                                    'share' => number_format($portfolio['overdue_share'], 1),
-                                    'count' => $int($portfolio['overdue_credit_count']),
-                                ]) }}</li>
                             </ul>
                         </td>
                     </tr>
@@ -256,9 +251,9 @@
                             <td style="{{ $cellR }} color:#9ca3af;">—</td>
                         </tr>
                         <tr>
-                            <td style="{{ $cell }}">{{ $t('comparison.prev_mtd', ['label' => $cmp['prev_mtd']['label']]) }}</td>
-                            <td style="{{ $cellR }}">{{ $money($cmp['prev_mtd']['net']) }} {{ $cur }}</td>
-                            <td style="{{ $cellR }}">{!! $delta($cmp['prev_mtd']['net_delta_pct']) !!}</td>
+                            <td style="{{ $cell }}">{{ $t('comparison.prev_month_day', ['label' => $cmp['prev_month_day']['label']]) }}</td>
+                            <td style="{{ $cellR }}">{{ $money($cmp['prev_month_day']['net']) }} {{ $cur }}</td>
+                            <td style="{{ $cellR }}">{!! $delta($cmp['prev_month_day']['net_delta_pct']) !!}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -303,7 +298,7 @@
                 @endif
 
                 {{-- =========================== METHODS =========================== --}}
-                <h2 style="{{ $h2 }}">{{ $t('methods.title') }}</h2>
+                <h2 style="{{ $h2 }}">{{ $t('methods.title', ['date' => $meta['date_label']]) }}</h2>
                 <table role="presentation" style="{{ $table }}">
                     <thead>
                         <tr>
@@ -434,6 +429,104 @@
                         </tbody>
                     </table>
                 @endif
+
+                {{-- =========================== SCHEDULE =========================== --}}
+                <h2 style="{{ $h2 }}">{{ $t('schedule.title') }}</h2>
+                <p style="{{ $desc }}">{{ $t('schedule.desc') }}</p>
+
+                <h3 style="margin:16px 0 6px 0; font-size:15px; line-height:22px; color:#0f172a; font-weight:700;">
+                    {{ $t('schedule.due_title') }}
+                </h3>
+                <table role="presentation" style="{{ $table }}">
+                    <tr>
+                        <td style="{{ $label }} width:60%;">{{ $t('schedule.due_credits') }}</td>
+                        <td style="{{ $cellR }} font-weight:700;">{{ $int($sch['due']['credit_count']) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.due_expected') }}</td>
+                        <td style="{{ $cellR }}">{{ $money($sch['due']['expected']) }} {{ $cur }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_credits') }}</td>
+                        <td style="{{ $cellR }} background-color:#ecfdf5; font-weight:700; color:#047857;">
+                            {{ $int($sch['due']['paid_credit_count']) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.due_paid_payments') }}</td>
+                        <td style="{{ $cellR }}">{{ $int($sch['due']['paid_payment_count']) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_amount') }}</td>
+                        <td style="{{ $cellR }} background-color:#ecfdf5; font-weight:700; color:#047857;">
+                            {{ $money($sch['due']['paid_amount']) }} {{ $cur }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.due_unpaid_credits') }}</td>
+                        <td style="{{ $cellR }} color:#b91c1c; font-weight:700;">{{ $int($sch['due']['unpaid_credit_count']) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }} background-color:#fef2f2;">{{ $t('schedule.due_missing') }}</td>
+                        <td style="{{ $cellR }} background-color:#fef2f2; font-weight:700; color:#b91c1c;">
+                            {{ $money($sch['due']['missing']) }} {{ $cur }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.due_rate') }}</td>
+                        <td style="{{ $cellR }} font-weight:700;">{{ $pct($sch['due']['rate']) }}</td>
+                    </tr>
+                </table>
+
+                <h3 style="margin:22px 0 4px 0; font-size:15px; line-height:22px; color:#0f172a; font-weight:700;">
+                    {{ $t('schedule.not_due_title') }}
+                </h3>
+                <p style="{{ $desc }}">{{ $t('schedule.not_due_desc') }}</p>
+                <table role="presentation" style="{{ $table }}">
+                    <tr>
+                        <td style="{{ $label }} width:60%;">{{ $t('schedule.not_due_credits') }}</td>
+                        <td style="{{ $cellR }} font-weight:700;">{{ $int($sch['not_due']['credit_count']) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.not_due_payments') }}</td>
+                        <td style="{{ $cellR }}">{{ $int($sch['not_due']['payment_count']) }}</td>
+                    </tr>
+                    <tr>
+                        <td style="{{ $label }}">{{ $t('schedule.not_due_amount') }}</td>
+                        <td style="{{ $cellR }} font-weight:700;">{{ $money($sch['not_due']['amount']) }} {{ $cur }}</td>
+                    </tr>
+                </table>
+
+                <table role="presentation" style="{{ $table }}">
+                    <thead>
+                        <tr>
+                            <th style="{{ $th }}">&nbsp;</th>
+                            <th style="{{ $thR }}">{{ $t('schedule.not_due_credits') }}</th>
+                            <th style="{{ $thR }}">{{ $t('schedule.not_due_payments') }}</th>
+                            <th style="{{ $thR }}">{{ $t('schedule.not_due_amount') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="{{ $cell }}">
+                                <span style="font-weight:700; color:#047857;">{{ $t('schedule.early_title') }}</span>
+                                <span style="display:block; font-size:12px; line-height:17px; color:#6b7280;">{{ $t('schedule.early_desc') }}</span>
+                            </td>
+                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['early']['credit_count']) }}</td>
+                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['early']['payment_count']) }}</td>
+                            <td style="{{ $cellR }} font-weight:700; color:#047857;">{{ $money($sch['not_due']['early']['amount']) }} {{ $cur }}</td>
+                        </tr>
+                        <tr>
+                            <td style="{{ $cell }}">
+                                <span style="font-weight:700; color:#b45309;">{{ $t('schedule.late_title') }}</span>
+                                <span style="display:block; font-size:12px; line-height:17px; color:#6b7280;">{{ $t('schedule.late_desc') }}</span>
+                            </td>
+                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['late']['credit_count']) }}</td>
+                            <td style="{{ $cellR }}">{{ $int($sch['not_due']['late']['payment_count']) }}</td>
+                            <td style="{{ $cellR }} font-weight:700; color:#b45309;">{{ $money($sch['not_due']['late']['amount']) }} {{ $cur }}</td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 {{-- ============================ AUDIT ============================ --}}
                 <h2 style="{{ $h2 }}">{{ $t('audit.title') }}</h2>
@@ -574,6 +667,7 @@
                             <tr>
                                 <th style="{{ $th }}">{{ $t('table.customer') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.contract') }}</th>
+                                <th style="{{ $th }}">{{ $t('table.backdated_day') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.payment_at') }}</th>
                                 <th style="{{ $th }}">{{ $t('table.entered_at') }}</th>
                                 <th style="{{ $thR }}">{{ $t('table.days_back') }}</th>
@@ -586,6 +680,9 @@
                                 <tr>
                                     <td style="{{ $cell }}">{{ $r['customer'] }}</td>
                                     <td style="{{ $cell }} color:#6b7280;">{{ $r['contract'] }}</td>
+                                    <td style="{{ $cell }} font-weight:700; color:#b45309; white-space:nowrap;">
+                                        {{ \Illuminate\Support\Str::before($r['payment_at'], ' ') }}
+                                    </td>
                                     <td style="{{ $cell }}">{{ $r['payment_at'] }}</td>
                                     <td style="{{ $cell }} color:#6b7280;">{{ $r['entered_at'] }}</td>
                                     <td style="{{ $cellR }} color:#b45309; font-weight:700;">{{ $r['days_back'] }}</td>
@@ -595,7 +692,7 @@
                             @endforeach
                             @if ($audit['backdated']['count'] > count($audit['backdated']['rows']))
                                 <tr>
-                                    <td colspan="7" style="{{ $cell }} color:#6b7280; font-style:italic;">
+                                    <td colspan="8" style="{{ $cell }} color:#6b7280; font-style:italic;">
                                         {{ $t('table.more', ['count' => $audit['backdated']['count'] - count($audit['backdated']['rows'])]) }}
                                     </td>
                                 </tr>

@@ -33,7 +33,6 @@ return [
         'top_branch' => 'En yüksek tahsilat :branch şubesinde: :net :currency (günün %:share\'i).',
         'audit_events' => 'Dikkat: bugün :voids iptal, :corrections düzeltme ve :backdated geriye dönük tarihli kayıt yapıldı. Detay aşağıda.',
         'audit_clean' => 'İptal, düzeltme veya geriye dönük tarihli kayıt yok — gün temiz.',
-        'overdue' => 'Vadesi geçmiş toplam alacak :amount :currency (açık bakiyenin %:share\'i, :count sözleşme).',
     ],
 
     'cash' => [
@@ -59,7 +58,7 @@ return [
         'avg7' => 'Son 7 Gün Ortalaması',
         'mtd' => 'Ay Başından Bugüne (:days gün)',
         'mtd_daily_avg' => 'Aylık Günlük Ortalama',
-        'prev_mtd' => 'Geçen Ay Aynı Dönem (:label)',
+        'prev_month_day' => 'Geçen ayın aynı günü (:label)',
     ],
 
     'trend' => [
@@ -68,7 +67,7 @@ return [
     ],
 
     'methods' => [
-        'title' => 'Ödeme Yöntemi Dağılımı',
+        'title' => 'Ödeme Yöntemi Dağılımı — :date',
         'cash' => 'Nakit',
         'card' => 'Kart',
         'phone' => 'Telefon',
@@ -86,6 +85,32 @@ return [
 
     'top' => [
         'title' => 'Günün En Yüksek :count Tahsilatı',
+    ],
+
+    'schedule' => [
+        'title' => 'Günün Ödeme Planı',
+        'desc' => 'Günün parası, müşterinin bugün ödemesi gerekip gerekmediğine göre ayrıldı.',
+
+        'due_title' => 'Bugün Ödemesi Gerekenler',
+        'due_credits' => 'Ödemesi gereken sözleşme',
+        'due_expected' => 'Beklenen tutar',
+        'due_paid_credits' => 'Ödeyen sözleşme',
+        'due_paid_payments' => 'Yaptıkları ödeme sayısı',
+        'due_paid_amount' => 'Ödedikleri tutar',
+        'due_unpaid_credits' => 'Ödemeyen sözleşme',
+        'due_missing' => 'Tahsil edilemeyen tutar',
+        'due_rate' => 'Gerçekleşme oranı',
+
+        'not_due_title' => 'Bugün Ödemesi Gerekmeyenler',
+        'not_due_desc' => 'Bugün vadesi olmadığı hâlde ödeme yapan müşteriler.',
+        'not_due_credits' => 'Sözleşme sayısı',
+        'not_due_payments' => 'Ödeme sayısı',
+        'not_due_amount' => 'Toplam tutar',
+
+        'early_title' => 'Vadesinden Önce Ödeyenler',
+        'early_desc' => 'Vadesi geçmiş borcu bulunmayan, peşin ödeyen müşteriler.',
+        'late_title' => 'Geç Kalıp Ödeyenler',
+        'late_desc' => 'Bugüne kadar vadesi geçmiş borcu olan ve onu kapatan müşteriler.',
     ],
 
     'audit' => [
@@ -145,6 +170,7 @@ return [
         'payment_date' => 'Ödeme Tarihi (eski → yeni)',
         'amount_change' => 'Tutar (eski → yeni)',
         'method_change' => 'Yöntem',
+        'backdated_day' => 'Hangi güne yazıldı',
         'old_amount' => 'Eski Tutar',
         'new_amount' => 'Yeni Tutar',
         'diff' => 'Fark',

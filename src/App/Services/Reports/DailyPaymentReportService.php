@@ -71,6 +71,7 @@ class DailyPaymentReportService
             'branches' => $this->branchBreakdown($payments),
             'cashiers' => $this->cashierBreakdown($payments),
             'top_payments' => $this->topPayments($payments),
+            'schedule' => $this->schedule($start, $payments),
             'audit' => $this->audit($start, $end, $payments),
             'portfolio' => $this->portfolio($start),
         ];
@@ -198,13 +199,13 @@ class DailyPaymentReportService
         $mtd = $this->netBetween($day->copy()->startOfMonth(), $day->copy()->endOfDay());
         $daysElapsed = max(1, $day->day);
 
-        // Same slice of the previous month: 1st through the same day number,
-        // clamped so that e.g. the 31st does not overflow a 30-day month.
-        $prevMonthStart = $day->copy()->subMonthNoOverflow()->startOfMonth();
-        $prevMonthEnd = $prevMonthStart->copy()
-            ->addDays(min($day->day, $prevMonthStart->daysInMonth) - 1)
-            ->endOfDay();
-        $prevMtd = $this->netBetween($prevMonthStart, $prevMonthEnd);
+        // The same calendar day one month back, so the comparison is day to day
+        // rather than a running total against a running total.
+        $prevMonthDay = $day->copy()->subMonthNoOverflow();
+        $prevMonthSame = $this->netBetween(
+            $prevMonthDay->copy()->startOfDay(),
+            $prevMonthDay->copy()->endOfDay()
+        );
 
         $today = $this->netBetween($day->copy()->startOfDay(), $day->copy()->endOfDay());
 
@@ -226,10 +227,11 @@ class DailyPaymentReportService
                 'days_elapsed' => $daysElapsed,
                 'daily_avg' => $mtd['net'] / $daysElapsed,
             ],
-            'prev_mtd' => [
-                'net' => $prevMtd['net'],
-                'label' => $prevMonthStart->format('m.Y'),
-                'net_delta_pct' => $this->deltaPct($mtd['net'], $prevMtd['net']),
+            'prev_month_day' => [
+                'net' => $prevMonthSame['net'],
+                'tx_count' => $prevMonthSame['tx_count'],
+                'label' => $prevMonthDay->format('d.m.Y'),
+                'net_delta_pct' => $this->deltaPct($today['net'], $prevMonthSame['net']),
             ],
         ];
     }
@@ -352,6 +354,136 @@ class DailyPaymentReportService
             ])
             ->values()
             ->all();
+    }
+
+    /* ------------------------------------------------------------ schedule */
+
+    /**
+     * Splits the day's money by whether the customer was actually due today.
+     *
+     * "Due today" follows the same six-installment plan the payment calendar
+     * uses: a credit is due on its start date plus one through six months.
+     *
+     * Payments from customers who were not due today are then split into paid
+     * early and paid late, using the project's existing overdue rule — the
+     * instalments that have come due by today against what the customer had
+     * paid *before* today. Someone who was already behind is catching up; the
+     * rest are paying ahead of their next instalment.
+     */
+    private function schedule(Carbon $day, Collection $payments): array
+    {
+        $dateKey = $day->toDateString();
+
+        $dueCredits = DB::table('credits')
+            ->where('active', true)
+            ->where('is_blocked', 0)
+            ->whereNotNull('date_')
+            ->whereRaw('COALESCE(amount_local, amount, 0) > 0')
+            ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
+            ->whereRaw("
+                EXISTS (
+                    SELECT 1 FROM generate_series(1, 6) AS installment_no
+                    WHERE (date_::date + (installment_no * INTERVAL '1 month'))::date = ?::date
+                )
+            ", [$dateKey])
+            ->selectRaw('source_id')
+            ->selectRaw('ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2) as installment')
+            ->get()
+            ->keyBy('source_id');
+
+        // The day's payments, netted per credit. paymentsBetween() does not
+        // carry credit_source_id, so this is read separately.
+        $paidByCredit = DB::table('credit_payments')
+            ->whereNull('voided_at')
+            ->whereBetween('created_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
+            ->selectRaw('credit_source_id')
+            ->selectRaw('COUNT(*) as payment_count')
+            ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as net')
+            ->groupBy('credit_source_id')
+            ->get()
+            ->keyBy('credit_source_id');
+
+        $dueExpected = (float) $dueCredits->sum(fn ($c) => (float) $c->installment);
+
+        $duePaidCredits = 0;
+        $duePaidPayments = 0;
+        $duePaidAmount = 0.0;
+
+        foreach ($dueCredits as $sourceId => $credit) {
+            $hit = $paidByCredit->get($sourceId);
+
+            if ($hit === null) {
+                continue;
+            }
+
+            $duePaidCredits++;
+            $duePaidPayments += (int) $hit->payment_count;
+            $duePaidAmount += (float) $hit->net;
+        }
+
+        $notDue = $paidByCredit->reject(fn ($row, $sourceId) => $dueCredits->has($sourceId));
+
+        $early = ['credit_count' => 0, 'payment_count' => 0, 'amount' => 0.0];
+        $late = ['credit_count' => 0, 'payment_count' => 0, 'amount' => 0.0];
+
+        if ($notDue->isNotEmpty()) {
+            $states = DB::table('credits')
+                ->whereIn('source_id', $notDue->keys()->all())
+                ->selectRaw('source_id')
+                ->selectRaw("
+                    LEAST(GREATEST(FLOOR((?::date - date_::date) / 30), 0), 6)
+                    * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2) as expected_to_date
+                ", [$dateKey])
+                ->selectRaw('COALESCE(paid_local, paid, 0) as paid_total')
+                ->get()
+                ->keyBy('source_id');
+
+            foreach ($notDue as $sourceId => $row) {
+                $state = $states->get($sourceId);
+                $net = (float) $row->net;
+
+                // paid_local already includes today's money, so today's net is
+                // taken back out to judge where the customer stood beforehand.
+                $paidBefore = (float) ($state->paid_total ?? 0) - $net;
+                $expected = (float) ($state->expected_to_date ?? 0);
+
+                $bucket = ($expected - $paidBefore) > 0.01 ? 'late' : 'early';
+
+                ${$bucket}['credit_count']++;
+                ${$bucket}['payment_count'] += (int) $row->payment_count;
+                ${$bucket}['amount'] += $net;
+            }
+        }
+
+        return [
+            'due' => [
+                'credit_count' => $dueCredits->count(),
+                'expected' => round($dueExpected, 2),
+                'paid_credit_count' => $duePaidCredits,
+                'paid_payment_count' => $duePaidPayments,
+                'paid_amount' => round($duePaidAmount, 2),
+                'unpaid_credit_count' => $dueCredits->count() - $duePaidCredits,
+                'missing' => round(max($dueExpected - $duePaidAmount, 0), 2),
+                'rate' => $dueExpected > 0 ? round($duePaidAmount / $dueExpected * 100, 2) : 0.0,
+            ],
+            'not_due' => [
+                'credit_count' => $notDue->count(),
+                'payment_count' => (int) $notDue->sum(fn ($r) => (int) $r->payment_count),
+                'amount' => round((float) $notDue->sum(fn ($r) => (float) $r->net), 2),
+                'early' => [
+                    'credit_count' => $early['credit_count'],
+                    'payment_count' => $early['payment_count'],
+                    'amount' => round($early['amount'], 2),
+                ],
+                'late' => [
+                    'credit_count' => $late['credit_count'],
+                    'payment_count' => $late['payment_count'],
+                    'amount' => round($late['amount'], 2),
+                ],
+            ],
+        ];
     }
 
     /* --------------------------------------------------------------- audit */

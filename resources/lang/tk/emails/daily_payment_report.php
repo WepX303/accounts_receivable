@@ -33,7 +33,6 @@ return [
         'top_branch' => 'Iň ýokary ýygym :branch şahamçasynda: :net :currency (günüň :share%-i).',
         'audit_events' => 'Üns beriň: bu gün :voids ýatyrma, :corrections düzediş we :backdated yzky sene bilen ýazgy edildi. Jikme-jikligi aşakda.',
         'audit_clean' => 'Ýatyrma, düzediş ýa-da yzky sene bilen ýazgy ýok — gün arassa.',
-        'overdue' => 'Möhleti geçen jemi bergi :amount :currency (açyk galyndynyň :share%-i, :count şertnama).',
     ],
 
     'cash' => [
@@ -59,7 +58,7 @@ return [
         'avg7' => 'Soňky 7 günüň ortaçasy',
         'mtd' => 'Aýyň başyndan bäri (:days gün)',
         'mtd_daily_avg' => 'Aýyň günlük ortaçasy',
-        'prev_mtd' => 'Geçen aý şol bir döwür (:label)',
+        'prev_month_day' => 'Geçen aýyň şol güni (:label)',
     ],
 
     'trend' => [
@@ -68,7 +67,7 @@ return [
     ],
 
     'methods' => [
-        'title' => 'Töleg usuly boýunça paýlanyş',
+        'title' => 'Töleg usuly boýunça paýlanyş — :date',
         'cash' => 'Nagt',
         'card' => 'Kart',
         'phone' => 'Telefon',
@@ -86,6 +85,32 @@ return [
 
     'top' => [
         'title' => 'Günüň iň ýokary :count ýygymy',
+    ],
+
+    'schedule' => [
+        'title' => 'Günüň töleg tertibi',
+        'desc' => 'Günüň puly, müşderiniň şu gün tölemeli bolandygyna görä bölündi.',
+
+        'due_title' => 'Şu gün tölemeli bolanlar',
+        'due_credits' => 'Tölemeli şertnama sany',
+        'due_expected' => 'Garaşylýan möçber',
+        'due_paid_credits' => 'Tölän şertnama sany',
+        'due_paid_payments' => 'Olaryň eden töleg sany',
+        'due_paid_amount' => 'Olaryň tölän möçberi',
+        'due_unpaid_credits' => 'Tölemedik şertnama sany',
+        'due_missing' => 'Ýygnalmadyk möçber',
+        'due_rate' => 'Ýerine ýetiriş göterimi',
+
+        'not_due_title' => 'Şu gün tölemeli bolmadyklar',
+        'not_due_desc' => 'Şu gün möhleti gelmedik, ýöne şonda-da töleg eden müşderiler.',
+        'not_due_credits' => 'Şertnama sany',
+        'not_due_payments' => 'Töleg sany',
+        'not_due_amount' => 'Jemi möçber',
+
+        'early_title' => 'Möhletinden öň tölänler',
+        'early_desc' => 'Geçen möhletli bergisi bolmadyk, öňünden töleýän müşderiler.',
+        'late_title' => 'Gijä galyp tölänler',
+        'late_desc' => 'Şu güne çenli möhleti geçen bergisi bolan we ony ýapýan müşderiler.',
     ],
 
     'audit' => [
@@ -145,6 +170,7 @@ return [
         'payment_date' => 'Töleg senesi (öňki → täze)',
         'amount_change' => 'Möçber (öňki → täze)',
         'method_change' => 'Usul',
+        'backdated_day' => 'Haýsy güne ýazyldy',
         'old_amount' => 'Öňki möçber',
         'new_amount' => 'Täze möçber',
         'diff' => 'Tapawut',
