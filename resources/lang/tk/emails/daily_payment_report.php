@@ -95,7 +95,7 @@ return [
         'due_credits' => 'Tölemeli şertnama sany',
         'due_expected' => 'Garaşylýan möçber',
         'due_paid_credits' => 'Tölän şertnama sany',
-        'due_paid_payments' => 'Olaryň eden töleg sany',
+        'payments_suffix' => ':count töleg',
         'due_paid_amount' => 'Olaryň tölän möçberi',
         'due_unpaid_credits' => 'Tölemedik şertnama sany',
         'due_missing' => 'Ýygnalmadyk möçber',
@@ -134,16 +134,6 @@ return [
         'idle_title' => 'Ýygym etmedik şahamçalar',
         'idle_desc' => 'Açyk galyndysy bar bolan, ýöne bu gün hiç hili ýygym hasaba almadyk şahamçalar.',
         'idle_summary' => ':count şahamça',
-    ],
-
-    'portfolio' => [
-        'title' => 'Portfeliň ýagdaýy',
-        'desc' => 'Günüň ýygymynyň ýerleşýän umumy şekili.',
-        'open_credits' => 'Açyk şertnama sany',
-        'open_balance' => 'Jemi açyk galyndy',
-        'overdue_credits' => 'Möhleti geçen şertnama',
-        'overdue_amount' => 'Möhleti geçen möçber',
-        'overdue_share' => 'Açyk galynda gatnaşygy',
     ],
 
     'table' => [

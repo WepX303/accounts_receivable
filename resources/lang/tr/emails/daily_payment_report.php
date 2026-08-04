@@ -95,7 +95,7 @@ return [
         'due_credits' => 'Ödemesi gereken sözleşme',
         'due_expected' => 'Beklenen tutar',
         'due_paid_credits' => 'Ödeyen sözleşme',
-        'due_paid_payments' => 'Yaptıkları ödeme sayısı',
+        'payments_suffix' => ':count ödeme',
         'due_paid_amount' => 'Ödedikleri tutar',
         'due_unpaid_credits' => 'Ödemeyen sözleşme',
         'due_missing' => 'Tahsil edilemeyen tutar',
@@ -134,16 +134,6 @@ return [
         'idle_title' => 'Hiç Tahsilat Yapmayan Şubeler',
         'idle_desc' => 'Açık bakiyesi olan fakat bu gün hiç tahsilat kaydetmeyen şubeler.',
         'idle_summary' => ':count şube',
-    ],
-
-    'portfolio' => [
-        'title' => 'Portföy Durumu',
-        'desc' => 'Günün tahsilatının içinde bulunduğu genel tablo.',
-        'open_credits' => 'Açık Sözleşme Sayısı',
-        'open_balance' => 'Toplam Açık Bakiye',
-        'overdue_credits' => 'Vadesi Geçen Sözleşme',
-        'overdue_amount' => 'Vadesi Geçen Tutar',
-        'overdue_share' => 'Açık Bakiyeye Oranı',
     ],
 
     'table' => [

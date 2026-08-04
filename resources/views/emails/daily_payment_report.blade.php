@@ -6,7 +6,6 @@
     $cmp = $report['comparison'];
     $audit = $report['audit'];
     $sch = $report['schedule'];
-    $portfolio = $report['portfolio'];
     $cur = $meta['currency'];
 
     $money = fn ($v) => number_format((float) $v, 2);
@@ -450,11 +449,10 @@
                         <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_credits') }}</td>
                         <td style="{{ $cellR }} background-color:#ecfdf5; font-weight:700; color:#047857;">
                             {{ $int($sch['due']['paid_credit_count']) }}
+                            <span style="font-weight:400; color:#6b7280;">
+                                / {{ $t('schedule.payments_suffix', ['count' => $int($sch['due']['paid_payment_count'])]) }}
+                            </span>
                         </td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('schedule.due_paid_payments') }}</td>
-                        <td style="{{ $cellR }}">{{ $int($sch['due']['paid_payment_count']) }}</td>
                     </tr>
                     <tr>
                         <td style="{{ $label }} background-color:#ecfdf5;">{{ $t('schedule.due_paid_amount') }}</td>
@@ -716,34 +714,6 @@
                         </tr>
                     </table>
                 @endif
-
-                {{-- ========================== PORTFOLIO ========================== --}}
-                <h2 style="{{ $h2 }}">{{ $t('portfolio.title') }}</h2>
-                <p style="{{ $desc }}">{{ $t('portfolio.desc') }}</p>
-                <table role="presentation" style="{{ $table }}">
-                    <tr>
-                        <td style="{{ $label }} width:60%;">{{ $t('portfolio.open_credits') }}</td>
-                        <td style="{{ $cellR }}">{{ $int($portfolio['credit_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('portfolio.open_balance') }}</td>
-                        <td style="{{ $cellR }} font-weight:700;">{{ $money($portfolio['open_balance']) }} {{ $cur }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('portfolio.overdue_credits') }}</td>
-                        <td style="{{ $cellR }}">{{ $int($portfolio['overdue_credit_count']) }}</td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }} background-color:#fef2f2;">{{ $t('portfolio.overdue_amount') }}</td>
-                        <td style="{{ $cellR }} background-color:#fef2f2; font-weight:700; color:#b91c1c;">
-                            {{ $money($portfolio['overdue_amount']) }} {{ $cur }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="{{ $label }}">{{ $t('portfolio.overdue_share') }}</td>
-                        <td style="{{ $cellR }} font-weight:700; color:#b91c1c;">{{ $pct($portfolio['overdue_share']) }}</td>
-                    </tr>
-                </table>
 
                 <p style="margin:24px 0 0 0; font-size:12px; line-height:19px; color:#6b7280;">
                     {{ $t('footer.note') }}

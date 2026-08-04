@@ -95,7 +95,7 @@ return [
         'due_credits' => 'Contracts due',
         'due_expected' => 'Expected amount',
         'due_paid_credits' => 'Contracts that paid',
-        'due_paid_payments' => 'Payments they made',
+        'payments_suffix' => ':count payments',
         'due_paid_amount' => 'Amount they paid',
         'due_unpaid_credits' => 'Contracts that did not pay',
         'due_missing' => 'Amount not collected',
@@ -134,16 +134,6 @@ return [
         'idle_title' => 'Branches With No Collections',
         'idle_desc' => 'Branches that carry an open balance but recorded no collection on this day.',
         'idle_summary' => ':count branch(es)',
-    ],
-
-    'portfolio' => [
-        'title' => 'Portfolio Position',
-        'desc' => 'The wider picture the day\'s collection sits inside.',
-        'open_credits' => 'Open Contracts',
-        'open_balance' => 'Total Open Balance',
-        'overdue_credits' => 'Overdue Contracts',
-        'overdue_amount' => 'Overdue Amount',
-        'overdue_share' => 'Share of Open Balance',
     ],
 
     'table' => [

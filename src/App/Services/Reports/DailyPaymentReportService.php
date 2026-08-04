@@ -73,7 +73,6 @@ class DailyPaymentReportService
             'top_payments' => $this->topPayments($payments),
             'schedule' => $this->schedule($start, $payments),
             'audit' => $this->audit($start, $end, $payments),
-            'portfolio' => $this->portfolio($start),
         ];
     }
 
@@ -597,16 +596,21 @@ class DailyPaymentReportService
     }
 
     /**
-     * Payments *entered* on the report day that carry an earlier payment date.
-     * The payment screen already flags these, so we read the flag rather than
-     * re-deriving it. These entries change days that were already closed.
+     * Payments entered on the report day whose payment date falls on an earlier
+     * calendar day. Those are the entries that reopen a closed cash day; a
+     * payment timed a few minutes before it was saved does not.
      */
     private function backdated(Carbon $start, Carbon $end): array
     {
         $rows = DB::table('activity_logs')
             ->where('action', 'payment_created')
             ->whereBetween('created_at', [$start, $end])
-            ->whereRaw("extra->>'backdated' = 'true'")
+            // The payment screen flags anything entered a minute after the time
+            // in the date field, which the field's minute precision makes true
+            // for most ordinary entries. What matters here is an entry landing
+            // on an earlier calendar day, so the day is compared directly.
+            ->whereRaw("extra->>'payment_at' IS NOT NULL")
+            ->whereRaw("(extra->>'payment_at')::date < activity_logs.created_at::date")
             // activity_logs has no branch of its own, so the entry is matched
             // back to its credit to decide whether it belongs in this report.
             ->when($this->branches !== null, function ($q) {
@@ -672,61 +676,6 @@ class DailyPaymentReportService
             ->reject(fn ($b) => $active->contains($b))
             ->values()
             ->all();
-    }
-
-    /* ----------------------------------------------------------- portfolio */
-
-    /**
-     * Context for the day's number: what is still on the books, and how much of
-     * it is already late. Overdue matches OverduePaymentsReportController — the
-     * 6-installment plan derived from the credit date.
-     */
-    private function portfolio(Carbon $day): array
-    {
-        $today = $day->toDateString();
-
-        $open = DB::table('credits')
-            ->where('active', true)
-            ->where('is_blocked', 0)
-            ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
-            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
-            ->selectRaw('COUNT(*) as credit_count')
-            ->selectRaw('COALESCE(SUM(COALESCE(amount_local, amount, 0) - COALESCE(paid_local, paid, 0)), 0) as open_balance')
-            ->first();
-
-        $overdue = DB::table('credits')
-            ->where('active', true)
-            ->where('is_blocked', 0)
-            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
-            ->whereNotNull('date_')
-            ->whereRaw('COALESCE(amount_local, amount, 0) > 0')
-            ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
-            ->whereRaw("
-                (
-                    LEAST(GREATEST(FLOOR((?::date - date_::date) / 30), 0), 6)
-                    * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2)
-                ) > COALESCE(paid_local, paid, 0)
-            ", [$today])
-            ->selectRaw('COUNT(*) as credit_count')
-            ->selectRaw("
-                COALESCE(SUM(
-                    LEAST(GREATEST(FLOOR((?::date - date_::date) / 30), 0), 6)
-                    * ROUND((COALESCE(amount_local, amount, 0) / 6)::numeric, 2)
-                    - COALESCE(paid_local, paid, 0)
-                ), 0) as overdue_amount
-            ", [$today])
-            ->first();
-
-        $openBalance = (float) ($open->open_balance ?? 0);
-        $overdueAmount = (float) ($overdue->overdue_amount ?? 0);
-
-        return [
-            'credit_count' => (int) ($open->credit_count ?? 0),
-            'open_balance' => $openBalance,
-            'overdue_credit_count' => (int) ($overdue->credit_count ?? 0),
-            'overdue_amount' => $overdueAmount,
-            'overdue_share' => $openBalance > 0 ? $overdueAmount / $openBalance * 100 : 0.0,
-        ];
     }
 
     /* --------------------------------------------------------------- utils */

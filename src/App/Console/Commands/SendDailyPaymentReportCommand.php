@@ -170,13 +170,12 @@ class SendDailyPaymentReportCommand extends Command
                     $s['tx_count'],
                     number_format($s['net'], 2),
                     $a['voids']['count'] . '/' . $a['corrections']['count'] . '/' . $a['backdated']['count'],
-                    number_format($report['portfolio']['open_balance'], 2),
                 ];
             }
         }
 
         $this->table(
-            ['Email', 'Source', 'Branches', 'Tx', 'Net', 'Void/Corr/Backdated', 'Open balance'],
+            ['Email', 'Source', 'Branches', 'Tx', 'Net', 'Void/Corr/Backdated'],
             $rows
         );
     }
