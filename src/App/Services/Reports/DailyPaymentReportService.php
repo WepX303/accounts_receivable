@@ -73,6 +73,7 @@ class DailyPaymentReportService
             'top_payments' => $this->topPayments($payments),
             'schedule' => $this->schedule($start, $payments),
             'audit' => $this->audit($start, $end, $payments),
+            'portfolio' => $this->portfolio($start),
         ];
     }
 
@@ -676,6 +677,96 @@ class DailyPaymentReportService
             ->reject(fn ($b) => $active->contains($b))
             ->values()
             ->all();
+    }
+
+    /* ----------------------------------------------------------- portfolio */
+
+    /**
+     * Where the book stands, branch by branch, with a total.
+     *
+     * Overdue follows OverduePaymentsReportController: the instalments that
+     * have come due by the report date against what the customer has paid, on
+     * the same six-instalment plan used everywhere else. "Never paid" counts
+     * contracts that have not put a single manat against the debt — they are
+     * inside the overdue figure too, but they are a different problem and worth
+     * seeing on their own.
+     *
+     * @return array{rows: array<int, array<string, mixed>>, total: array<string, mixed>}
+     */
+    private function portfolio(Carbon $day): array
+    {
+        $today = $day->toDateString();
+
+        $amount = 'COALESCE(amount_local, amount, 0)';
+        $paid = 'COALESCE(paid_local, paid, 0)';
+        // Instalments that have come due by the report date, on the same
+        // six-instalment plan the rest of the reporting uses.
+        $expected = 'LEAST(GREATEST(FLOOR((?::date - date_::date) / 30), 0), 6)'
+            . " * ROUND(($amount / 6)::numeric, 2)";
+
+        $rows = DB::table('credits')
+            ->where('active', true)
+            ->where('is_blocked', 0)
+            ->whereRaw("$amount > $paid")
+            ->whereNotNull('branch')
+            ->where('branch', '!=', '')
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
+            ->groupBy('branch')
+            ->orderBy('branch')
+            ->selectRaw('branch')
+            ->selectRaw('COUNT(*) as credit_count')
+            ->selectRaw("COALESCE(SUM($amount), 0) as total_amount")
+            ->selectRaw("COALESCE(SUM($paid), 0) as paid_amount")
+            ->selectRaw("COALESCE(SUM($amount - $paid), 0) as open_balance")
+            ->selectRaw("COUNT(*) FILTER (WHERE $paid <= 0) as never_paid_count")
+            ->selectRaw("COALESCE(SUM($amount - $paid) FILTER (WHERE $paid <= 0), 0) as never_paid_amount")
+            ->selectRaw("COUNT(*) FILTER (WHERE date_ IS NOT NULL AND ($expected) > $paid) as overdue_credit_count", [$today])
+            ->selectRaw("COALESCE(SUM(GREATEST(($expected) - $paid, 0)) FILTER (WHERE date_ IS NOT NULL), 0) as overdue_amount", [$today])
+            ->get()
+            ->map(fn ($r) => [
+                'branch' => (string) $r->branch,
+                'credit_count' => (int) $r->credit_count,
+                'total_amount' => (float) $r->total_amount,
+                'paid_amount' => (float) $r->paid_amount,
+                'open_balance' => (float) $r->open_balance,
+                'collected_pct' => (float) $r->total_amount > 0
+                    ? (float) $r->paid_amount / (float) $r->total_amount * 100
+                    : 0.0,
+                'never_paid_count' => (int) $r->never_paid_count,
+                'never_paid_amount' => (float) $r->never_paid_amount,
+                'overdue_credit_count' => (int) $r->overdue_credit_count,
+                'overdue_amount' => (float) $r->overdue_amount,
+                'overdue_share' => (float) $r->open_balance > 0
+                    ? (float) $r->overdue_amount / (float) $r->open_balance * 100
+                    : 0.0,
+            ])
+            ->sortByDesc('open_balance')
+            ->values()
+            ->all();
+
+        $sum = fn (string $key) => array_sum(array_column($rows, $key));
+
+        $totalAmount = $sum('total_amount');
+        $totalPaid = $sum('paid_amount');
+        $totalOpen = $sum('open_balance');
+        $totalOverdue = $sum('overdue_amount');
+
+        return [
+            'rows' => $rows,
+            'total' => [
+                'branch_count' => count($rows),
+                'credit_count' => (int) $sum('credit_count'),
+                'total_amount' => $totalAmount,
+                'paid_amount' => $totalPaid,
+                'open_balance' => $totalOpen,
+                'collected_pct' => $totalAmount > 0 ? $totalPaid / $totalAmount * 100 : 0.0,
+                'never_paid_count' => (int) $sum('never_paid_count'),
+                'never_paid_amount' => $sum('never_paid_amount'),
+                'overdue_credit_count' => (int) $sum('overdue_credit_count'),
+                'overdue_amount' => $totalOverdue,
+                'overdue_share' => $totalOpen > 0 ? $totalOverdue / $totalOpen * 100 : 0.0,
+            ],
+        ];
     }
 
     /* --------------------------------------------------------------- utils */

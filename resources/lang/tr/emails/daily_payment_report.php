@@ -136,6 +136,23 @@ return [
         'idle_summary' => ':count şube',
     ],
 
+    'portfolio' => [
+        'title' => 'Portföy Durumu',
+        'desc' => 'Şube bazında defterdeki alacak. Rakamlar rapor gününe aittir.',
+        'branch_scope' => ':count şube',
+        'contracts' => 'Açık sözleşme',
+        'total_debt' => 'Toplam borç',
+        'collected' => 'Tahsil edilen',
+        'open_balance' => 'Kalan bakiye',
+        'collected_pct' => 'Tahsilat %',
+        'overdue_count' => 'Vadesi geçen',
+        'overdue_amount' => 'Vadesi geçen tutar',
+        'overdue_pct' => 'Kalanda payı',
+        'never_paid' => 'Hiç ödemeyen',
+        'never_paid_hint' => 'Tek kuruş ödeme yapılmamış sözleşmeler.',
+        'legend' => 'Vadesi geçen — bugüne kadar gelen taksitlerin ödenmemiş kısmı. «Hiç ödemeyen» sözleşmeler bunun içindedir.',
+    ],
+
     'table' => [
         'branch' => 'Şube',
         'method' => 'Yöntem',

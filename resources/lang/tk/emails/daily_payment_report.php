@@ -136,6 +136,23 @@ return [
         'idle_summary' => ':count şahamça',
     ],
 
+    'portfolio' => [
+        'title' => 'Portfeliň ýagdaýy',
+        'desc' => 'Şahamçalar boýunça kitapda duran bergi. Sanlar hasabat gününe degişli.',
+        'branch_scope' => ':count şahamça',
+        'contracts' => 'Açyk şertnama',
+        'total_debt' => 'Jemi bergi',
+        'collected' => 'Ýygnalan',
+        'open_balance' => 'Galyndy',
+        'collected_pct' => 'Ýygnalan %',
+        'overdue_count' => 'Möhleti geçen',
+        'overdue_amount' => 'Möhleti geçen möçber',
+        'overdue_pct' => 'Galyndyda paýy',
+        'never_paid' => 'Hiç tölemedik',
+        'never_paid_hint' => 'Bir gezek hem töleg etmedik şertnamalar.',
+        'legend' => 'Möhleti geçen — şu güne çenli gelen paýlaryň tölenmedik bölegi. «Hiç tölemedik» şertnamalar munuň içindedir.',
+    ],
+
     'table' => [
         'branch' => 'Şahamça',
         'method' => 'Usul',

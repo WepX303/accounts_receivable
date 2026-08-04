@@ -6,6 +6,7 @@
     $cmp = $report['comparison'];
     $audit = $report['audit'];
     $sch = $report['schedule'];
+    $pf = $report['portfolio'];
     $cur = $meta['currency'];
 
     $money = fn ($v) => number_format((float) $v, 2);
@@ -714,6 +715,76 @@
                         </tr>
                     </table>
                 @endif
+
+                {{-- ========================== PORTFOLIO ========================== --}}
+                <h2 style="{{ $h2 }}">
+                    {{ $t('portfolio.title') }}
+                    <span style="font-size:13px; font-weight:400; color:#6b7280;">
+                        · {{ $t('portfolio.branch_scope', ['count' => $int($pf['total']['branch_count'])]) }}
+                    </span>
+                </h2>
+                <p style="{{ $desc }}">{{ $t('portfolio.desc') }}</p>
+
+                <table role="presentation" style="{{ $table }}">
+                    <thead>
+                        <tr>
+                            <th style="{{ $th }}">{{ $t('table.branch') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.contracts') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.total_debt') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.collected') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.collected_pct') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.open_balance') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.overdue_amount') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.overdue_pct') }}</th>
+                            <th style="{{ $thR }}">{{ $t('portfolio.never_paid') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($pf['rows'] as $b)
+                            <tr>
+                                <td style="{{ $cell }} font-weight:600;">{{ $b['branch'] }}</td>
+                                <td style="{{ $cellR }}">{{ $int($b['credit_count']) }}</td>
+                                <td style="{{ $cellR }} color:#6b7280;">{{ $money($b['total_amount']) }}</td>
+                                <td style="{{ $cellR }} color:#047857;">{{ $money($b['paid_amount']) }}</td>
+                                <td style="{{ $cellR }} color:#6b7280;">{{ $pct($b['collected_pct']) }}</td>
+                                <td style="{{ $cellR }} font-weight:700;">{{ $money($b['open_balance']) }}</td>
+                                <td style="{{ $cellR }} color:#b91c1c; font-weight:700;">{{ $money($b['overdue_amount']) }}</td>
+                                <td style="{{ $cellR }} color:#b91c1c;">{{ $pct($b['overdue_share']) }}</td>
+                                <td style="{{ $cellR }} color:#b45309;">
+                                    {{ $int($b['never_paid_count']) }}
+                                    <span style="display:block; font-size:11px; line-height:15px; color:#9ca3af;">
+                                        {{ $money($b['never_paid_amount']) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
+                            </tr>
+                        @endforelse
+
+                        @if (count($pf['rows']) > 0)
+                            <tr>
+                                <td style="{{ $totalCell }}">{{ $t('table.total') }}</td>
+                                <td style="{{ $totalCellR }}">{{ $int($pf['total']['credit_count']) }}</td>
+                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['total_amount']) }}</td>
+                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['paid_amount']) }}</td>
+                                <td style="{{ $totalCellR }}">{{ $pct($pf['total']['collected_pct']) }}</td>
+                                <td style="{{ $totalCellR }}">{{ $money($pf['total']['open_balance']) }}</td>
+                                <td style="{{ $totalCellR }} color:#b91c1c;">{{ $money($pf['total']['overdue_amount']) }}</td>
+                                <td style="{{ $totalCellR }} color:#b91c1c;">{{ $pct($pf['total']['overdue_share']) }}</td>
+                                <td style="{{ $totalCellR }} color:#b45309;">
+                                    {{ $int($pf['total']['never_paid_count']) }}
+                                    <span style="display:block; font-size:11px; line-height:15px; font-weight:400; color:#9ca3af;">
+                                        {{ $money($pf['total']['never_paid_amount']) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
+
+                <p style="{{ $desc }}">{{ $t('portfolio.legend') }}</p>
 
                 <p style="margin:24px 0 0 0; font-size:12px; line-height:19px; color:#6b7280;">
                     {{ $t('footer.note') }}

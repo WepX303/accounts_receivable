@@ -136,6 +136,23 @@ return [
         'idle_summary' => ':count branch(es)',
     ],
 
+    'portfolio' => [
+        'title' => 'Portfolio Position',
+        'desc' => 'What is on the book, branch by branch. Figures are as at the report day.',
+        'branch_scope' => ':count branches',
+        'contracts' => 'Open contracts',
+        'total_debt' => 'Total debt',
+        'collected' => 'Collected',
+        'open_balance' => 'Open balance',
+        'collected_pct' => 'Collected %',
+        'overdue_count' => 'Overdue',
+        'overdue_amount' => 'Overdue amount',
+        'overdue_pct' => 'Share of balance',
+        'never_paid' => 'Never paid',
+        'never_paid_hint' => 'Contracts that have not made a single payment.',
+        'legend' => 'Overdue is the unpaid part of the instalments that have come due so far. Contracts that never paid are counted inside it.',
+    ],
+
     'table' => [
         'branch' => 'Branch',
         'method' => 'Method',
