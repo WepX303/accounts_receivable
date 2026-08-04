@@ -26,6 +26,11 @@
     $totalCellR = $totalCell . ' text-align:right; white-space:nowrap;';
     $sub = 'display:block; font-size:11px; line-height:15px; font-weight:400; color:#9ca3af;';
 
+    // Label/value card used where a wide grid would not fit a phone.
+    $cardHead = 'padding:10px 14px; font-size:15px; line-height:22px; font-weight:700;';
+    $cardKey = 'padding:9px 14px; border-top:1px solid #e5e7eb; font-size:13px; line-height:19px; color:#4b5563;';
+    $cardVal = 'padding:9px 14px; border-top:1px solid #e5e7eb; font-size:14px; line-height:19px; color:#111827; text-align:right; white-space:nowrap; font-weight:600;';
+
     $hasPayments = $s['tx_count'] > 0;
     $auditCount = $audit['voids']['count'] + $audit['corrections']['count'] + $audit['backdated']['count'];
     $topBranch = $report['branches'][0] ?? null;
@@ -358,69 +363,47 @@
 
                 {{-- =========================== BRANCHES =========================== --}}
                 <h2 style="{{ $h2 }}">{{ $t('branches.title') }}</h2>
-                <table role="presentation" style="{{ $table }}">
-                    <thead>
-                        <tr>
-                            <th style="{{ $th }}">{{ $t('table.branch') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.net') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.cash') }} / {{ $t('table.card') }} / {{ $t('table.phone') }}</th>
-                            <th style="{{ $thR }}">{{ $t('table.share') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($report['branches'] as $b)
-                            <tr>
-                                <td style="{{ $cell }}">
-                                    <span style="font-weight:700;">{{ $b['branch'] }}</span>
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $int($b['tx_count']) }} {{ $t('hero.transactions') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }}">
-                                    <span style="font-weight:700;">{{ $money($b['net']) }}</span>
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($b['gross']) }} − {{ $money($b['change']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }}">
-                                    {{ $money($b['cash']) }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($b['card']) }} / {{ $money($b['phone']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }} color:#6b7280;">{{ $pct($b['share']) }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
-                            </tr>
-                        @endforelse
 
-                        @if (count($report['branches']) > 0)
+                @php
+                    $branchRows = function (array $b) use ($t, $money, $int, $pct, $cur) {
+                        return [
+                            [$t('table.count'), $int($b['tx_count']), ''],
+                            [$t('table.gross'), $money($b['gross']) . ' ' . $cur, 'color:#6b7280;'],
+                            [$t('table.change'), '− ' . $money($b['change']) . ' ' . $cur, 'color:#b45309;'],
+                            [$t('table.net'), $money($b['net']) . ' ' . $cur, 'font-size:15px; color:#047857;'],
+                            [$t('table.cash'), $money($b['cash']) . ' ' . $cur, ''],
+                            [$t('table.card'), $money($b['card']) . ' ' . $cur, ''],
+                            [$t('table.phone'), $money($b['phone']) . ' ' . $cur, ''],
+                            [$t('table.share'), $pct($b['share']), 'color:#6b7280;'],
+                        ];
+                    };
+
+                    $branchCards = array_map(fn ($b) => [$b['branch'], $branchRows($b), false], $report['branches']);
+
+                    if (count($report['branches']) > 0) {
+                        $branchCards[] = [$t('table.total'), $branchRows($s + ['share' => 100.0]), true];
+                    }
+                @endphp
+
+                @forelse ($branchCards as [$name, $rows, $isTotal])
+                    <table role="presentation"
+                        style="width:100%; border-collapse:collapse; border:1px solid {{ $isTotal ? '#0f172a' : '#e5e7eb' }}; margin-bottom:14px;">
+                        <tr>
+                            <td colspan="2"
+                                style="{{ $cardHead }} background-color:{{ $isTotal ? '#0f172a' : '#f8fafc' }}; color:{{ $isTotal ? '#ffffff' : '#0f172a' }};">
+                                {{ $name }}
+                            </td>
+                        </tr>
+                        @foreach ($rows as [$label, $value, $style])
                             <tr>
-                                <td style="{{ $totalCell }}">
-                                    {{ $t('table.total') }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $int($s['tx_count']) }} {{ $t('hero.transactions') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }}">
-                                    {{ $money($s['net']) }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($s['gross']) }} − {{ $money($s['change']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }}">
-                                    {{ $money($s['cash']) }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($s['card']) }} / {{ $money($s['phone']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }}">100.0%</td>
+                                <td style="{{ $cardKey }} width:58%;">{{ $label }}</td>
+                                <td style="{{ $cardVal }} {{ $style }}">{{ $value }}</td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
+                        @endforeach
+                    </table>
+                @empty
+                    <p style="{{ $desc }}">{{ $t('table.empty') }}</p>
+                @endforelse
 
                 {{-- =========================== CASHIERS =========================== --}}
                 <h2 style="{{ $h2 }}">{{ $t('cashiers.title') }}</h2>
@@ -772,75 +755,49 @@
                 </h2>
                 <p style="{{ $desc }}">{{ $t('portfolio.desc') }}</p>
 
-                <table role="presentation" style="{{ $table }}">
-                    <thead>
-                        <tr>
-                            <th style="{{ $th }}">{{ $t('table.branch') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.open_balance') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.overdue_amount') }}</th>
-                            <th style="{{ $thR }}">{{ $t('portfolio.never_paid') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($pf['rows'] as $b)
-                            <tr>
-                                <td style="{{ $cell }}">
-                                    <span style="font-weight:700;">{{ $b['branch'] }}</span>
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $int($b['credit_count']) }} {{ $t('portfolio.contracts') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }}">
-                                    <span style="font-weight:700;">{{ $money($b['open_balance']) }}</span>
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($b['total_amount']) }} · {{ $pct($b['collected_pct']) }} {{ $t('portfolio.collected') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }}">
-                                    <span style="font-weight:700; color:#b91c1c;">{{ $money($b['overdue_amount']) }}</span>
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $pct($b['overdue_share']) }} · {{ $int($b['overdue_credit_count']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $cellR }}">
-                                    <span style="font-weight:700; color:#b45309;">{{ $int($b['never_paid_count']) }}</span>
-                                    <span class="sub" style="{{ $sub }}">{{ $money($b['never_paid_amount']) }}</span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" style="{{ $cell }} text-align:center; color:#6b7280;">{{ $t('table.empty') }}</td>
-                            </tr>
-                        @endforelse
+                @php
+                    // One labelled block per branch rather than a wide grid: every
+                    // number keeps its own caption, and two columns fit any screen.
+                    $pfCard = function (array $b, bool $isTotal) use ($t, $money, $int, $pct, $cur) {
+                        return [
+                            'name' => $isTotal ? $t('table.total') : $b['branch'],
+                            'rows' => [
+                                [$t('portfolio.contracts'), $int($b['credit_count']), ''],
+                                [$t('portfolio.total_debt'), $money($b['total_amount']) . ' ' . $cur, 'color:#6b7280;'],
+                                [$t('portfolio.collected'), $money($b['paid_amount']) . ' ' . $cur . '  (' . $pct($b['collected_pct']) . ')', 'color:#047857;'],
+                                [$t('portfolio.open_balance'), $money($b['open_balance']) . ' ' . $cur, 'font-size:15px;'],
+                                [$t('portfolio.overdue_amount'), $money($b['overdue_amount']) . ' ' . $cur . '  (' . $pct($b['overdue_share']) . ')', 'color:#b91c1c;'],
+                                [$t('portfolio.overdue_count'), $int($b['overdue_credit_count']), 'color:#b91c1c;'],
+                                [$t('portfolio.never_paid'), $int($b['never_paid_count']) . '  (' . $money($b['never_paid_amount']) . ' ' . $cur . ')', 'color:#b45309;'],
+                            ],
+                        ];
+                    };
+                @endphp
 
-                        @if (count($pf['rows']) > 0)
+                {{-- Total first, then the branches behind it. --}}
+                @foreach (array_merge([[$pf['total'], true]], array_map(fn ($b) => [$b, false], $pf['rows'])) as [$row, $isTotal])
+                    @php $card = $pfCard($row, $isTotal); @endphp
+
+                    <table role="presentation"
+                        style="width:100%; border-collapse:collapse; border:1px solid {{ $isTotal ? '#0f172a' : '#e5e7eb' }}; margin-bottom:14px;">
+                        <tr>
+                            <td colspan="2"
+                                style="{{ $cardHead }} background-color:{{ $isTotal ? '#0f172a' : '#f8fafc' }}; color:{{ $isTotal ? '#ffffff' : '#0f172a' }};">
+                                {{ $card['name'] }}
+                            </td>
+                        </tr>
+                        @foreach ($card['rows'] as [$label, $value, $style])
                             <tr>
-                                <td style="{{ $totalCell }}">
-                                    {{ $t('table.total') }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $int($pf['total']['credit_count']) }} {{ $t('portfolio.contracts') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }}">
-                                    {{ $money($pf['total']['open_balance']) }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $money($pf['total']['total_amount']) }} · {{ $pct($pf['total']['collected_pct']) }} {{ $t('portfolio.collected') }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }} color:#b91c1c;">
-                                    {{ $money($pf['total']['overdue_amount']) }}
-                                    <span class="sub" style="{{ $sub }}">
-                                        {{ $pct($pf['total']['overdue_share']) }} · {{ $int($pf['total']['overdue_credit_count']) }}
-                                    </span>
-                                </td>
-                                <td style="{{ $totalCellR }} color:#b45309;">
-                                    {{ $int($pf['total']['never_paid_count']) }}
-                                    <span class="sub" style="{{ $sub }}">{{ $money($pf['total']['never_paid_amount']) }}</span>
-                                </td>
+                                <td style="{{ $cardKey }} width:58%;">{{ $label }}</td>
+                                <td style="{{ $cardVal }} {{ $style }}">{{ $value }}</td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
+                        @endforeach
+                    </table>
+                @endforeach
+
+                @if (count($pf['rows']) === 0)
+                    <p style="{{ $desc }}">{{ $t('table.empty') }}</p>
+                @endif
 
                 <p style="{{ $desc }}">{{ $t('portfolio.legend') }}</p>
 
