@@ -83,6 +83,29 @@ class User extends Authenticatable
         return $this->allowedBranches() !== null;
     }
 
+    /**
+     * Branches the nightly report is built for, or null for every branch.
+     *
+     * Deliberately different from allowedBranches(): this reads the stored list
+     * as it is, so a Super Admin with branches assigned receives a report for
+     * exactly those branches. Panel access still ignores the list for a Super
+     * Admin — that exemption exists to prevent a lockout, and a mailed report
+     * cannot lock anyone out.
+     *
+     * @return string[]|null
+     */
+    public function dailyReportBranches(): ?array
+    {
+        $branches = collect($this->branches ?? [])
+            ->map(fn ($b) => trim((string) $b))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $branches === [] ? null : $branches;
+    }
+
     public function canAccessBranch(?string $branch): bool
     {
         $allowed = $this->allowedBranches();

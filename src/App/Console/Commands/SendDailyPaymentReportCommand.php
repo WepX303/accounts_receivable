@@ -81,10 +81,14 @@ class SendDailyPaymentReportCommand extends Command
     /**
      * Who gets the mail, and how much of it.
      *
-     * The addresses in DAILY_REPORT_EMAILS always get the whole picture. Users
-     * ticked on the users page get their own branches only, and fall back to
-     * the whole picture when they are not branch-restricted. An address on both
-     * lists is sent once, unrestricted.
+     * Addresses in DAILY_REPORT_EMAILS get the whole picture. Users ticked on
+     * the users page get their own branches, and the whole picture when no
+     * branches are assigned to them.
+     *
+     * An address on both lists is sent once and the user record wins, because
+     * assigning branches to an account is the more deliberate act of the two —
+     * otherwise ticking yourself would silently do nothing while your address
+     * sits in the env file.
      *
      * @return Collection<int, array{email: string, branches: string[]|null, label: string}>
      */
@@ -118,12 +122,12 @@ class SendDailyPaymentReportCommand extends Command
             ->get()
             ->map(fn (User $user) => [
                 'email' => trim((string) $user->email),
-                'branches' => $user->allowedBranches(),
+                'branches' => $user->dailyReportBranches(),
                 'label' => 'user #' . $user->id,
             ]);
 
-        return $configured
-            ->concat($users)
+        return $users
+            ->concat($configured)
             ->unique(fn (array $r) => mb_strtolower($r['email']))
             ->values();
     }
