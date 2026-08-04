@@ -58,6 +58,10 @@ return [
         'avg7' => 'Son 7 Gün Ortalaması',
         'mtd' => 'Ay Başından Bugüne (:days gün)',
         'mtd_daily_avg' => 'Aylık Günlük Ortalama',
+        'prev_mtd' => 'Geçen ay aynı dönem (:label)',
+        'day_group' => 'Tek günler — bugünle karşılaştırılır',
+        'period_group' => 'Kümülatif dönemler — ay başından bugüne ile karşılaştırılır',
+        'legend' => 'Her satır kendi grubunun tabanıyla karşılaştırılır: tek günler bugünle, kümülatif dönemler ay başından bugüne toplamıyla.',
         'prev_month_day' => 'Geçen ayın aynı günü (:label)',
     ],
 

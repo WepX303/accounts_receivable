@@ -199,13 +199,22 @@ class DailyPaymentReportService
         $mtd = $this->netBetween($day->copy()->startOfMonth(), $day->copy()->endOfDay());
         $daysElapsed = max(1, $day->day);
 
-        // The same calendar day one month back, so the comparison is day to day
-        // rather than a running total against a running total.
+        // Two different questions, so two different windows. The same calendar
+        // day one month back pairs with today; the same slice of last month
+        // pairs with month-to-date. Comparing a running total against a single
+        // day would read as a collapse every time.
         $prevMonthDay = $day->copy()->subMonthNoOverflow();
         $prevMonthSame = $this->netBetween(
             $prevMonthDay->copy()->startOfDay(),
             $prevMonthDay->copy()->endOfDay()
         );
+
+        // Clamped so that e.g. the 31st does not overflow a 30-day month.
+        $prevMonthStart = $prevMonthDay->copy()->startOfMonth();
+        $prevMonthEnd = $prevMonthStart->copy()
+            ->addDays(min($day->day, $prevMonthStart->daysInMonth) - 1)
+            ->endOfDay();
+        $prevMtd = $this->netBetween($prevMonthStart, $prevMonthEnd);
 
         $today = $this->netBetween($day->copy()->startOfDay(), $day->copy()->endOfDay());
 
@@ -232,6 +241,13 @@ class DailyPaymentReportService
                 'tx_count' => $prevMonthSame['tx_count'],
                 'label' => $prevMonthDay->format('d.m.Y'),
                 'net_delta_pct' => $this->deltaPct($today['net'], $prevMonthSame['net']),
+            ],
+            'prev_mtd' => [
+                'net' => $prevMtd['net'],
+                'tx_count' => $prevMtd['tx_count'],
+                'label' => $prevMonthStart->format('d.m') . ' – ' . $prevMonthEnd->format('d.m.Y'),
+                'days' => $prevMonthStart->diffInDays($prevMonthEnd) + 1,
+                'net_delta_pct' => $this->deltaPct($mtd['net'], $prevMtd['net']),
             ],
         ];
     }

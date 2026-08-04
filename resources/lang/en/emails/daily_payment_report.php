@@ -58,6 +58,10 @@ return [
         'avg7' => 'Trailing 7-Day Average',
         'mtd' => 'Month to Date (:days days)',
         'mtd_daily_avg' => 'Month-to-Date Daily Average',
+        'prev_mtd' => 'Previous month, same period (:label)',
+        'day_group' => 'Single days — measured against today',
+        'period_group' => 'Running totals — measured against month to date',
+        'legend' => 'Each row is compared with the baseline of its own group: single days against today, running totals against the month-to-date figure.',
         'prev_month_day' => 'Same day last month (:label)',
     ],
 

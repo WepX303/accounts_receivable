@@ -58,6 +58,10 @@ return [
         'avg7' => 'Soňky 7 günüň ortaçasy',
         'mtd' => 'Aýyň başyndan bäri (:days gün)',
         'mtd_daily_avg' => 'Aýyň günlük ortaçasy',
+        'prev_mtd' => 'Geçen aý şol bir döwür (:label)',
+        'day_group' => 'Aýry günler — bu gün bilen deňeşdirilýär',
+        'period_group' => 'Jemleýji döwürler — aýyň başyndan bäri bilen deňeşdirilýär',
+        'legend' => 'Her hatar öz toparynyň esasy bilen deňeşdirilýär: aýry günler bu gün bilen, jemleýji döwürler bolsa aýyň başyndan bäriki jem bilen.',
         'prev_month_day' => 'Geçen aýyň şol güni (:label)',
     ],
 

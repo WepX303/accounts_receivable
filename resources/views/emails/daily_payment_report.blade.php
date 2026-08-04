@@ -225,6 +225,12 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{-- Single days, all measured against today. --}}
+                        <tr>
+                            <td colspan="3" style="{{ $th }} font-size:12px; text-transform:uppercase; letter-spacing:0.4px;">
+                                {{ $t('comparison.day_group') }}
+                            </td>
+                        </tr>
                         <tr>
                             <td style="{{ $cell }} font-weight:700;">{{ $t('comparison.today') }}</td>
                             <td style="{{ $cellR }} font-weight:700;">{{ $money($cmp['today']['net']) }} {{ $cur }}</td>
@@ -241,22 +247,35 @@
                             <td style="{{ $cellR }}">{!! $delta($cmp['avg7']['net_delta_pct']) !!}</td>
                         </tr>
                         <tr>
+                            <td style="{{ $cell }}">{{ $t('comparison.prev_month_day', ['label' => $cmp['prev_month_day']['label']]) }}</td>
+                            <td style="{{ $cellR }}">{{ $money($cmp['prev_month_day']['net']) }} {{ $cur }}</td>
+                            <td style="{{ $cellR }}">{!! $delta($cmp['prev_month_day']['net_delta_pct']) !!}</td>
+                        </tr>
+
+                        {{-- Running totals, measured against month-to-date. --}}
+                        <tr>
+                            <td colspan="3" style="{{ $th }} font-size:12px; text-transform:uppercase; letter-spacing:0.4px;">
+                                {{ $t('comparison.period_group') }}
+                            </td>
+                        </tr>
+                        <tr>
                             <td style="{{ $cell }} font-weight:700;">{{ $t('comparison.mtd', ['days' => $cmp['mtd']['days_elapsed']]) }}</td>
                             <td style="{{ $cellR }} font-weight:700;">{{ $money($cmp['mtd']['net']) }} {{ $cur }}</td>
                             <td style="{{ $cellR }} color:#6b7280;">{{ $int($cmp['mtd']['tx_count']) }} {{ $t('hero.transactions') }}</td>
+                        </tr>
+                        <tr>
+                            <td style="{{ $cell }}">{{ $t('comparison.prev_mtd', ['label' => $cmp['prev_mtd']['label']]) }}</td>
+                            <td style="{{ $cellR }}">{{ $money($cmp['prev_mtd']['net']) }} {{ $cur }}</td>
+                            <td style="{{ $cellR }}">{!! $delta($cmp['prev_mtd']['net_delta_pct']) !!}</td>
                         </tr>
                         <tr>
                             <td style="{{ $cell }}">{{ $t('comparison.mtd_daily_avg') }}</td>
                             <td style="{{ $cellR }}">{{ $money($cmp['mtd']['daily_avg']) }} {{ $cur }}</td>
                             <td style="{{ $cellR }} color:#9ca3af;">—</td>
                         </tr>
-                        <tr>
-                            <td style="{{ $cell }}">{{ $t('comparison.prev_month_day', ['label' => $cmp['prev_month_day']['label']]) }}</td>
-                            <td style="{{ $cellR }}">{{ $money($cmp['prev_month_day']['net']) }} {{ $cur }}</td>
-                            <td style="{{ $cellR }}">{!! $delta($cmp['prev_month_day']['net_delta_pct']) !!}</td>
-                        </tr>
                     </tbody>
                 </table>
+                <p style="{{ $desc }}">{{ $t('comparison.legend') }}</p>
 
                 {{-- ============================ TREND ============================ --}}
                 <h2 style="{{ $h2 }}">{{ $t('trend.title', ['days' => count($report['trend'])]) }}</h2>
