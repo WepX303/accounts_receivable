@@ -37,6 +37,7 @@
                                         <th data-sort="position">{{ __('pages/users.th_position') }}</th>
                                         <th data-sort="role">{{ __('pages/users.th_role') }}</th>
                                         <th data-sort="branches">{{ __('pages/users.th_branches') }}</th>
+                                        <th data-sort="daily_report">{{ __('pages/users.th_daily_report') }}</th>
                                         <th data-sort="status">{{ __('pages/users.th_status') }}</th>
                                         <th data-sort="action">{{ __('pages/users.th_action') }}</th>
                                     </tr>
@@ -55,6 +56,17 @@
                                             <td class="position">{{ $user->position }}</td>
                                             {{-- <td class="role">{{ $user->role }}</td> --}}
                                             <td class="role">{{ $user->role->label() }}</td>
+                                            <td class="daily_report">
+                                                @if ($user->daily_report)
+                                                    <span class="badge bg-success-subtle text-success">
+                                                        {{ __('pages/users.daily_report_on') }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-light text-muted">
+                                                        {{ __('pages/users.daily_report_off') }}
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td class="branches">
                                                 @if ($user->isSuperAdmin())
                                                     <span class="badge bg-secondary-subtle text-secondary">
@@ -113,6 +125,7 @@
                                                                 data-position="{{ $user->position }}"
                                                                 data-role="{{ $user->role?->value }}"
                                                                 data-branches="{{ json_encode($user->branches ?? []) }}"
+                                                                data-daily-report="{{ $user->daily_report ? 1 : 0 }}"
                                                                 data-status="{{ $user->status }}">
                                                                 <i class="ri-pencil-fill fs-16"></i>
                                                             </a>
@@ -144,7 +157,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center">
+                                            <td colspan="10" class="text-center">
                                                 {{ __('pages/users.no_users_found') }}
                                             </td>
                                         </tr>
@@ -298,6 +311,20 @@
                                             <div class="form-text">{{ __('pages/users.branches_hint') }}</div>
                                         </div>
 
+                                        @if (auth()->user()->isSuperAdmin())
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    <input type="hidden" name="daily_report" value="0">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        name="daily_report" value="1" id="dailyReportCheck">
+                                                    <label class="form-check-label" for="dailyReportCheck">
+                                                        {{ __('pages/users.daily_report') }}
+                                                    </label>
+                                                </div>
+                                                <div class="form-text">{{ __('pages/users.daily_report_hint') }}</div>
+                                            </div>
+                                        @endif
+
                                         <div class="mb-3">
                                             <label class="form-label">{{ __('pages/users.status') }}</label>
                                             <select name="status"
@@ -437,6 +464,12 @@
             document.getElementById('create-btn').addEventListener('click', function() {
                 form.reset();
                 setBranches([]);
+
+                const newDailyBox = form.querySelector('input[type="checkbox"][name="daily_report"]');
+                if (newDailyBox) {
+                    newDailyBox.checked = false;
+                }
+
                 form.action = "{{ route('users.store') }}";
                 form.method = "POST";
                 submitButton.textContent = t.create_user;
@@ -470,6 +503,11 @@
                     form.role.value = role;
                     form.status.value = status ? 1 : 0;
                     setBranches(branches);
+
+                    const dailyReportBox = form.querySelector('input[type="checkbox"][name="daily_report"]');
+                    if (dailyReportBox) {
+                        dailyReportBox.checked = this.dataset.dailyReport === '1';
+                    }
 
                     form.action = "/users/" + id;
                     let methodInput = form.querySelector('input[name="_method"]');

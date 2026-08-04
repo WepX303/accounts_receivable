@@ -11,6 +11,8 @@ return [
 
     'meta' => [
         'report_date' => 'Hasabat güni',
+        'branches' => 'Şahamçalar',
+        'all_branches' => 'Ähli şahamçalar',
         'generated_at' => 'Döredilen wagty',
     ],
 

@@ -11,6 +11,8 @@ return [
 
     'meta' => [
         'report_date' => 'Rapor Günü',
+        'branches' => 'Şubeler',
+        'all_branches' => 'Tüm şubeler',
         'generated_at' => 'Oluşturulma',
     ],
 

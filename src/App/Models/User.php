@@ -22,6 +22,7 @@ class User extends Authenticatable
         'position',
         'role',
         'branches',
+        'daily_report',
         'status',
         'password',
         'token',
@@ -38,6 +39,7 @@ class User extends Authenticatable
     protected $casts = [
         'role' => UserRoleEnum::class,
         'branches' => 'array',
+        'daily_report' => 'boolean',
         'token_expires_at' => 'datetime',
     ];
 

@@ -75,6 +75,7 @@ class UserController extends Controller
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'branches' => 'nullable|array',
             'branches.*' => 'nullable|string|max:100',
+            'daily_report' => 'nullable|boolean',
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -127,6 +128,7 @@ class UserController extends Controller
             'position' => $request->position,
             'role' => UserRoleEnum::from($request->role)->value,
             'branches' => $this->resolveBranches($request),
+            'daily_report' => $currentUser->isSuperAdmin() && $request->boolean('daily_report'),
             'status' => $request->status,
             'password' => Hash::make($request->password),
         ]);
@@ -144,6 +146,7 @@ class UserController extends Controller
                 'position' => $user->position,
                 'role' => $user->role?->value ?? $user->role,
                 'branches' => $user->branches,
+                'daily_report' => $user->daily_report,
                 'status' => $user->status,
             ],
             extra: null,
@@ -194,6 +197,7 @@ class UserController extends Controller
             'role' => ['required', 'in:' . implode(',', $allowedRoles)],
             'branches' => 'nullable|array',
             'branches.*' => 'nullable|string|max:100',
+            'daily_report' => 'nullable|boolean',
             'status' => 'required|boolean',
         ], [
             'firstname.required' => __('validations/validations.users.firstname_required'),
@@ -249,6 +253,7 @@ class UserController extends Controller
             'position',
             'role',
             'branches',
+            'daily_report',
             'status',
         ]);
 
@@ -266,6 +271,11 @@ class UserController extends Controller
 
         $data['role'] = UserRoleEnum::from($request->role)->value;
         $data['branches'] = $this->resolveBranches($request);
+        // Only a Super Admin decides who is on the nightly mailing list; an
+        // Admin editing the same account leaves the flag as it was.
+        $data['daily_report'] = $currentUser->isSuperAdmin()
+            ? $request->boolean('daily_report')
+            : (bool) $user->daily_report;
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -282,6 +292,7 @@ class UserController extends Controller
             'phonenumber',
             'position',
             'branches',
+            'daily_report',
             'status',
         ]);
 
@@ -377,6 +388,7 @@ class UserController extends Controller
             'position',
             'role',
             'branches',
+            'daily_report',
             'status',
         ]);
 

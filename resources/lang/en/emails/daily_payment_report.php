@@ -11,6 +11,8 @@ return [
 
     'meta' => [
         'report_date' => 'Report Day',
+        'branches' => 'Branches',
+        'all_branches' => 'All branches',
         'generated_at' => 'Generated',
     ],
 

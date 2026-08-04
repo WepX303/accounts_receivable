@@ -18,6 +18,11 @@ return [
     'all_branches' => 'Tüm şubeler',
     'no_branches' => 'Şube bulunamadı.',
     'branches_hint' => 'Hiçbiri seçilmezse kullanıcı tüm şubeleri görür. Süper Admin her zaman tümünü görür.',
+    'th_daily_report' => 'Günlük rapor',
+    'daily_report' => 'Günlük rapor e-postası gönderilsin',
+    'daily_report_hint' => 'İşaretlenirse bu kullanıcıya her akşam kendi şubelerinin tahsilat raporu gönderilir.',
+    'daily_report_on' => 'Gönderiliyor',
+    'daily_report_off' => 'Gönderilmiyor',
     'th_status' => 'Durum',
     'th_action' => 'İşlem',
 

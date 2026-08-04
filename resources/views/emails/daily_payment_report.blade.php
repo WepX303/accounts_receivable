@@ -72,6 +72,12 @@
                 <p style="margin:10px 0 0 0; font-size:13px; line-height:19px; color:#cbd5e1;">
                     {{ $t('header.subtitle') }}
                 </p>
+                <p style="margin:6px 0 0 0; font-size:13px; line-height:19px; color:#cbd5e1;">
+                    {{ $t('meta.branches') }}:
+                    <strong style="color:#ffffff;">
+                        {{ empty($meta['branches']) ? $t('meta.all_branches') : implode(', ', $meta['branches']) }}
+                    </strong>
+                </p>
                 <p style="margin:8px 0 0 0; font-size:12px; line-height:18px; color:#fcd34d;">
                     {{ $t('header.auto_notice') }}
                 </p>

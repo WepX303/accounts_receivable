@@ -18,6 +18,11 @@ return [
     'all_branches' => 'All branches',
     'no_branches' => 'No branches found.',
     'branches_hint' => 'If none are selected the user sees every branch. A Super Admin always sees all of them.',
+    'th_daily_report' => 'Daily report',
+    'daily_report' => 'Send the daily report email',
+    'daily_report_hint' => 'When ticked, this user is emailed the collection report for their own branches every evening.',
+    'daily_report_on' => 'Sending',
+    'daily_report_off' => 'Not sending',
     'th_status' => 'Status',
     'th_action' => 'Action',
 

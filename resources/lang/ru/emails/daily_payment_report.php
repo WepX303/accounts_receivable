@@ -11,6 +11,8 @@ return [
 
     'meta' => [
         'report_date' => 'Отчётный день',
+        'branches' => 'Филиалы',
+        'all_branches' => 'Все филиалы',
         'generated_at' => 'Сформирован',
     ],
 

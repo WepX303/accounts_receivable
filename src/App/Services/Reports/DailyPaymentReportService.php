@@ -26,13 +26,29 @@ class DailyPaymentReportService
     private const TOP_PAYMENTS = 5;
     private const AUDIT_ROWS = 20;
 
+    /**
+     * Branches this run is limited to, or null for every branch.
+     *
+     * The service reads through the query builder, so BranchScope never fires
+     * here — which is what lets the nightly command build one unrestricted
+     * report for the configured addresses and a narrowed one per recipient.
+     *
+     * @var string[]|null
+     */
+    private ?array $branches = null;
+
     public function getTodayReport(): array
     {
         return $this->getReport(Carbon::today());
     }
 
-    public function getReport(?CarbonInterface $date = null): array
+    /**
+     * @param  string[]|null  $branches  Null means every branch.
+     */
+    public function getReport(?CarbonInterface $date = null, ?array $branches = null): array
     {
+        $this->branches = $this->normalizeBranches($branches);
+
         $day = $date ? Carbon::parse($date)->startOfDay() : Carbon::today();
         $start = $day->copy()->startOfDay();
         $end = $day->copy()->endOfDay();
@@ -46,6 +62,7 @@ class DailyPaymentReportService
                 'weekday' => (int) $start->dayOfWeekIso,
                 'generated_at' => now()->format('d.m.Y H:i'),
                 'currency' => 'TMT',
+                'branches' => $this->branches,
             ],
             'summary' => $this->summary($payments),
             'comparison' => $this->comparison($start),
@@ -57,6 +74,38 @@ class DailyPaymentReportService
             'audit' => $this->audit($start, $end, $payments),
             'portfolio' => $this->portfolio($start),
         ];
+    }
+
+    /**
+     * @param  string[]|null  $branches
+     * @return string[]|null
+     */
+    private function normalizeBranches(?array $branches): ?array
+    {
+        if ($branches === null) {
+            return null;
+        }
+
+        $clean = collect($branches)
+            ->map(fn ($b) => trim((string) $b))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $clean === [] ? null : $clean;
+    }
+
+    /**
+     * Adds the branch restriction to a query, if this run has one.
+     */
+    private function scopeBranch(mixed $query, string $column): mixed
+    {
+        if ($this->branches !== null) {
+            $query->whereIn($column, $this->branches);
+        }
+
+        return $query;
     }
 
     /* ---------------------------------------------------------------- data */
@@ -80,6 +129,7 @@ class DailyPaymentReportService
             ])
             ->whereNull('voided_at')
             ->whereBetween('created_at', [$start, $end])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->orderBy('created_at')
             ->get();
     }
@@ -94,6 +144,7 @@ class DailyPaymentReportService
         $row = DB::table('credit_payments')
             ->whereNull('voided_at')
             ->whereBetween('created_at', [$start, $end])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->selectRaw('COUNT(*) as tx_count')
             ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as net')
             ->first();
@@ -193,6 +244,7 @@ class DailyPaymentReportService
         $rows = DB::table('credit_payments')
             ->whereNull('voided_at')
             ->whereBetween('created_at', [$from, $day->copy()->endOfDay()])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->selectRaw('DATE(created_at)::text as d')
             ->selectRaw('COUNT(*) as tx_count')
             ->selectRaw('COALESCE(SUM(pay_amount - COALESCE(change_amount, 0)), 0) as net')
@@ -324,6 +376,7 @@ class DailyPaymentReportService
             ->leftJoin('users as u', 'u.id', '=', 'p.voided_by')
             ->whereNotNull('p.voided_at')
             ->whereBetween('p.voided_at', [$start, $end])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'p.branch'))
             ->whereNotExists(function ($q) {
                 $q->select(DB::raw(1))
                     ->from('credit_payments as c')
@@ -363,6 +416,7 @@ class DailyPaymentReportService
             ->leftJoin('users as u', 'u.id', '=', 'p.corrected_by')
             ->whereNotNull('p.corrected_at')
             ->whereBetween('p.corrected_at', [$start, $end])
+            ->tap(fn ($q) => $this->scopeBranch($q, 'p.branch'))
             ->selectRaw('p.customer_name, p.customer_contract, p.branch')
             ->selectRaw('prev.created_at as old_payment_at, p.created_at as new_payment_at')
             ->selectRaw('prev.pay_amount - COALESCE(prev.change_amount, 0) as old_net')
@@ -421,6 +475,20 @@ class DailyPaymentReportService
             ->where('action', 'payment_created')
             ->whereBetween('created_at', [$start, $end])
             ->whereRaw("extra->>'backdated' = 'true'")
+            // activity_logs has no branch of its own, so the entry is matched
+            // back to its credit to decide whether it belongs in this report.
+            ->when($this->branches !== null, function ($q) {
+                $placeholders = implode(',', array_fill(0, count($this->branches), '?'));
+
+                $q->whereRaw(
+                    "EXISTS (
+                        SELECT 1 FROM credits bc
+                        WHERE bc.source_id = (activity_logs.extra->>'credit_source_id')::bigint
+                          AND bc.branch IN ($placeholders)
+                    )",
+                    $this->branches
+                );
+            })
             ->selectRaw('user_name, created_at as entered_at')
             ->selectRaw("extra->>'customer_name' as customer_name")
             ->selectRaw("extra->>'customer_contract' as customer_contract")
@@ -464,6 +532,7 @@ class DailyPaymentReportService
             ->where('is_blocked', 0)
             ->whereNotNull('branch')
             ->where('branch', '!=', '')
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
             ->distinct()
             ->orderBy('branch')
@@ -488,6 +557,7 @@ class DailyPaymentReportService
             ->where('active', true)
             ->where('is_blocked', 0)
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->selectRaw('COUNT(*) as credit_count')
             ->selectRaw('COALESCE(SUM(COALESCE(amount_local, amount, 0) - COALESCE(paid_local, paid, 0)), 0) as open_balance')
             ->first();
@@ -495,6 +565,7 @@ class DailyPaymentReportService
         $overdue = DB::table('credits')
             ->where('active', true)
             ->where('is_blocked', 0)
+            ->tap(fn ($q) => $this->scopeBranch($q, 'branch'))
             ->whereNotNull('date_')
             ->whereRaw('COALESCE(amount_local, amount, 0) > 0')
             ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')

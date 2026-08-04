@@ -18,6 +18,11 @@ return [
     'all_branches' => 'Ähli şahamçalar',
     'no_branches' => 'Şahamça tapylmady.',
     'branches_hint' => 'Hiç zat saýlanmasa, ulanyjy ähli şahamçalary görýär. Super Admin hemişe ählisini görýär.',
+    'th_daily_report' => 'Gündelik hasabat',
+    'daily_report' => 'Gündelik hasabat hatyny alsyn',
+    'daily_report_hint' => 'Bellense, bu ulanyja her agşam öz şahamçalarynyň ýygym hasabaty iberilýär.',
+    'daily_report_on' => 'Iberilýär',
+    'daily_report_off' => 'Iberilenok',
     'th_status' => 'Ýagdaý',
     'th_action' => 'Amal',
 
