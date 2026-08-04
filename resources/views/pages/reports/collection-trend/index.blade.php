@@ -7,14 +7,14 @@
                 <div class="card-body">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                         <div>
-                            <h4 class="mb-1">Collection Trend Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.collection_trend.title') }}</h4>
                             <p class="text-muted mb-0">
-                                Collection trend by day, week or month based on net received payments.
+                                {{ __('pages/reports.collection_trend.subtitle') }}
                             </p>
                         </div>
 
                         <div class="text-muted">
-                            Period:
+                            {{ __('pages/reports.common.period') }}:
                             <span class="fw-semibold">
                                 {{ $dateFrom->format('d.m.Y') }} - {{ $dateTo->format('d.m.Y') }}
                             </span>
@@ -33,30 +33,33 @@
                     <form method="GET" action="{{ route('reports.collection-trend') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Date From</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_from') }}</label>
                                 <input type="date" name="date_from" class="form-control"
                                     value="{{ request('date_from', $dateFrom->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Date To</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_to') }}</label>
                                 <input type="date" name="date_to" class="form-control"
                                     value="{{ request('date_to', $dateTo->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Group By</label>
+                                <label class="form-label">{{ __('pages/reports.collection_trend.group_by') }}</label>
                                 <select name="group_by" class="form-select">
-                                    <option value="day" {{ $groupBy === 'day' ? 'selected' : '' }}>Daily</option>
-                                    <option value="week" {{ $groupBy === 'week' ? 'selected' : '' }}>Weekly</option>
-                                    <option value="month" {{ $groupBy === 'month' ? 'selected' : '' }}>Monthly</option>
+                                    <option value="day" {{ $groupBy === 'day' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.collection_trend.daily') }}</option>
+                                    <option value="week" {{ $groupBy === 'week' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.collection_trend.weekly') }}</option>
+                                    <option value="month" {{ $groupBy === 'month' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.collection_trend.monthly') }}</option>
                                 </select>
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -66,9 +69,9 @@
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Cashier</label>
+                                <label class="form-label">{{ __('pages/reports.common.cashier') }}</label>
                                 <select name="cashier" class="form-select">
-                                    <option value="">All Cashiers</option>
+                                    <option value="">{{ __('pages/reports.common.all_cashiers') }}</option>
                                     @foreach ($cashiers as $c)
                                         <option value="{{ $c }}" {{ $cashier === $c ? 'selected' : '' }}>
                                             {{ $c }}
@@ -80,11 +83,11 @@
                             <div class="col-md-2">
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-primary w-100" type="submit">
-                                        Apply
+                                        {{ __('pages/reports.common.apply') }}
                                     </button>
 
                                     <a href="{{ route('reports.collection-trend') }}" class="btn btn-light border w-100">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
                             </div>
@@ -100,7 +103,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Net Collection</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.net_collection') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['net_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -109,7 +112,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Transactions</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.transactions') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['tx_count']) }}</h4>
                 </div>
             </div>
@@ -118,7 +121,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Average Net</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.collection_trend.average_net') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['avg_net'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -127,7 +131,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Change Returned</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.change_returned') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['change_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -138,7 +142,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Cash</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.cash') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['cash_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -147,7 +151,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Card</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.card') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['card_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -156,7 +160,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Phone</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.phone') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['phone_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -168,7 +172,8 @@
         <div class="col-xl-6">
             <div class="card border-success">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Best Collection Period</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.collection_trend.best_period') }}</p>
                     <h5 class="mb-1">
                         {{ $bestRow?->period_key ?? '-' }}
                     </h5>
@@ -182,7 +187,8 @@
         <div class="col-xl-6">
             <div class="card border-warning">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Lowest Collection Period</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.collection_trend.lowest_period') }}</p>
                     <h5 class="mb-1">
                         {{ $lowestRow?->period_key ?? '-' }}
                     </h5>
@@ -199,7 +205,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Collection Trend Chart</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.collection_trend.chart_title') }}</h5>
                 </div>
 
                 <div class="card-body">
@@ -215,7 +221,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Trend Data</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.collection_trend.table_title') }}</h5>
                 </div>
 
                 <div class="card-body">
@@ -223,14 +229,14 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Period</th>
-                                    <th class="text-end">Transactions</th>
-                                    <th class="text-end">Gross</th>
-                                    <th class="text-end">Change</th>
-                                    <th class="text-end">Net</th>
-                                    <th class="text-end">Cash</th>
-                                    <th class="text-end">Card</th>
-                                    <th class="text-end">Phone</th>
+                                    <th>{{ __('pages/reports.collection_trend.period_column') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.transactions') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.gross') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.net') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.cash') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.card') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.phone') }}</th>
                                 </tr>
                             </thead>
 
@@ -251,7 +257,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="8" class="text-center text-muted py-4">
-                                            No trend data found.
+                                            {{ __('pages/reports.collection_trend.empty') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -259,7 +265,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th>Total</th>
+                                    <th>{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['tx_count']) }}</th>
                                     <th class="text-end">{{ number_format($summary['gross_total'], 2) }} TMT</th>
                                     <th class="text-end">{{ number_format($summary['change_total'], 2) }} TMT</th>
@@ -281,6 +287,13 @@
 @section('script')
     <script>
         window.COLLECTION_TREND = {!! json_encode($chart) !!};
+        window.COLLECTION_TREND_LABELS = {!! json_encode([
+            'net' => __('pages/reports.common.net'),
+            'gross' => __('pages/reports.common.gross'),
+            'cash' => __('pages/reports.common.cash'),
+            'card' => __('pages/reports.common.card'),
+            'phone' => __('pages/reports.common.phone'),
+        ]) !!};
     </script>
 
     <script src="{{ URL::asset('build/libs/apexcharts/apexcharts.min.js') }}"></script>
@@ -302,6 +315,14 @@
                 phone: []
             };
 
+            const t = window.COLLECTION_TREND_LABELS || {
+                net: 'Net',
+                gross: 'Gross',
+                cash: 'Cash',
+                card: 'Card',
+                phone: 'Phone'
+            };
+
             const options = {
                 chart: {
                     height: 360,
@@ -311,23 +332,23 @@
                     }
                 },
                 series: [{
-                        name: 'Net',
+                        name: t.net,
                         data: data.net || []
                     },
                     {
-                        name: 'Gross',
+                        name: t.gross,
                         data: data.gross || []
                     },
                     {
-                        name: 'Cash',
+                        name: t.cash,
                         data: data.cash || []
                     },
                     {
-                        name: 'Card',
+                        name: t.card,
                         data: data.card || []
                     },
                     {
-                        name: 'Phone',
+                        name: t.phone,
                         data: data.phone || []
                     }
                 ],

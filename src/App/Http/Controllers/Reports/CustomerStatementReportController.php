@@ -168,8 +168,8 @@ class CustomerStatementReportController extends Controller
 
         $statementRows->push((object) [
             'date' => $credit->date_ ? Carbon::parse($credit->date_) : null,
-            'type' => 'Credit Created',
-            'description' => 'Credit amount created',
+            'type' => __('pages/reports.customer_statement.type_credit_created'),
+            'description' => __('pages/reports.customer_statement.description_credit_created'),
             'debit' => round($amount, 2),
             'credit' => 0,
             'change' => 0,
@@ -180,6 +180,7 @@ class CustomerStatementReportController extends Controller
             'note' => $credit->note,
             'is_voided' => false,
             'is_corrected' => false,
+            'is_credit_created' => true,
         ]);
 
         foreach ($payments as $payment) {
@@ -196,8 +197,12 @@ class CustomerStatementReportController extends Controller
 
             $statementRows->push((object) [
                 'date' => $payment->created_at ? Carbon::parse($payment->created_at) : null,
-                'type' => $isVoided ? 'Voided Payment' : ($isCorrected ? 'Corrected Payment' : 'Payment'),
-                'description' => 'Payment #' . $payment->id,
+                'type' => $isVoided
+                    ? __('pages/reports.customer_statement.type_voided_payment')
+                    : ($isCorrected
+                        ? __('pages/reports.customer_statement.type_corrected_payment')
+                        : __('pages/reports.customer_statement.type_payment')),
+                'description' => __('pages/reports.customer_statement.description_payment', ['id' => $payment->id]),
                 'debit' => 0,
                 'credit' => $isVoided ? 0 : $net,
                 'change' => round($change, 2),
@@ -208,6 +213,7 @@ class CustomerStatementReportController extends Controller
                 'note' => $payment->note,
                 'is_voided' => $isVoided,
                 'is_corrected' => $isCorrected,
+                'is_credit_created' => false,
             ]);
         }
 

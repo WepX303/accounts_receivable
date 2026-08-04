@@ -7,16 +7,16 @@
                 <div class="card-body">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                         <div>
-                            <h4 class="mb-1">Customer Statement Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.customer_statement.title') }}</h4>
                             <p class="text-muted mb-0">
-                                Customer debt, payment history, void/correct records and running balance.
+                                {{ __('pages/reports.customer_statement.subtitle') }}
                             </p>
                         </div>
 
                         @if ($credit)
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <div class="text-muted me-2">
-                                    Contract:
+                                    {{ __('pages/reports.common.contract') }}:
                                     <span class="fw-semibold">{{ $credit->contract ?? '-' }}</span>
                                 </div>
 
@@ -26,7 +26,7 @@
                                 ]) }}"
                                     class="btn btn-success">
                                     <i class="ri-file-excel-2-line me-1"></i>
-                                    Export Excel
+                                    {{ __('pages/reports.common.export_excel') }}
                                 </a>
                             </div>
                         @endif
@@ -44,36 +44,36 @@
                     <form method="GET" action="{{ route('reports.customer-statement') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Contract</label>
+                                <label class="form-label">{{ __('pages/reports.common.contract') }}</label>
                                 <input type="text"
                                        name="contract"
                                        class="form-control"
-                                       placeholder="0014153"
+                                       placeholder="{{ __('pages/reports.customer_statement.contract_placeholder') }}"
                                        value="{{ $contract }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Phone</label>
+                                <label class="form-label">{{ __('pages/reports.common.phone') }}</label>
                                 <input type="text"
                                        name="phone"
                                        class="form-control"
-                                       placeholder="Phone"
+                                       placeholder="{{ __('pages/reports.customer_statement.phone_placeholder') }}"
                                        value="{{ $phone }}">
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label">Customer</label>
+                                <label class="form-label">{{ __('pages/reports.common.customer') }}</label>
                                 <input type="text"
                                        name="customer"
                                        class="form-control"
-                                       placeholder="Customer name"
+                                       placeholder="{{ __('pages/reports.customer_statement.customer_placeholder') }}"
                                        value="{{ $customer }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -85,12 +85,12 @@
                             <div class="col-md-3">
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-primary w-100" type="submit">
-                                        Search
+                                        {{ __('pages/reports.common.search') }}
                                     </button>
 
                                     <a href="{{ route('reports.customer-statement') }}"
                                        class="btn btn-light border w-100">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
                             </div>
@@ -105,14 +105,14 @@
         <div class="card mb-3">
             <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                 <div>
-                    <h5 class="mb-0">Select Customer</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.customer_statement.select_customer') }}</h5>
                     <div class="text-muted small mt-1">
-                        Multiple records found. Select the correct customer statement.
+                        {{ __('pages/reports.customer_statement.multiple_found') }}
                     </div>
                 </div>
 
                 <div class="text-muted small">
-                    Found:
+                    {{ __('pages/reports.customer_statement.found') }}:
                     @if ($matches instanceof \Illuminate\Pagination\LengthAwarePaginator)
                         {{ number_format($matches->total()) }}
                     @else
@@ -126,15 +126,15 @@
                     <table class="table table-hover align-middle mb-0 text-nowrap">
                         <thead class="table-light">
                             <tr>
-                                <th>Credit ID</th>
-                                <th>Customer</th>
-                                <th>Contract</th>
-                                <th>Phone</th>
-                                <th>Branch</th>
-                                <th>Credit Date</th>
-                                <th class="text-end">Total Debt</th>
-                                <th class="text-end">Paid</th>
-                                <th class="text-end">Remaining</th>
+                                <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                <th>{{ __('pages/reports.common.customer') }}</th>
+                                <th>{{ __('pages/reports.common.contract') }}</th>
+                                <th>{{ __('pages/reports.common.phone') }}</th>
+                                <th>{{ __('pages/reports.common.branch') }}</th>
+                                <th>{{ __('pages/reports.common.credit_date') }}</th>
+                                <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                <th class="text-end">{{ __('pages/reports.common.paid') }}</th>
+                                <th class="text-end">{{ __('pages/reports.common.remaining') }}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -177,7 +177,7 @@
                                             'branch' => $m->branch,
                                         ]) }}"
                                            class="btn btn-sm btn-primary">
-                                            View Statement
+                                            {{ __('pages/reports.customer_statement.view_statement') }}
                                             <i class="ri-arrow-right-line ms-1"></i>
                                         </a>
                                     </td>
@@ -198,7 +198,7 @@
 
     @if (! $credit && $matches->count() === 0 && ($contract !== '' || $phone !== '' || $customer !== ''))
         <div class="alert alert-warning">
-            No customer credit found for the selected search criteria.
+            {{ __('pages/reports.customer_statement.not_found') }}
         </div>
     @endif
 
@@ -208,14 +208,16 @@
             <div class="col-xl-4">
                 <div class="card card-height-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Customer</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.customer') }}</p>
                         <h5 class="mb-2">{{ $credit->name ?? '-' }}</h5>
 
                         <div class="text-muted small">
-                            <div>Credit ID: <span class="fw-semibold">{{ $credit->source_id }}</span></div>
+                            <div>{{ __('pages/reports.common.credit_id') }}: <span
+                                    class="fw-semibold">{{ $credit->source_id }}</span></div>
                             <div>LogicalRef: <span class="fw-semibold">{{ $credit->logicalref ?? '-' }}</span></div>
                             <div>ClientRef: <span class="fw-semibold">{{ $credit->clientref ?? '-' }}</span></div>
-                            <div>Passport: <span class="fw-semibold">{{ $credit->passport ?? '-' }}</span></div>
+                            <div>{{ __('pages/reports.common.passport') }}: <span
+                                    class="fw-semibold">{{ $credit->passport ?? '-' }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -224,15 +226,19 @@
             <div class="col-xl-4">
                 <div class="card card-height-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Contract Info</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">
+                            {{ __('pages/reports.customer_statement.contract_info') }}</p>
                         <h5 class="mb-2">{{ $credit->contract ?? '-' }}</h5>
 
                         <div class="text-muted small">
-                            <div>Phone: <span class="fw-semibold">{{ $credit->phone ?? '-' }}</span></div>
-                            <div>Branch: <span class="fw-semibold">{{ $credit->branch ?? '-' }}</span></div>
-                            <div>Status: <span class="fw-semibold">{{ $credit->status ?? '-' }}</span></div>
+                            <div>{{ __('pages/reports.common.phone') }}: <span
+                                    class="fw-semibold">{{ $credit->phone ?? '-' }}</span></div>
+                            <div>{{ __('pages/reports.common.branch') }}: <span
+                                    class="fw-semibold">{{ $credit->branch ?? '-' }}</span></div>
+                            <div>{{ __('pages/reports.common.status') }}: <span
+                                    class="fw-semibold">{{ $credit->status ?? '-' }}</span></div>
                             <div>
-                                Credit Date:
+                                {{ __('pages/reports.common.credit_date') }}:
                                 <span class="fw-semibold">
                                     {{ $credit->date_ ? \Carbon\Carbon::parse($credit->date_)->format('d.m.Y') : '-' }}
                                 </span>
@@ -245,30 +251,31 @@
             <div class="col-xl-4">
                 <div class="card card-height-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Statement Summary</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">
+                            {{ __('pages/reports.customer_statement.statement_summary') }}</p>
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Total Debt</span>
+                            <span>{{ __('pages/reports.common.total_debt') }}</span>
                             <span class="fw-semibold">{{ number_format($summary['total_debt'], 2) }} TMT</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Paid</span>
+                            <span>{{ __('pages/reports.common.paid') }}</span>
                             <span class="fw-semibold text-success">{{ number_format($summary['paid'], 2) }} TMT</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Remaining</span>
+                            <span>{{ __('pages/reports.common.remaining') }}</span>
                             <span class="fw-semibold text-danger">{{ number_format($summary['remaining'], 2) }} TMT</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Payments</span>
+                            <span>{{ __('pages/reports.common.payments') }}</span>
                             <span class="fw-semibold">{{ number_format($summary['payment_count']) }}</span>
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <span>Voided</span>
+                            <span>{{ __('pages/reports.customer_statement.voided') }}</span>
                             <span class="fw-semibold text-warning">{{ number_format($summary['voided_count']) }}</span>
                         </div>
                     </div>
@@ -281,7 +288,7 @@
             <div class="col">
                 <div class="card card-height-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Total Debt</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.total_debt') }}</p>
                         <h4 class="mb-0">{{ number_format($summary['total_debt'], 2) }} TMT</h4>
                     </div>
                 </div>
@@ -290,7 +297,7 @@
             <div class="col">
                 <div class="card card-height-100 border-success">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Paid</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.paid') }}</p>
                         <h4 class="mb-0 text-success">{{ number_format($summary['paid'], 2) }} TMT</h4>
                     </div>
                 </div>
@@ -299,7 +306,7 @@
             <div class="col">
                 <div class="card card-height-100 border-danger">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Remaining</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.remaining') }}</p>
                         <h4 class="mb-0 text-danger">{{ number_format($summary['remaining'], 2) }} TMT</h4>
                     </div>
                 </div>
@@ -308,7 +315,7 @@
             <div class="col">
                 <div class="card card-height-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase fs-13 mb-2">Last Payment</p>
+                        <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.last_payment') }}</p>
                         <h4 class="mb-0">
                             {{ $summary['last_payment_at'] ? \Carbon\Carbon::parse($summary['last_payment_at'])->format('d.m.Y') : '-' }}
                         </h4>
@@ -323,14 +330,15 @@
                 <div class="card">
                     <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                         <div>
-                            <h5 class="mb-0">Customer Statement</h5>
+                            <h5 class="mb-0">{{ __('pages/reports.customer_statement.table_title') }}</h5>
                             <div class="text-muted small mt-1">
-                                Running balance from credit creation through all payment records.
+                                {{ __('pages/reports.customer_statement.table_hint') }}
                             </div>
                         </div>
 
                         <div class="text-muted small">
-                            Rows: {{ number_format($statementRows->count()) }}
+                            {{ __('pages/reports.customer_statement.rows') }}:
+                            {{ number_format($statementRows->count()) }}
                         </div>
                     </div>
 
@@ -339,17 +347,17 @@
                             <table class="table table-hover align-middle mb-0 text-nowrap">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Type</th>
-                                        <th>Description</th>
-                                        <th class="text-end">Debit</th>
-                                        <th class="text-end">Credit</th>
-                                        <th class="text-end">Change</th>
-                                        <th class="text-end">Net</th>
-                                        <th class="text-end">Balance</th>
-                                        <th>Method</th>
-                                        <th>Cashier</th>
-                                        <th>Note</th>
+                                        <th>{{ __('pages/reports.common.date') }}</th>
+                                        <th>{{ __('pages/reports.customer_statement.type') }}</th>
+                                        <th>{{ __('pages/reports.customer_statement.description') }}</th>
+                                        <th class="text-end">{{ __('pages/reports.customer_statement.debit') }}</th>
+                                        <th class="text-end">{{ __('pages/reports.customer_statement.credit') }}</th>
+                                        <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                        <th class="text-end">{{ __('pages/reports.common.net') }}</th>
+                                        <th class="text-end">{{ __('pages/reports.customer_statement.balance') }}</th>
+                                        <th>{{ __('pages/reports.common.method') }}</th>
+                                        <th>{{ __('pages/reports.common.cashier') }}</th>
+                                        <th>{{ __('pages/reports.common.note') }}</th>
                                     </tr>
                                 </thead>
 
@@ -368,7 +376,7 @@
                                                     <span class="badge bg-warning-subtle text-warning">{{ $row->type }}</span>
                                                 @elseif ($row->is_corrected)
                                                     <span class="badge bg-info-subtle text-info">{{ $row->type }}</span>
-                                                @elseif ($row->type === 'Credit Created')
+                                                @elseif ($row->is_credit_created)
                                                     <span class="badge bg-secondary-subtle text-secondary">{{ $row->type }}</span>
                                                 @else
                                                     <span class="badge bg-success-subtle text-success">{{ $row->type }}</span>
@@ -389,7 +397,7 @@
                                     @empty
                                         <tr>
                                             <td colspan="11" class="text-center text-muted py-4">
-                                                No statement records found.
+                                                {{ __('pages/reports.customer_statement.empty') }}
                                             </td>
                                         </tr>
                                     @endforelse
@@ -397,7 +405,7 @@
 
                                 <tfoot class="table-light">
                                     <tr>
-                                        <th colspan="3">Total</th>
+                                        <th colspan="3">{{ __('pages/reports.common.total') }}</th>
                                         <th class="text-end">{{ number_format($summary['total_debt'], 2) }} TMT</th>
                                         <th class="text-end">{{ number_format($summary['paid'], 2) }} TMT</th>
                                         <th></th>
@@ -415,7 +423,7 @@
     @else
         <div class="card">
             <div class="card-body text-center text-muted py-5">
-                Search by contract, phone or customer name to view a customer statement.
+                {{ __('pages/reports.customer_statement.prompt') }}
             </div>
         </div>
     @endif

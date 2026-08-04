@@ -7,15 +7,15 @@
                 <div class="card-body">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                         <div>
-                            <h4 class="mb-1">Collection Performance Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.collection_performance.title') }}</h4>
                             <p class="text-muted mb-0">
-                                Cashier and branch collection performance based on received payments.
+                                {{ __('pages/reports.collection_performance.subtitle') }}
                             </p>
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <div class="text-muted me-2">
-                                Period:
+                                {{ __('pages/reports.common.period') }}:
                                 <span class="fw-semibold">
                                     {{ $dateFrom->format('d.m.Y') }} - {{ $dateTo->format('d.m.Y') }}
                                 </span>
@@ -24,7 +24,7 @@
                             <a href="{{ route('reports.collection-performance.export', request()->query()) }}"
                                 class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
-                                Export Excel
+                                {{ __('pages/reports.common.export_excel') }}
                             </a>
                         </div>
                     </div>
@@ -41,21 +41,21 @@
                     <form method="GET" action="{{ route('reports.collection-performance') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Date From</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_from') }}</label>
                                 <input type="date" name="date_from" class="form-control"
                                     value="{{ request('date_from', $dateFrom->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Date To</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_to') }}</label>
                                 <input type="date" name="date_to" class="form-control"
                                     value="{{ request('date_to', $dateTo->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -65,9 +65,9 @@
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Cashier</label>
+                                <label class="form-label">{{ __('pages/reports.common.cashier') }}</label>
                                 <select name="cashier" class="form-select">
-                                    <option value="">All Cashiers</option>
+                                    <option value="">{{ __('pages/reports.common.all_cashiers') }}</option>
                                     @foreach ($cashiers as $c)
                                         <option value="{{ $c }}" {{ $cashier === $c ? 'selected' : '' }}>
                                             {{ $c }}
@@ -77,12 +77,16 @@
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Method</label>
+                                <label class="form-label">{{ __('pages/reports.common.method') }}</label>
                                 <select name="method" class="form-select">
-                                    <option value="all" {{ $method === 'all' ? 'selected' : '' }}>All</option>
-                                    <option value="cash" {{ $method === 'cash' ? 'selected' : '' }}>Cash</option>
-                                    <option value="card" {{ $method === 'card' ? 'selected' : '' }}>Card</option>
-                                    <option value="phone" {{ $method === 'phone' ? 'selected' : '' }}>Phone</option>
+                                    <option value="all" {{ $method === 'all' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.all') }}</option>
+                                    <option value="cash" {{ $method === 'cash' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.cash') }}</option>
+                                    <option value="card" {{ $method === 'card' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.card') }}</option>
+                                    <option value="phone" {{ $method === 'phone' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.phone') }}</option>
                                 </select>
                             </div>
 
@@ -90,12 +94,12 @@
                             <div class="col-md-2">
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-primary w-100" type="submit">
-                                        Apply
+                                        {{ __('pages/reports.common.apply') }}
                                     </button>
 
                                     <a href="{{ route('reports.collection-performance') }}"
                                         class="btn btn-light border w-100">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
                             </div>
@@ -111,7 +115,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Transactions</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.transactions') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['tx_count']) }}</h4>
                 </div>
             </div>
@@ -120,7 +124,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Gross Collection</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.gross_collection') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['gross_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -129,7 +133,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Change Returned</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.change_returned') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['change_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -138,7 +142,7 @@
         <div class="col">
             <div class="card card-height-100 border-success">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Net Collection</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.net_collection') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['net_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -149,7 +153,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Cash</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.cash') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['cash_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -158,7 +162,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Card</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.card') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['card_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -167,7 +171,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Phone</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.phone') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['phone_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -176,7 +180,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Cashiers</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.cashiers') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['cashier_count']) }}</h4>
                 </div>
             </div>
@@ -185,7 +189,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Branches</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.branches') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['branch_count']) }}</h4>
                 </div>
             </div>
@@ -197,7 +201,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Cashier Performance</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.collection_performance.cashier_performance') }}</h5>
                 </div>
 
                 <div class="card-body">
@@ -205,14 +209,14 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Cashier</th>
-                                    <th class="text-end">Transactions</th>
-                                    <th class="text-end">Gross</th>
-                                    <th class="text-end">Change</th>
-                                    <th class="text-end">Net</th>
-                                    <th class="text-end">Cash</th>
-                                    <th class="text-end">Card</th>
-                                    <th class="text-end">Phone</th>
+                                    <th>{{ __('pages/reports.common.cashier') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.transactions') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.gross') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.net') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.cash') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.card') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.phone') }}</th>
                                 </tr>
                             </thead>
 
@@ -248,7 +252,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="8" class="text-center text-muted py-4">
-                                            No cashier data found.
+                                            {{ __('pages/reports.collection_performance.no_cashier_data') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -256,7 +260,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th>Total</th>
+                                    <th>{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['tx_count']) }}</th>
                                     <th class="text-end">{{ number_format($summary['gross_total'], 2) }} TMT</th>
                                     <th class="text-end">{{ number_format($summary['change_total'], 2) }} TMT</th>
@@ -279,7 +283,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Branch Performance</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.collection_performance.branch_performance') }}</h5>
                 </div>
 
                 <div class="card-body">
@@ -287,14 +291,14 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Branch</th>
-                                    <th class="text-end">Transactions</th>
-                                    <th class="text-end">Gross</th>
-                                    <th class="text-end">Change</th>
-                                    <th class="text-end">Net</th>
-                                    <th class="text-end">Cash</th>
-                                    <th class="text-end">Card</th>
-                                    <th class="text-end">Phone</th>
+                                    <th>{{ __('pages/reports.common.branch') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.transactions') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.gross') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.net') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.cash') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.card') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.phone') }}</th>
                                 </tr>
                             </thead>
 
@@ -330,7 +334,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="8" class="text-center text-muted py-4">
-                                            No branch data found.
+                                            {{ __('pages/reports.collection_performance.no_branch_data') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -338,7 +342,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th>Total</th>
+                                    <th>{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['tx_count']) }}</th>
                                     <th class="text-end">{{ number_format($summary['gross_total'], 2) }} TMT</th>
                                     <th class="text-end">{{ number_format($summary['change_total'], 2) }} TMT</th>

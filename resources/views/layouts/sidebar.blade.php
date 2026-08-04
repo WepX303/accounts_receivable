@@ -68,59 +68,59 @@
                             <a class="nav-link menu-link dropdown-toggle" href="#" id="reportsDropdown"
                                 role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="ri-folder-chart-line"></i>
-                                <span>Reports</span>
+                                <span>{{ __('menu.report') }}</span>
                             </a>
 
                             <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
 
                                 <li>
                                     <a class="dropdown-item" href="{{ route('report') }}">
-                                        Monthly Payment Report
+                                        {{ __('pages/reports.avshocrecat.title') }}
                                     </a>
                                 </li>
 
                                 @if (in_array($role, ['SuperAdmin', 'Analyst', 'Admin'], true))
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.payment-calendar') }}">
-                                            Payment Calendar Report
+                                            {{ __('pages/reports.payment_calendar.title') }}
                                         </a>
                                     </li>
 
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.overdue-payments') }}">
-                                            Overdue Payments Report
+                                            {{ __('pages/reports.overdue_payments.title') }}
                                         </a>
                                     </li>
 
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.collection-performance') }}">
-                                            Collection Performance Report
+                                            {{ __('pages/reports.collection_performance.title') }}
                                         </a>
                                     </li>
 
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.daily-cash-closing') }}">
-                                            Daily Cash Closing Report
+                                            {{ __('pages/reports.daily_cash_closing.title') }}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.collection-trend') }}">
-                                            Collection Trend Report
+                                            {{ __('pages/reports.collection_trend.title') }}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.promise-to-pay') }}">
-                                            Promise To Pay Report
+                                            {{ __('pages/reports.promise_to_pay.title') }}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.recovery-effectiveness') }}">
-                                            Recovery Effectiveness Report
+                                            {{ __('pages/reports.recovery_effectiveness.title') }}
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('reports.customer-statement') }}">
-                                            Customer Statement
+                                            {{ __('pages/reports.customer_statement.table_title') }}
                                         </a>
                                     </li>
                                 @endif

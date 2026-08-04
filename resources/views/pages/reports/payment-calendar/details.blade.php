@@ -20,14 +20,14 @@
                                 <div>
                                     <h4 class="mb-0">
                                         {{ $type === 'received'
-                                            ? 'All Payments Received'
+                                            ? __('pages/reports.payment_calendar.details.received_heading')
                                             : ($type === 'expected-paid'
-                                                ? 'Paid Expected Customers'
-                                                : 'Expected Payments') }}
+                                                ? __('pages/reports.payment_calendar.details.expected_paid_heading')
+                                                : __('pages/reports.payment_calendar.details.expected_heading')) }}
                                     </h4>
 
                                     <div class="text-muted">
-                                        Report Date:
+                                        {{ __('pages/reports.common.report_date') }}:
                                         <span class="fw-semibold">{{ $date->format('d.m.Y') }}</span>
                                     </div>
                                 </div>
@@ -38,7 +38,7 @@
                             <a href="{{ route('reports.payment-calendar', ['month' => $date->format('Y-m')]) }}"
                                class="btn btn-light border">
                                 <i class="ri-arrow-left-line me-1"></i>
-                                Back to Calendar
+                                {{ __('pages/reports.payment_calendar.details.back_to_calendar') }}
                             </a>
 
                             <a href="{{ route('reports.payment-calendar.details.export', [
@@ -47,7 +47,7 @@
                             ]) }}"
                                class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
-                                Export Excel
+                                {{ __('pages/reports.common.export_excel') }}
                             </a>
                         </div>
                     </div>
@@ -65,18 +65,19 @@
 
                 <div class="row g-3 align-items-end">
                     <div class="col-md-9">
-                        <label class="form-label">Search Customer</label>
+                        <label class="form-label">
+                            {{ __('pages/reports.payment_calendar.details.search_customer') }}</label>
                         <input type="text"
                                name="q"
                                class="form-control"
-                               placeholder="Customer / contract / phone / passport / branch"
+                               placeholder="{{ __('pages/reports.payment_calendar.details.search_placeholder') }}"
                                value="{{ $q ?? request('q') }}">
                     </div>
 
                     <div class="col-md-3">
                         <div class="d-flex gap-2">
                             <button class="btn btn-primary w-100" type="submit">
-                                Search
+                                {{ __('pages/reports.common.search') }}
                             </button>
 
                             <a href="{{ route('reports.payment-calendar.details', [
@@ -84,7 +85,7 @@
                                 'date' => $date->toDateString(),
                             ]) }}"
                                class="btn btn-light border w-100">
-                                Clear
+                                {{ __('pages/reports.common.clear') }}
                             </a>
                         </div>
                     </div>
@@ -96,9 +97,9 @@
     @if ($type === 'received')
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-1">All payments received on this day</h5>
+                <h5 class="mb-1">{{ __('pages/reports.payment_calendar.details.received_title') }}</h5>
                 <p class="text-muted mb-0">
-                    All non-voided payments recorded for the selected date. This list is informational and includes every payment received that day.
+                    {{ __('pages/reports.payment_calendar.details.received_hint') }}
                 </p>
             </div>
 
@@ -107,18 +108,18 @@
                     <table class="table table-hover align-middle table-nowrap mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Payment ID</th>
-                                <th>Credit ID</th>
-                                <th>Customer</th>
-                                <th>Contract</th>
-                                <th>Phone</th>
-                                <th>Branch</th>
-                                <th>Method</th>
-                                <th class="text-end">Received</th>
-                                <th class="text-end">Change</th>
-                                <th class="text-end">Net Applied</th>
-                                <th>Cashier</th>
-                                <th>Payment Time</th>
+                                <th>{{ __('pages/reports.payment_calendar.details.payment_id') }}</th>
+                                <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                <th>{{ __('pages/reports.common.customer') }}</th>
+                                <th>{{ __('pages/reports.common.contract') }}</th>
+                                <th>{{ __('pages/reports.common.phone') }}</th>
+                                <th>{{ __('pages/reports.common.branch') }}</th>
+                                <th>{{ __('pages/reports.common.method') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.received') }}</th>
+                                <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.net_applied') }}</th>
+                                <th>{{ __('pages/reports.common.cashier') }}</th>
+                                <th>{{ __('pages/reports.payment_calendar.details.payment_time') }}</th>
                             </tr>
                         </thead>
 
@@ -161,7 +162,7 @@
                             @empty
                                 <tr>
                                     <td colspan="12" class="text-center text-muted py-4">
-                                        No records found.
+                                        {{ __('pages/reports.payment_calendar.details.empty') }}
                                     </td>
                                 </tr>
                             @endforelse
@@ -179,14 +180,14 @@
             <div class="card-header">
                 <h5 class="mb-1">
                     {{ $type === 'expected-paid'
-                        ? 'Expected customers who paid on this day'
-                        : 'Customers expected to pay on this day' }}
+                        ? __('pages/reports.payment_calendar.details.expected_paid_title')
+                        : __('pages/reports.payment_calendar.details.expected_title') }}
                 </h5>
 
                 <p class="text-muted mb-0">
                     {{ $type === 'expected-paid'
-                        ? 'Only customers whose installment due date is this day and who made a payment on this day.'
-                        : 'Installment plan is calculated from credit date and total debt divided by 6.' }}
+                        ? __('pages/reports.payment_calendar.details.expected_paid_hint')
+                        : __('pages/reports.payment_calendar.details.expected_hint') }}
                 </p>
             </div>
 
@@ -195,19 +196,21 @@
                     <table class="table table-hover align-middle table-nowrap mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Credit ID</th>
-                                <th>Customer</th>
-                                <th>Contract</th>
-                                <th>Phone</th>
-                                <th>Branch</th>
-                                <th class="text-end">Total Debt</th>
-                                <th class="text-end">Paid Total</th>
-                                <th class="text-end">Remaining Total</th>
-                                <th class="text-end">Expected Installment</th>
-                                <th class="text-end">Paid Today</th>
-                                <th class="text-end">Missing Today</th>
-                                <th>Status</th>
-                                <th>Credit Date</th>
+                                <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                <th>{{ __('pages/reports.common.customer') }}</th>
+                                <th>{{ __('pages/reports.common.contract') }}</th>
+                                <th>{{ __('pages/reports.common.phone') }}</th>
+                                <th>{{ __('pages/reports.common.branch') }}</th>
+                                <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.paid_total') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.remaining_total') }}
+                                </th>
+                                <th class="text-end">
+                                    {{ __('pages/reports.payment_calendar.details.expected_installment') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.paid_today') }}</th>
+                                <th class="text-end">{{ __('pages/reports.payment_calendar.details.missing_today') }}</th>
+                                <th>{{ __('pages/reports.common.status') }}</th>
+                                <th>{{ __('pages/reports.common.credit_date') }}</th>
                             </tr>
                         </thead>
 
@@ -221,9 +224,9 @@
                                     };
 
                                     $statusText = match ($c->payment_status) {
-                                        'paid' => 'Paid',
-                                        'partial' => 'Partial',
-                                        default => 'Unpaid',
+                                        'paid' => __('pages/reports.payment_calendar.details.status_paid'),
+                                        'partial' => __('pages/reports.payment_calendar.details.status_partial'),
+                                        default => __('pages/reports.payment_calendar.details.status_unpaid'),
                                     };
                                 @endphp
 
@@ -273,7 +276,7 @@
                             @empty
                                 <tr>
                                     <td colspan="13" class="text-center text-muted py-4">
-                                        No records found.
+                                        {{ __('pages/reports.payment_calendar.details.empty') }}
                                     </td>
                                 </tr>
                             @endforelse

@@ -20,32 +20,32 @@ class CustomerStatementExport implements FromCollection, WithHeadings, ShouldAut
     public function headings(): array
     {
         return [
-            'Date',
-            'Type',
-            'Description',
-            'Debit',
-            'Credit',
-            'Change',
-            'Net',
-            'Balance',
-            'Method',
-            'Cashier',
-            'Note',
+            __('pages/reports.common.date'),
+            __('pages/reports.customer_statement.type'),
+            __('pages/reports.customer_statement.description'),
+            __('pages/reports.customer_statement.debit'),
+            __('pages/reports.customer_statement.credit'),
+            __('pages/reports.common.change'),
+            __('pages/reports.common.net'),
+            __('pages/reports.customer_statement.balance'),
+            __('pages/reports.common.method'),
+            __('pages/reports.common.cashier'),
+            __('pages/reports.common.note'),
 
-            'Payment ID',
-            'Customer',
-            'Contract',
-            'Phone',
-            'Passport',
-            'Branch',
-            'Credit ID',
-            'LogicalRef',
-            'ClientRef',
-            'Credit Date',
-            'Total Debt',
-            'Paid',
-            'Remaining',
-            'Credit Status',
+            __('pages/reports.export.payment_id'),
+            __('pages/reports.common.customer'),
+            __('pages/reports.common.contract'),
+            __('pages/reports.common.phone'),
+            __('pages/reports.common.passport'),
+            __('pages/reports.common.branch'),
+            __('pages/reports.common.credit_id'),
+            __('pages/reports.export.logicalref'),
+            __('pages/reports.export.clientref'),
+            __('pages/reports.common.credit_date'),
+            __('pages/reports.common.total_debt'),
+            __('pages/reports.common.paid'),
+            __('pages/reports.common.remaining'),
+            __('pages/reports.export.credit_status'),
         ];
     }
 
@@ -77,8 +77,8 @@ class CustomerStatementExport implements FromCollection, WithHeadings, ShouldAut
 
         $rows->push([
             $credit->date_ ? Carbon::parse($credit->date_)->format('Y-m-d H:i') : null,
-            'Credit Created',
-            'Credit amount created',
+            __('pages/reports.customer_statement.type_credit_created'),
+            __('pages/reports.customer_statement.description_credit_created'),
             round($amount, 2),
             0,
             0,
@@ -123,13 +123,15 @@ class CustomerStatementExport implements FromCollection, WithHeadings, ShouldAut
             }
 
             $type = $isVoided
-                ? 'Voided Payment'
-                : ($isCorrected ? 'Corrected Payment' : 'Payment');
+                ? __('pages/reports.customer_statement.type_voided_payment')
+                : ($isCorrected
+                    ? __('pages/reports.customer_statement.type_corrected_payment')
+                    : __('pages/reports.customer_statement.type_payment'));
 
             $rows->push([
                 $payment->created_at ? Carbon::parse($payment->created_at)->format('Y-m-d H:i') : null,
                 $type,
-                'Payment #' . $payment->id,
+                __('pages/reports.customer_statement.description_payment', ['id' => $payment->id]),
                 0,
                 $isVoided ? 0 : $net,
                 round($change, 2),
@@ -158,7 +160,7 @@ class CustomerStatementExport implements FromCollection, WithHeadings, ShouldAut
 
         $rows->push([
             '',
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             '',
             round($amount, 2),
             round($paid, 2),

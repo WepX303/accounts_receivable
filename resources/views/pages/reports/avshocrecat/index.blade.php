@@ -1,6 +1,15 @@
 @extends('layouts.layouts-horizontal')
 
 @section('content')
+    @if (session('export_error'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-1"></i>
+            {{ session('export_error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                aria-label="{{ __('common.close') }}"></button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-12">
             <div class="card" id="orderList">
@@ -11,7 +20,7 @@
                         <div class="row g-3 align-items-end">
 
                             <div class="col-xxl-3 col-md-6">
-                                <label class="form-label">Search</label>
+                                <label class="form-label">{{ __('pages/reports.common.search') }}</label>
                                 <div class="search-box">
                                     <input type="text" class="form-control" name="q"
                                         value="{{ $q ?? request('q') }}"
@@ -21,19 +30,19 @@
                             </div>
 
                             <div class="col-xxl-2 col-md-3">
-                                <label class="form-label">Date From</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_from') }}</label>
                                 <input type="date" name="date_from" class="form-control"
                                     value="{{ $dateFrom ?? request('date_from') }}">
                             </div>
 
                             <div class="col-xxl-2 col-md-3">
-                                <label class="form-label">Date To</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_to') }}</label>
                                 <input type="date" name="date_to" class="form-control"
                                     value="{{ $dateTo ?? request('date_to') }}">
                             </div>
 
                             <div class="col-xxl-3 col-md-6">
-                                <label class="form-label">Branches</label>
+                                <label class="form-label">{{ __('pages/reports.common.branches') }}</label>
 
                                 <div class="dropdown w-100">
                                     <button
@@ -42,9 +51,9 @@
                                         aria-expanded="false">
                                         <span id="branchSelectedText">
                                             @if (!empty($selectedBranches))
-                                                {{ count($selectedBranches) }} branch selected
+                                                {{ __('pages/reports.avshocrecat.branch_selected', ['count' => count($selectedBranches)]) }}
                                             @else
-                                                All Branches
+                                                {{ __('pages/reports.common.all_branches') }}
                                             @endif
                                         </span>
                                         <i class="ri-arrow-down-s-line"></i>
@@ -70,18 +79,18 @@
                             <div class="col-xxl-2 col-md-6">
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-primary w-100">
-                                        Apply
+                                        {{ __('pages/reports.common.apply') }}
                                     </button>
 
                                     <a href="{{ route('report') }}" class="btn btn-light border w-100">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
 
                                 <a href="{{ route('report.export', request()->query()) }}"
                                     class="btn btn-success w-100 mt-2">
                                     <i class="ri-file-excel-2-line"></i>
-                                    Export
+                                    {{ __('pages/reports.avshocrecat.export') }}
                                 </a>
                             </div>
 
@@ -269,6 +278,11 @@
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
+        window.BRANCH_LABELS = {!! json_encode([
+            'all' => __('pages/reports.common.all_branches'),
+            'selected' => __('pages/reports.avshocrecat.branches_selected', ['count' => '__COUNT__']),
+        ]) !!};
+
         document.addEventListener('DOMContentLoaded', function() {
             const checkboxes = document.querySelectorAll('.branch-checkbox');
             const selectedText = document.getElementById('branchSelectedText');
@@ -280,12 +294,17 @@
                     .filter(cb => cb.checked)
                     .map(cb => cb.value);
 
+                const labels = window.BRANCH_LABELS || {
+                    all: 'All Branches',
+                    selected: '__COUNT__ branches selected'
+                };
+
                 if (selected.length === 0) {
-                    selectedText.textContent = 'All Branches';
+                    selectedText.textContent = labels.all;
                 } else if (selected.length <= 2) {
                     selectedText.textContent = selected.join(', ');
                 } else {
-                    selectedText.textContent = selected.length + ' branches selected';
+                    selectedText.textContent = labels.selected.replace('__COUNT__', selected.length);
                 }
             }
 

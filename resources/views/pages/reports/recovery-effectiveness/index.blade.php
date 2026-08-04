@@ -7,15 +7,15 @@
                 <div class="card-body">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                         <div>
-                            <h4 class="mb-1">Recovery Effectiveness Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.recovery_effectiveness.title') }}</h4>
                             <p class="text-muted mb-0">
-                                Measures how effectively overdue customer debt was recovered in the selected period.
+                                {{ __('pages/reports.recovery_effectiveness.subtitle') }}
                             </p>
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <div class="text-muted me-2">
-                                Period:
+                                {{ __('pages/reports.common.period') }}:
                                 <span class="fw-semibold">
                                     {{ $dateFrom->format('d.m.Y') }} - {{ $dateTo->format('d.m.Y') }}
                                 </span>
@@ -24,7 +24,7 @@
                             <a href="{{ route('reports.recovery-effectiveness.export', request()->query()) }}"
                                 class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
-                                Export Excel
+                                {{ __('pages/reports.common.export_excel') }}
                             </a>
                         </div>
                     </div>
@@ -41,21 +41,21 @@
                     <form method="GET" action="{{ route('reports.recovery-effectiveness') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Date From</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_from') }}</label>
                                 <input type="date" name="date_from" class="form-control"
                                     value="{{ request('date_from', $dateFrom->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Date To</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_to') }}</label>
                                 <input type="date" name="date_to" class="form-control"
                                     value="{{ request('date_to', $dateTo->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -65,44 +65,47 @@
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Min Recovered</label>
+                                <label
+                                    class="form-label">{{ __('pages/reports.recovery_effectiveness.min_recovered') }}</label>
                                 <input type="number" min="0" step="0.01" name="min_recovered"
                                     class="form-control" value="{{ $minRecovered }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Sort</label>
+                                <label class="form-label">{{ __('pages/reports.common.sort') }}</label>
                                 <select name="sort" class="form-select">
                                     <option value="recovered_desc" {{ $sort === 'recovered_desc' ? 'selected' : '' }}>
-                                        Recovered High</option>
+                                        {{ __('pages/reports.recovery_effectiveness.sort_recovered_desc') }}</option>
                                     <option value="recovered_asc" {{ $sort === 'recovered_asc' ? 'selected' : '' }}>
-                                        Recovered Low</option>
-                                    <option value="rate_desc" {{ $sort === 'rate_desc' ? 'selected' : '' }}>Rate High
-                                    </option>
-                                    <option value="rate_asc" {{ $sort === 'rate_asc' ? 'selected' : '' }}>Rate Low</option>
+                                        {{ __('pages/reports.recovery_effectiveness.sort_recovered_asc') }}</option>
+                                    <option value="rate_desc" {{ $sort === 'rate_desc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.recovery_effectiveness.sort_rate_desc') }}</option>
+                                    <option value="rate_asc" {{ $sort === 'rate_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.recovery_effectiveness.sort_rate_asc') }}</option>
                                     <option value="remaining_desc" {{ $sort === 'remaining_desc' ? 'selected' : '' }}>
-                                        Remaining High</option>
-                                    <option value="customer_asc" {{ $sort === 'customer_asc' ? 'selected' : '' }}>Customer
-                                        A-Z</option>
-                                    <option value="branch_asc" {{ $sort === 'branch_asc' ? 'selected' : '' }}>Branch A-Z
-                                    </option>
+                                        {{ __('pages/reports.recovery_effectiveness.sort_remaining_desc') }}</option>
+                                    <option value="customer_asc" {{ $sort === 'customer_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.customer_asc') }}</option>
+                                    <option value="branch_asc" {{ $sort === 'branch_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.branch_asc') }}</option>
                                 </select>
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Search</label>
+                                <label class="form-label">{{ __('pages/reports.common.search') }}</label>
                                 <input type="text" name="q" class="form-control"
-                                    placeholder="Customer / contract / phone" value="{{ $q }}">
+                                    placeholder="{{ __('pages/reports.recovery_effectiveness.search_placeholder') }}"
+                                    value="{{ $q }}">
                             </div>
 
                             <div class="col-md-12">
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-primary" type="submit">
-                                        Apply
+                                        {{ __('pages/reports.common.apply') }}
                                     </button>
 
                                     <a href="{{ route('reports.recovery-effectiveness') }}" class="btn btn-light border">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
                             </div>
@@ -118,7 +121,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Overdue Customers</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.overdue_customers') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['overdue_customers']) }}</h4>
                 </div>
             </div>
@@ -127,7 +131,8 @@
         <div class="col">
             <div class="card card-height-100 border-success">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Recovered Customers</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.recovered_customers') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['recovered_customers']) }}</h4>
                     <p class="text-muted mt-2 mb-0">
                         {{ number_format($summary['customer_recovery_rate'], 2) }}%
@@ -139,7 +144,8 @@
         <div class="col">
             <div class="card card-height-100 border-danger">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Not Recovered</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.not_recovered') }}</p>
                     <h4 class="mb-0 text-danger">{{ number_format($summary['not_recovered_customers']) }}</h4>
                 </div>
             </div>
@@ -148,7 +154,8 @@
         <div class="col">
             <div class="card card-height-100 border-primary">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Customer Recovery Rate</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.customer_recovery_rate') }}</p>
                     <h4 class="mb-0 text-primary">{{ number_format($summary['customer_recovery_rate'], 2) }}%</h4>
                 </div>
             </div>
@@ -159,7 +166,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Total Debt</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.total_debt') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_debt'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -168,7 +175,8 @@
         <div class="col">
             <div class="card card-height-100 border-success">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Net Recovered</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.net_recovered') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['net_recovered'], 2) }} TMT</h4>
                     <p class="text-muted mt-2 mb-0">
                         {{ number_format($summary['amount_recovery_rate'], 2) }}%
@@ -180,7 +188,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Gross Recovered</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.recovery_effectiveness.gross_recovered') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['gross_recovered'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -189,7 +198,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Change Returned</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.change_returned') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['change_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -201,7 +210,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Branch Recovery Performance</h5>
+                    <h5 class="mb-0">{{ __('pages/reports.recovery_effectiveness.branch_table_title') }}</h5>
                 </div>
 
                 <div class="card-body">
@@ -209,13 +218,15 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Branch</th>
-                                    <th class="text-end">Customers</th>
-                                    <th class="text-end">Recovered</th>
-                                    <th class="text-end">Customer Rate</th>
-                                    <th class="text-end">Total Debt</th>
-                                    <th class="text-end">Net Recovered</th>
-                                    <th class="text-end">Amount Rate</th>
+                                    <th>{{ __('pages/reports.common.branch') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.customers') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.recovered') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.customer_rate') }}
+                                    </th>
+                                    <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.net_recovered') }}
+                                    </th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.amount_rate') }}</th>
                                 </tr>
                             </thead>
 
@@ -237,7 +248,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center text-muted py-4">
-                                            No branch recovery data found.
+                                            {{ __('pages/reports.recovery_effectiveness.no_branch_data') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -245,7 +256,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th>Total</th>
+                                    <th>{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['overdue_customers']) }}</th>
                                     <th class="text-end">{{ number_format($summary['recovered_customers']) }}</th>
                                     <th class="text-end">{{ number_format($summary['customer_recovery_rate'], 2) }}%</th>
@@ -268,14 +279,14 @@
             <div class="card">
                 <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                     <div>
-                        <h5 class="mb-0">Customer Recovery Details</h5>
+                        <h5 class="mb-0">{{ __('pages/reports.recovery_effectiveness.customer_table_title') }}</h5>
                         <div class="text-muted small mt-1">
-                            Customers with remaining debt and their recovery in selected period.
+                            {{ __('pages/reports.recovery_effectiveness.customer_table_hint') }}
                         </div>
                     </div>
 
                     <div class="text-muted small">
-                        Total: {{ number_format($summary['overdue_customers']) }}
+                        {{ __('pages/reports.common.total') }}: {{ number_format($summary['overdue_customers']) }}
                     </div>
                 </div>
 
@@ -284,20 +295,23 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Credit ID</th>
-                                    <th>Customer</th>
-                                    <th>Contract</th>
-                                    <th>Phone</th>
-                                    <th>Branch</th>
-                                    <th class="text-end">Total Debt</th>
-                                    <th class="text-end">Paid</th>
-                                    <th class="text-end">Remaining</th>
-                                    <th class="text-end">Payments</th>
-                                    <th class="text-end">Gross Recovered</th>
-                                    <th class="text-end">Change</th>
-                                    <th class="text-end">Net Recovered</th>
-                                    <th class="text-end">Recovery %</th>
-                                    <th>Last Payment</th>
+                                    <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                    <th>{{ __('pages/reports.common.customer') }}</th>
+                                    <th>{{ __('pages/reports.common.contract') }}</th>
+                                    <th>{{ __('pages/reports.common.phone') }}</th>
+                                    <th>{{ __('pages/reports.common.branch') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.paid') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.remaining') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.payments') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.gross_recovered') }}
+                                    </th>
+                                    <th class="text-end">{{ __('pages/reports.common.change') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.recovery_effectiveness.net_recovered') }}
+                                    </th>
+                                    <th class="text-end">
+                                        {{ __('pages/reports.recovery_effectiveness.recovery_percent') }}</th>
+                                    <th>{{ __('pages/reports.common.last_payment') }}</th>
                                 </tr>
                             </thead>
 
@@ -340,7 +354,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="14" class="text-center text-muted py-4">
-                                            No recovery records found.
+                                            {{ __('pages/reports.recovery_effectiveness.empty') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -348,7 +362,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="5">Total</th>
+                                    <th colspan="5">{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['total_debt'], 2) }} TMT</th>
                                     <th></th>
                                     <th class="text-end">{{ number_format($summary['total_remaining'], 2) }} TMT</th>

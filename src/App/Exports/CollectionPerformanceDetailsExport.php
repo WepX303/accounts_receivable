@@ -19,44 +19,44 @@ class CollectionPerformanceDetailsExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'Payment ID',
-            'Credit Source ID',
-            'Credit LogicalRef',
+            __('pages/reports.export.payment_id'),
+            __('pages/reports.export.credit_source_id'),
+            __('pages/reports.export.credit_logicalref'),
 
-            'Customer',
-            'Contract',
-            'Phone',
-            'Passport',
-            'Branch',
+            __('pages/reports.common.customer'),
+            __('pages/reports.common.contract'),
+            __('pages/reports.common.phone'),
+            __('pages/reports.common.passport'),
+            __('pages/reports.common.branch'),
 
-            'Cashier',
-            'Cashier Email',
-            'Cashier Phone',
+            __('pages/reports.common.cashier'),
+            __('pages/reports.export.cashier_email'),
+            __('pages/reports.export.cashier_phone'),
 
-            'Payment Date',
-            'Method',
+            __('pages/reports.export.payment_date'),
+            __('pages/reports.common.method'),
 
-            'Received Amount',
-            'Change Amount',
-            'Net Applied',
+            __('pages/reports.export.received_amount'),
+            __('pages/reports.export.change_amount'),
+            __('pages/reports.export.net_applied'),
 
-            'Cash Amount',
-            'Card Amount',
-            'Phone Amount',
+            __('pages/reports.export.cash_amount'),
+            __('pages/reports.export.card_amount'),
+            __('pages/reports.export.phone_amount'),
 
-            'Receiver Phone',
+            __('pages/reports.export.receiver_phone'),
 
-            'Old Remaining',
-            'New Remaining',
-            'Old Paid',
-            'New Paid',
+            __('pages/reports.export.old_remaining'),
+            __('pages/reports.export.new_remaining'),
+            __('pages/reports.export.old_paid'),
+            __('pages/reports.export.new_paid'),
 
-            'Corrected By',
-            'Corrected At',
-            'Correct Reason',
-            'Corrected From Payment ID',
+            __('pages/reports.export.corrected_by'),
+            __('pages/reports.export.corrected_at'),
+            __('pages/reports.export.correct_reason'),
+            __('pages/reports.export.corrected_from_payment_id'),
 
-            'Note',
+            __('pages/reports.common.note'),
         ];
     }
 
@@ -147,7 +147,7 @@ class CollectionPerformanceDetailsExport implements FromCollection, WithHeadings
         $exportRows->push([
             '',
             '',
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             '',
             '',
             '',

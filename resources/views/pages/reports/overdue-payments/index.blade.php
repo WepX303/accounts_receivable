@@ -8,17 +8,17 @@
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
 
                         <div>
-                            <h4 class="mb-1">Overdue Payments Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.overdue_payments.title') }}</h4>
 
                             <p class="text-muted mb-0">
-                                Customers whose expected installment payments are behind schedule.
+                                {{ __('pages/reports.overdue_payments.subtitle') }}
                             </p>
                         </div>
 
                         <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2">
 
                             <div class="text-muted text-sm-end">
-                                <div class="small">Report Date</div>
+                                <div class="small">{{ __('pages/reports.common.report_date') }}</div>
                                 <div class="fw-semibold">
                                     {{ $today->format('d.m.Y') }}
                                 </div>
@@ -26,7 +26,7 @@
                             <a href="{{ route('reports.overdue-payments.export', request()->query()) }}"
                                 class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
-                                Export Excel
+                                {{ __('pages/reports.common.export_excel') }}
                             </a>
 
                         </div>
@@ -45,15 +45,15 @@
                     <form method="GET" action="{{ route('reports.overdue-payments') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-xl-3 col-md-6">
-                                <label class="form-label">Search</label>
+                                <label class="form-label">{{ __('pages/reports.common.search') }}</label>
                                 <input type="text" name="q" class="form-control" value="{{ $q }}"
-                                    placeholder="Customer, phone, passport, contract...">
+                                    placeholder="{{ __('pages/reports.overdue_payments.search_placeholder') }}">
                             </div>
 
                             <div class="col-xl-2 col-md-6">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -63,45 +63,45 @@
                             </div>
 
                             <div class="col-xl-2 col-md-6">
-                                <label class="form-label">Min Overdue</label>
+                                <label class="form-label">{{ __('pages/reports.overdue_payments.min_overdue') }}</label>
                                 <input type="number" step="0.01" min="0" name="min_overdue" class="form-control"
                                     value="{{ $minOverdue }}">
                             </div>
 
                             <div class="col-xl-2 col-md-6">
-                                <label class="form-label">Min Days</label>
+                                <label class="form-label">{{ __('pages/reports.overdue_payments.min_days') }}</label>
                                 <input type="number" min="0" name="min_days" class="form-control"
                                     value="{{ $minDays }}">
                             </div>
 
                             <div class="col-xl-2 col-md-6">
-                                <label class="form-label">Sort</label>
+                                <label class="form-label">{{ __('pages/reports.common.sort') }}</label>
                                 <select name="sort" class="form-select">
-                                    <option value="overdue_desc" {{ $sort === 'overdue_desc' ? 'selected' : '' }}>Overdue
-                                        high to low</option>
-                                    <option value="overdue_asc" {{ $sort === 'overdue_asc' ? 'selected' : '' }}>Overdue low
-                                        to high</option>
-                                    <option value="days_desc" {{ $sort === 'days_desc' ? 'selected' : '' }}>Days high to
-                                        low</option>
-                                    <option value="days_asc" {{ $sort === 'days_asc' ? 'selected' : '' }}>Days low to high
-                                    </option>
-                                    <option value="customer_asc" {{ $sort === 'customer_asc' ? 'selected' : '' }}>Customer
-                                        A-Z</option>
-                                    <option value="branch_asc" {{ $sort === 'branch_asc' ? 'selected' : '' }}>Branch A-Z
-                                    </option>
+                                    <option value="overdue_desc" {{ $sort === 'overdue_desc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.overdue_payments.sort_overdue_desc') }}</option>
+                                    <option value="overdue_asc" {{ $sort === 'overdue_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.overdue_payments.sort_overdue_asc') }}</option>
+                                    <option value="days_desc" {{ $sort === 'days_desc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.overdue_payments.sort_days_desc') }}</option>
+                                    <option value="days_asc" {{ $sort === 'days_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.overdue_payments.sort_days_asc') }}</option>
+                                    <option value="customer_asc" {{ $sort === 'customer_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.customer_asc') }}</option>
+                                    <option value="branch_asc" {{ $sort === 'branch_asc' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.common.branch_asc') }}</option>
                                 </select>
                             </div>
 
                             <div class="col-xl-1 col-md-6">
                                 <button type="submit" class="btn btn-primary w-100">
-                                    Filter
+                                    {{ __('pages/reports.common.filter') }}
                                 </button>
                             </div>
                         </div>
 
                         <div class="mt-3">
                             <a href="{{ route('reports.overdue-payments') }}" class="btn btn-light border btn-sm">
-                                Clear Filters
+                                {{ __('pages/reports.common.clear_filters') }}
                             </a>
                         </div>
                     </form>
@@ -115,7 +115,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Customers</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.customers') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['customers_count']) }}</h4>
                 </div>
             </div>
@@ -124,7 +124,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Total Debt</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.total_debt') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_debt'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -133,7 +133,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Paid</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.paid') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_paid'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -142,7 +142,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Remaining</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.remaining') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_remaining'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -151,7 +151,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Expected Paid</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.expected_paid') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_expected'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -160,7 +160,8 @@
         <div class="col">
             <div class="card card-height-100 border-danger">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Overdue Amount</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.overdue_payments.overdue_amount') }}</p>
                     <h4 class="mb-0 text-danger">{{ number_format($summary['total_overdue'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -173,10 +174,13 @@
             <div class="card">
                 <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                     <div>
-                        <h5 class="mb-1">Overdue Customer List</h5>
+                        <h5 class="mb-1">{{ __('pages/reports.overdue_payments.table_title') }}</h5>
                         <p class="text-muted mb-0">
-                            Showing {{ $rows->firstItem() ?? 0 }} - {{ $rows->lastItem() ?? 0 }}
-                            of {{ $rows->total() }} records.
+                            {{ __('pages/reports.common.showing', [
+                                'from' => $rows->firstItem() ?? 0,
+                                'to' => $rows->lastItem() ?? 0,
+                                'total' => $rows->total(),
+                            ]) }}
                         </p>
                     </div>
                 </div>
@@ -186,21 +190,21 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Credit ID</th>
-                                    <th>Customer</th>
-                                    <th>Contract</th>
-                                    <th>Phone</th>
-                                    <th>Branch</th>
-                                    <th class="text-end">Monthly</th>
-                                    <th class="text-end">Due Count</th>
-                                    <th class="text-end">Total Debt</th>
-                                    <th class="text-end">Paid</th>
-                                    <th class="text-end">Expected Paid</th>
-                                    <th class="text-end">Overdue</th>
-                                    <th class="text-end">Remaining</th>
-                                    <th class="text-end">Overdue Days</th>
-                                    <th>Credit Date</th>
-                                    <th>Last Due Date</th>
+                                    <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                    <th>{{ __('pages/reports.common.customer') }}</th>
+                                    <th>{{ __('pages/reports.common.contract') }}</th>
+                                    <th>{{ __('pages/reports.common.phone') }}</th>
+                                    <th>{{ __('pages/reports.common.branch') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.overdue_payments.monthly') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.overdue_payments.due_count') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.paid') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.expected_paid') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.overdue_payments.overdue') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.remaining') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.overdue_payments.overdue_days') }}</th>
+                                    <th>{{ __('pages/reports.common.credit_date') }}</th>
+                                    <th>{{ __('pages/reports.overdue_payments.last_due_date') }}</th>
                                 </tr>
                             </thead>
 
@@ -232,7 +236,7 @@
 
                                         <td class="text-end">
                                             <span class="badge bg-danger-subtle text-danger">
-                                                {{ $row->overdue_days }} days
+                                                {{ $row->overdue_days }} {{ __('pages/reports.common.days') }}
                                             </span>
                                         </td>
 
@@ -242,7 +246,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="15" class="text-center text-muted py-4">
-                                            No overdue payments found.
+                                            {{ __('pages/reports.overdue_payments.empty') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -250,7 +254,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="7">Total</th>
+                                    <th colspan="7">{{ __('pages/reports.common.total') }}</th>
                                     <th class="text-end">{{ number_format($summary['total_debt'], 2) }} TMT</th>
                                     <th class="text-end">{{ number_format($summary['total_paid'], 2) }} TMT</th>
                                     <th class="text-end">{{ number_format($summary['total_expected'], 2) }} TMT</th>
@@ -265,7 +269,10 @@
 
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <div class="text-muted small">
-                            Page {{ $rows->currentPage() }} / {{ $rows->lastPage() }}
+                            {{ __('pages/reports.common.page_of', [
+                                'current' => $rows->currentPage(),
+                                'last' => $rows->lastPage(),
+                            ]) }}
                         </div>
 
                         <div>

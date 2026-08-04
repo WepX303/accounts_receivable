@@ -6,16 +6,16 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                     <div>
-                        <h4 class="mb-1">Payment Calendar Report</h4>
+                        <h4 class="mb-1">{{ __('pages/reports.payment_calendar.title') }}</h4>
                         <p class="text-muted mb-0">
-                            Daily expected payments, received payments, difference and collection percentage.
+                            {{ __('pages/reports.payment_calendar.subtitle') }}
                         </p>
                     </div>
 
                     <div class="d-flex gap-2">
                         <a href="{{ route('reports.payment-calendar', ['month' => $previousMonth]) }}"
                             class="btn btn-light border">
-                            Previous Month
+                            {{ __('pages/reports.payment_calendar.previous_month') }}
                         </a>
 
                         <form method="GET" action="{{ route('reports.payment-calendar') }}">
@@ -25,13 +25,13 @@
 
                         <a href="{{ route('reports.payment-calendar', ['month' => $nextMonth]) }}"
                             class="btn btn-light border">
-                            Next Month
+                            {{ __('pages/reports.payment_calendar.next_month') }}
                         </a>
 
                         <a href="{{ route('reports.payment-calendar.export', ['month' => $currentMonth->format('Y-m')]) }}"
                             class="btn btn-success">
                             <i class="ri-file-excel-2-line"></i>
-                            Excel Export
+                            {{ __('pages/reports.common.export_excel') }}
                         </a>
                     </div>
                 </div>
@@ -44,9 +44,11 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Expected Payments</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.payment_calendar.expected_payments') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['expected_total'], 2) }} TMT</h4>
-                    <p class="text-muted mt-3 mb-0">Total expected amount for selected month.</p>
+                    <p class="text-muted mt-3 mb-0">
+                        {{ __('pages/reports.payment_calendar.expected_payments_hint') }}</p>
                 </div>
             </div>
         </div>
@@ -54,9 +56,10 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Paid Expected</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.payment_calendar.paid_expected') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['paid_expected_total'], 2) }} TMT</h4>
-                    <p class="text-muted mt-3 mb-0">Payments from customers expected to pay this month.</p>
+                    <p class="text-muted mt-3 mb-0">{{ __('pages/reports.payment_calendar.paid_expected_hint') }}</p>
                 </div>
             </div>
         </div>
@@ -64,14 +67,15 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Difference</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.payment_calendar.difference') }}</p>
 
                     <h4 class="mb-0 {{ $summary['difference_total'] >= 0 ? 'text-success' : 'text-danger' }}">
                         {{ number_format($summary['difference_total'], 2) }} TMT
                     </h4>
 
                     <p class="text-muted mt-3 mb-0">
-                        Received amount minus expected amount.
+                        {{ __('pages/reports.payment_calendar.difference_hint') }}
                     </p>
                 </div>
             </div>
@@ -80,9 +84,10 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Total Received</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.payment_calendar.total_received') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['total_received_total'], 2) }} TMT</h4>
-                    <p class="text-muted mt-3 mb-0">All net payments received in selected month.</p>
+                    <p class="text-muted mt-3 mb-0">{{ __('pages/reports.payment_calendar.total_received_hint') }}</p>
                 </div>
             </div>
         </div>
@@ -90,9 +95,9 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Change Returned</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.change_returned') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['change_total'], 2) }} TMT</h4>
-                    <p class="text-muted mt-3 mb-0">Total change returned to customers.</p>
+                    <p class="text-muted mt-3 mb-0">{{ __('pages/reports.payment_calendar.change_returned_hint') }}</p>
                 </div>
             </div>
         </div>
@@ -100,7 +105,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Collection Rate</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.payment_calendar.collection_rate') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['percent_total'], 2) }}%</h4>
 
                     <div class="progress mt-3" style="height: 8px;">
@@ -111,7 +117,7 @@
                     </div>
 
                     <p class="text-muted mt-3 mb-0">
-                        Percentage of received payments against expected payments.
+                        {{ __('pages/reports.payment_calendar.collection_rate_hint') }}
                     </p>
                 </div>
             </div>
@@ -125,10 +131,10 @@
                 <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                     <div>
                         <h4 class="card-title mb-1">
-                            Daily Payment Calendar - {{ $currentMonth->format('F Y') }}
+                            {{ __('pages/reports.payment_calendar.table_title', ['month' => $currentMonth->format('F Y')]) }}
                         </h4>
                         <p class="text-muted mb-0">
-                            Each row shows one calendar day with expected, received and missing amount.
+                            {{ __('pages/reports.payment_calendar.table_hint') }}
                         </p>
                     </div>
                 </div>
@@ -139,31 +145,33 @@
 
                             <thead class="table-light">
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Day</th>
+                                    <th>{{ __('pages/reports.common.date') }}</th>
+                                    <th>{{ __('pages/reports.common.day') }}</th>
 
                                     <th class="text-end">
-                                        Expected<br>
+                                        {{ __('pages/reports.payment_calendar.expected') }}<br>
                                         <small class="text-muted">{{ $currentMonth->format('F Y') }}</small>
                                     </th>
                                     <th class="text-end">
-                                        Paid Expected<br>
-                                        <small class="text-muted">Expected customers only</small>
+                                        {{ __('pages/reports.payment_calendar.paid_expected') }}<br>
+                                        <small
+                                            class="text-muted">{{ __('pages/reports.payment_calendar.expected_customers_only') }}</small>
                                     </th>
                                     <th class="text-end">
-                                        Total Received<br>
-                                        <small class="text-muted">All payments</small>
+                                        {{ __('pages/reports.payment_calendar.total_received') }}<br>
+                                        <small
+                                            class="text-muted">{{ __('pages/reports.payment_calendar.all_payments') }}</small>
                                     </th>
                                     <th class="text-end">
-                                        Change<br>
+                                        {{ __('pages/reports.common.change') }}<br>
                                         <small class="text-muted">{{ $currentMonth->format('F Y') }}</small>
                                     </th>
                                     <th class="text-end">
-                                        Difference<br>
+                                        {{ __('pages/reports.payment_calendar.difference') }}<br>
                                         <small class="text-muted">{{ $currentMonth->format('F Y') }}</small>
                                     </th>
-                                    <th class="text-end">Collection %</th>
-                                    <th>Status</th>
+                                    <th class="text-end">{{ __('pages/reports.payment_calendar.collection_percent') }}</th>
+                                    <th>{{ __('pages/reports.common.status') }}</th>
                                 </tr>
                             </thead>
 
@@ -171,23 +179,23 @@
                                 @foreach ($days as $day)
                                     @php
                                         $statusClass = 'secondary';
-                                        $statusText = 'No Expected Payment';
+                                        $statusText = __('pages/reports.payment_calendar.status.no_expected');
 
                                         if ($day['expected'] > 0 && $day['percent'] >= 100) {
                                             $statusClass = 'success';
-                                            $statusText = 'Completed';
+                                            $statusText = __('pages/reports.payment_calendar.status.completed');
                                         } elseif ($day['expected'] > 0 && $day['paid_expected'] > 0) {
                                             $statusClass = 'warning';
-                                            $statusText = 'Partially Paid';
+                                            $statusText = __('pages/reports.payment_calendar.status.partially_paid');
                                         } elseif ($day['expected'] > 0 && $day['received'] <= 0 && $day['is_past']) {
                                             $statusClass = 'danger';
-                                            $statusText = 'Missing';
+                                            $statusText = __('pages/reports.payment_calendar.status.missing');
                                         } elseif ($day['expected'] > 0 && $day['is_today']) {
                                             $statusClass = 'info';
-                                            $statusText = 'Due Today';
+                                            $statusText = __('pages/reports.payment_calendar.status.due_today');
                                         } elseif ($day['expected'] > 0 && $day['is_future']) {
                                             $statusClass = 'primary';
-                                            $statusText = 'Upcoming';
+                                            $statusText = __('pages/reports.payment_calendar.status.upcoming');
                                         }
                                     @endphp
 
@@ -198,19 +206,11 @@
                                             </div>
 
                                             @if ($day['is_today'])
-                                                <div class="text-info small">Today</div>
+                                                <div class="text-info small">{{ __('pages/reports.common.today') }}</div>
                                             @endif
                                         </td>
 
                                         <td>{{ $day['day_name'] }}</td>
-
-                                        {{-- <td class="text-end">
-                                            {{ number_format($day['expected'], 2) }} TMT
-                                        </td>
-
-                                        <td class="text-end">
-                                            {{ number_format($day['received'], 2) }} TMT
-                                        </td> --}}
 
                                         <td class="text-end">
                                             @if ($day['expected'] > 0)
@@ -279,7 +279,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="2">Total</th>
+                                    <th colspan="2">{{ __('pages/reports.common.total') }}</th>
 
                                     <th class="text-end">
                                         {{ number_format($summary['expected_total'], 2) }} TMT

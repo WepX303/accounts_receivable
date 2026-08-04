@@ -18,15 +18,15 @@ class PaymentCalendarReportExport implements FromArray, WithHeadings
     public function headings(): array
     {
         return [
-            'Date',
-            'Day',
-            'Expected Amount',
-            'Paid Expected Amount',
-            'Total Received Amount',
-            'Change Returned',
-            'Difference',
-            'Collection %',
-            'Status',
+            __('pages/reports.common.date'),
+            __('pages/reports.common.day'),
+            __('pages/reports.export.expected_amount'),
+            __('pages/reports.export.paid_expected_amount'),
+            __('pages/reports.export.total_received_amount'),
+            __('pages/reports.common.change_returned'),
+            __('pages/reports.payment_calendar.difference'),
+            __('pages/reports.payment_calendar.collection_percent'),
+            __('pages/reports.common.status'),
         ];
     }
 
@@ -169,7 +169,7 @@ class PaymentCalendarReportExport implements FromArray, WithHeadings
             : 0;
 
         $rows[] = [
-            'Total',
+            __('pages/reports.common.total'),
             '',
             number_format($expectedTotal, 2) . ' TMT',
             number_format($paidExpectedTotal, 2) . ' TMT',
@@ -186,26 +186,26 @@ class PaymentCalendarReportExport implements FromArray, WithHeadings
     private function statusText(float $expected, float $paidExpected, float $percent, Carbon $date): string
     {
         if ($expected <= 0) {
-            return 'No Expected Payment';
+            return __('pages/reports.payment_calendar.status.no_expected');
         }
 
         if ($percent >= 100) {
-            return 'Completed';
+            return __('pages/reports.payment_calendar.status.completed');
         }
 
         if ($paidExpected > 0) {
-            return 'Partially Paid';
+            return __('pages/reports.payment_calendar.status.partially_paid');
         }
 
         if ($date->isToday()) {
-            return 'Due Today';
+            return __('pages/reports.payment_calendar.status.due_today');
         }
 
         if ($date->isPast()) {
-            return 'Missing';
+            return __('pages/reports.payment_calendar.status.missing');
         }
 
-        return 'Upcoming';
+        return __('pages/reports.payment_calendar.status.upcoming');
     }
 
     private function sumMoneyColumn(array $rows, int $index): float

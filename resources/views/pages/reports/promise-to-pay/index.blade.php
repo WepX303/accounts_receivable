@@ -7,15 +7,15 @@
                 <div class="card-body">
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                         <div>
-                            <h4 class="mb-1">Promise To Pay Report</h4>
+                            <h4 class="mb-1">{{ __('pages/reports.promise_to_pay.title') }}</h4>
                             <p class="text-muted mb-0">
-                                Customers with planned promise payment dates and promise amounts.
+                                {{ __('pages/reports.promise_to_pay.subtitle') }}
                             </p>
                         </div>
 
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <div class="text-muted me-2">
-                                Period:
+                                {{ __('pages/reports.common.period') }}:
                                 <span class="fw-semibold">
                                     {{ $dateFrom->format('d.m.Y') }} - {{ $dateTo->format('d.m.Y') }}
                                 </span>
@@ -24,7 +24,7 @@
                             <a href="{{ route('reports.promise-to-pay.export', request()->query()) }}"
                                 class="btn btn-success">
                                 <i class="ri-file-excel-2-line me-1"></i>
-                                Export Excel
+                                {{ __('pages/reports.common.export_excel') }}
                             </a>
                         </div>
                     </div>
@@ -41,21 +41,21 @@
                     <form method="GET" action="{{ route('reports.promise-to-pay') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-2">
-                                <label class="form-label">Date From</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_from') }}</label>
                                 <input type="date" name="date_from" class="form-control"
                                     value="{{ request('date_from', $dateFrom->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Date To</label>
+                                <label class="form-label">{{ __('pages/reports.common.date_to') }}</label>
                                 <input type="date" name="date_to" class="form-control"
                                     value="{{ request('date_to', $dateTo->format('Y-m-d')) }}">
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Branch</label>
+                                <label class="form-label">{{ __('pages/reports.common.branch') }}</label>
                                 <select name="branch" class="form-select">
-                                    <option value="">All Branches</option>
+                                    <option value="">{{ __('pages/reports.common.all_branches') }}</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b }}" {{ $branch === $b ? 'selected' : '' }}>
                                             {{ $b }}
@@ -65,31 +65,36 @@
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Promise Status</label>
+                                <label class="form-label">{{ __('pages/reports.promise_to_pay.promise_status') }}</label>
                                 <select name="status" class="form-select">
-                                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>All</option>
-                                    <option value="broken" {{ $status === 'broken' ? 'selected' : '' }}>Broken</option>
-                                    <option value="today" {{ $status === 'today' ? 'selected' : '' }}>Today</option>
-                                    <option value="upcoming" {{ $status === 'upcoming' ? 'selected' : '' }}>Upcoming
-                                    </option>
-                                    <option value="kept" {{ $status === 'kept' ? 'selected' : '' }}>Kept</option>
+                                    <option value="all" {{ $status === 'all' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.promise_to_pay.status.all') }}</option>
+                                    <option value="broken" {{ $status === 'broken' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.promise_to_pay.status.broken') }}</option>
+                                    <option value="today" {{ $status === 'today' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.promise_to_pay.status.today') }}</option>
+                                    <option value="upcoming" {{ $status === 'upcoming' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.promise_to_pay.status.upcoming') }}</option>
+                                    <option value="kept" {{ $status === 'kept' ? 'selected' : '' }}>
+                                        {{ __('pages/reports.promise_to_pay.status.kept') }}</option>
                                 </select>
                             </div>
 
                             <div class="col-md-2">
-                                <label class="form-label">Search</label>
+                                <label class="form-label">{{ __('pages/reports.common.search') }}</label>
                                 <input type="text" name="q" class="form-control"
-                                    placeholder="Customer / contract / phone" value="{{ $q }}">
+                                    placeholder="{{ __('pages/reports.promise_to_pay.search_placeholder') }}"
+                                    value="{{ $q }}">
                             </div>
 
                             <div class="col-md-2">
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-primary w-100" type="submit">
-                                        Apply
+                                        {{ __('pages/reports.common.apply') }}
                                     </button>
 
                                     <a href="{{ route('reports.promise-to-pay') }}" class="btn btn-light border w-100">
-                                        Clear
+                                        {{ __('pages/reports.common.clear') }}
                                     </a>
                                 </div>
                             </div>
@@ -105,7 +110,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Promise Customers</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.promise_customers') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['customers_count']) }}</h4>
                 </div>
             </div>
@@ -114,7 +120,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Promise Amount</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.promise_amount') }}</p>
                     <h4 class="mb-0">{{ number_format($summary['promise_amount'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -123,7 +130,8 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Paid After Promise</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.paid_after_promise') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['paid_after_promise'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -132,7 +140,7 @@
         <div class="col">
             <div class="card card-height-100">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Remaining</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">{{ __('pages/reports.common.remaining') }}</p>
                     <h4 class="mb-0 text-danger">{{ number_format($summary['remaining_total'], 2) }} TMT</h4>
                 </div>
             </div>
@@ -143,7 +151,8 @@
         <div class="col">
             <div class="card card-height-100 border-danger">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Broken</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.status.broken') }}</p>
                     <h4 class="mb-0 text-danger">{{ number_format($summary['broken_count']) }}</h4>
                 </div>
             </div>
@@ -152,7 +161,8 @@
         <div class="col">
             <div class="card card-height-100 border-info">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Today</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.status.today') }}</p>
                     <h4 class="mb-0 text-info">{{ number_format($summary['today_count']) }}</h4>
                 </div>
             </div>
@@ -161,7 +171,8 @@
         <div class="col">
             <div class="card card-height-100 border-primary">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Upcoming</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.status.upcoming') }}</p>
                     <h4 class="mb-0 text-primary">{{ number_format($summary['upcoming_count']) }}</h4>
                 </div>
             </div>
@@ -170,7 +181,8 @@
         <div class="col">
             <div class="card card-height-100 border-success">
                 <div class="card-body">
-                    <p class="text-muted text-uppercase fs-13 mb-2">Kept</p>
+                    <p class="text-muted text-uppercase fs-13 mb-2">
+                        {{ __('pages/reports.promise_to_pay.status.kept') }}</p>
                     <h4 class="mb-0 text-success">{{ number_format($summary['kept_count']) }}</h4>
                 </div>
             </div>
@@ -183,14 +195,14 @@
             <div class="card">
                 <div class="card-header d-flex flex-column flex-lg-row justify-content-between gap-2">
                     <div>
-                        <h5 class="mb-0">Promise Customer List</h5>
+                        <h5 class="mb-0">{{ __('pages/reports.promise_to_pay.table_title') }}</h5>
                         <div class="text-muted small mt-1">
-                            Sorted by priority: Broken, Today, Upcoming, Kept.
+                            {{ __('pages/reports.promise_to_pay.table_hint') }}
                         </div>
                     </div>
 
                     <div class="text-muted small">
-                        Total: {{ number_format($summary['customers_count']) }}
+                        {{ __('pages/reports.common.total') }}: {{ number_format($summary['customers_count']) }}
                     </div>
                 </div>
 
@@ -199,19 +211,19 @@
                         <table class="table table-hover align-middle mb-0 text-nowrap">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Credit ID</th>
-                                    <th>Customer</th>
-                                    <th>Contract</th>
-                                    <th>Phone</th>
-                                    <th>Branch</th>
-                                    <th class="text-end">Total Debt</th>
-                                    <th class="text-end">Paid</th>
-                                    <th class="text-end">Remaining</th>
-                                    <th>Promise Date</th>
-                                    <th class="text-end">Promise Amount</th>
-                                    <th class="text-end">Paid After Promise</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Promise Days</th>
+                                    <th>{{ __('pages/reports.common.credit_id') }}</th>
+                                    <th>{{ __('pages/reports.common.customer') }}</th>
+                                    <th>{{ __('pages/reports.common.contract') }}</th>
+                                    <th>{{ __('pages/reports.common.phone') }}</th>
+                                    <th>{{ __('pages/reports.common.branch') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.total_debt') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.paid') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.common.remaining') }}</th>
+                                    <th>{{ __('pages/reports.promise_to_pay.promise_date') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.promise_to_pay.promise_amount') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.promise_to_pay.paid_after_promise') }}</th>
+                                    <th>{{ __('pages/reports.common.status') }}</th>
+                                    <th class="text-end">{{ __('pages/reports.promise_to_pay.promise_days') }}</th>
                                 </tr>
                             </thead>
 
@@ -224,6 +236,14 @@
                                             'kept' => 'success',
                                             'broken' => 'danger',
                                             default => 'secondary',
+                                        };
+
+                                        $statusLabel = match ($row->promise_status) {
+                                            'today' => __('pages/reports.promise_to_pay.status.today'),
+                                            'upcoming' => __('pages/reports.promise_to_pay.status.upcoming'),
+                                            'kept' => __('pages/reports.promise_to_pay.status.kept'),
+                                            'broken' => __('pages/reports.promise_to_pay.status.broken'),
+                                            default => ucfirst((string) $row->promise_status),
                                         };
 
                                         $rowClass = match ($row->promise_status) {
@@ -264,14 +284,14 @@
 
                                         <td>
                                             <span class="badge bg-{{ $badgeClass }}-subtle text-{{ $badgeClass }}">
-                                                {{ ucfirst($row->promise_status) }}
+                                                {{ $statusLabel }}
                                             </span>
                                         </td>
 
                                         <td class="text-end">
                                             @if ($row->promise_status === 'broken')
                                                 <span class="badge bg-danger-subtle text-danger">
-                                                    {{ $row->promise_days }} days
+                                                    {{ $row->promise_days }} {{ __('pages/reports.common.days') }}
                                                 </span>
                                             @else
                                                 —
@@ -281,7 +301,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="13" class="text-center text-muted py-4">
-                                            No promise to pay records found.
+                                            {{ __('pages/reports.promise_to_pay.empty') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -289,7 +309,7 @@
 
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="5">Total</th>
+                                    <th colspan="5">{{ __('pages/reports.common.total') }}</th>
                                     <th></th>
                                     <th></th>
                                     <th class="text-end">{{ number_format($summary['remaining_total'], 2) }} TMT</th>

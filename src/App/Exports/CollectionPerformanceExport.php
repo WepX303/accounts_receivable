@@ -37,21 +37,23 @@ class CollectionPerformanceSheet implements FromCollection, WithHeadings, Should
     public function title(): string
     {
         return $this->type === 'cashier'
-            ? 'Cashiers'
-            : 'Branches';
+            ? __('pages/reports.export.sheet_cashiers')
+            : __('pages/reports.export.sheet_branches');
     }
 
     public function headings(): array
     {
         return [
-            $this->type === 'cashier' ? 'Cashier' : 'Branch',
-            'Transactions',
-            'Gross Collection',
-            'Change Returned',
-            'Net Collection',
-            'Cash Amount',
-            'Card Amount',
-            'Phone Amount',
+            $this->type === 'cashier'
+                ? __('pages/reports.common.cashier')
+                : __('pages/reports.common.branch'),
+            __('pages/reports.common.transactions'),
+            __('pages/reports.common.gross_collection'),
+            __('pages/reports.common.change_returned'),
+            __('pages/reports.common.net_collection'),
+            __('pages/reports.export.cash_amount'),
+            __('pages/reports.export.card_amount'),
+            __('pages/reports.export.phone_amount'),
         ];
     }
 
@@ -101,7 +103,7 @@ class CollectionPerformanceSheet implements FromCollection, WithHeadings, Should
         });
 
         $exportRows->push([
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             (int) $exportRows->sum(fn ($r) => (int) ($r[1] ?? 0)),
             round((float) $exportRows->sum(fn ($r) => (float) ($r[2] ?? 0)), 2),
             round((float) $exportRows->sum(fn ($r) => (float) ($r[3] ?? 0)), 2),

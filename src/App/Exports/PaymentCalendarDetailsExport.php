@@ -24,64 +24,64 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
     {
         if ($this->type === 'received') {
             return [
-                'Payment ID',
-                'Credit Source ID',
-                'Credit LogicalRef',
-                'Customer',
-                'Contract',
-                'Phone',
-                'Passport',
-                'Branch',
-                'Cashier',
-                'Cashier Email',
-                'Cashier Phone',
-                'Payment Date',
-                'Method',
-                'Received Amount',
-                'Change Amount',
-                'Net Applied',
-                'Cash Amount',
-                'Card Amount',
-                'Phone Amount',
-                'Receiver Phone',
-                'Corrected',
-                'Corrected At',
-                'Note',
+                __('pages/reports.export.payment_id'),
+                __('pages/reports.export.credit_source_id'),
+                __('pages/reports.export.credit_logicalref'),
+                __('pages/reports.common.customer'),
+                __('pages/reports.common.contract'),
+                __('pages/reports.common.phone'),
+                __('pages/reports.common.passport'),
+                __('pages/reports.common.branch'),
+                __('pages/reports.common.cashier'),
+                __('pages/reports.export.cashier_email'),
+                __('pages/reports.export.cashier_phone'),
+                __('pages/reports.export.payment_date'),
+                __('pages/reports.common.method'),
+                __('pages/reports.export.received_amount'),
+                __('pages/reports.export.change_amount'),
+                __('pages/reports.export.net_applied'),
+                __('pages/reports.export.cash_amount'),
+                __('pages/reports.export.card_amount'),
+                __('pages/reports.export.phone_amount'),
+                __('pages/reports.export.receiver_phone'),
+                __('pages/reports.export.corrected'),
+                __('pages/reports.export.corrected_at'),
+                __('pages/reports.common.note'),
             ];
         }
 
         return [
-            'Credit ID',
-            'LogicalRef',
-            'Customer',
-            'Contract',
-            'Phone',
-            'Passport',
-            'Branch',
-            'ClientRef',
-            'Assurance',
-            'Manager',
-            'Status',
-            'Credit Date',
-            'Due Date',
-            'Expected Installment',
-            'Paid Today',
-            'Gross Today',
-            'Change Today',
-            'Missing Today',
-            'Payment Count',
-            'Payment Status',
-            'Last Payment At',
-            'Total Debt',
-            'Paid Total',
-            'Remaining Total',
-            'Remote Amount',
-            'Remote Paid',
-            'Local Amount',
-            'Local Paid',
-            'Will Pay Date',
-            'Will Pay Amount',
-            'Note',
+            __('pages/reports.common.credit_id'),
+            __('pages/reports.export.logicalref'),
+            __('pages/reports.common.customer'),
+            __('pages/reports.common.contract'),
+            __('pages/reports.common.phone'),
+            __('pages/reports.common.passport'),
+            __('pages/reports.common.branch'),
+            __('pages/reports.export.clientref'),
+            __('pages/reports.export.assurance'),
+            __('pages/reports.export.manager'),
+            __('pages/reports.common.status'),
+            __('pages/reports.common.credit_date'),
+            __('pages/reports.export.due_date'),
+            __('pages/reports.export.expected_installment'),
+            __('pages/reports.export.paid_today'),
+            __('pages/reports.export.gross_today'),
+            __('pages/reports.export.change_today'),
+            __('pages/reports.export.missing_today'),
+            __('pages/reports.export.payment_count'),
+            __('pages/reports.export.payment_status'),
+            __('pages/reports.export.last_payment_at'),
+            __('pages/reports.common.total_debt'),
+            __('pages/reports.export.paid_total'),
+            __('pages/reports.export.remaining_total'),
+            __('pages/reports.export.remote_amount'),
+            __('pages/reports.export.remote_paid'),
+            __('pages/reports.export.local_amount'),
+            __('pages/reports.export.local_paid'),
+            __('pages/reports.export.will_pay_date'),
+            __('pages/reports.export.will_pay_amount'),
+            __('pages/reports.common.note'),
         ];
     }
 
@@ -184,12 +184,12 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
 
             $missingToday = round(max($installment - $paidToday, 0), 2);
 
-            $paymentStatus = 'Unpaid';
+            $paymentStatus = __('pages/reports.payment_calendar.details.status_unpaid');
 
             if ($paidToday >= $installment && $installment > 0) {
-                $paymentStatus = 'Paid';
+                $paymentStatus = __('pages/reports.payment_calendar.details.status_paid');
             } elseif ($paidToday > 0 && $paidToday < $installment) {
-                $paymentStatus = 'Partial';
+                $paymentStatus = __('pages/reports.payment_calendar.details.status_partial');
             }
 
             $dueDate = $targetDate->copy();
@@ -241,7 +241,7 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
         $rows->push([
             '',
             '',
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             '',
             '',
             '',
@@ -334,7 +334,7 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
                     round((float) ($p->card_amount ?? 0), 2),
                     round((float) ($p->phone_amount ?? 0), 2),
                     $p->receiver_phone_number,
-                    $p->corrected_at ? 'YES' : 'NO',
+                    $p->corrected_at ? __('pages/reports.export.yes') : __('pages/reports.export.no'),
                     $p->corrected_at ? Carbon::parse($p->corrected_at)->format('Y-m-d H:i:s') : null,
                     $p->note,
                 ];
@@ -345,7 +345,7 @@ class PaymentCalendarDetailsExport implements FromCollection, WithHeadings, Shou
             '',
             '',
             '',
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             '',
             '',
             '',

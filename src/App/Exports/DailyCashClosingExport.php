@@ -20,14 +20,14 @@ class DailyCashClosingExport implements FromCollection, WithHeadings, ShouldAuto
     public function headings(): array
     {
         return [
-            'Date',
-            'Transactions',
-            'Gross Collection',
-            'Change Returned',
-            'Net Collection',
-            'Cash Amount',
-            'Card Amount',
-            'Phone Amount',
+            __('pages/reports.common.date'),
+            __('pages/reports.common.transactions'),
+            __('pages/reports.common.gross_collection'),
+            __('pages/reports.common.change_returned'),
+            __('pages/reports.common.net_collection'),
+            __('pages/reports.export.cash_amount'),
+            __('pages/reports.export.card_amount'),
+            __('pages/reports.export.phone_amount'),
         ];
     }
 
@@ -61,7 +61,7 @@ class DailyCashClosingExport implements FromCollection, WithHeadings, ShouldAuto
             });
 
         $rows->push([
-            'TOTAL',
+            __('pages/reports.export.total_upper'),
             (int) $rows->sum(fn ($r) => (int) ($r[1] ?? 0)),
             round((float) $rows->sum(fn ($r) => (float) ($r[2] ?? 0)), 2),
             round((float) $rows->sum(fn ($r) => (float) ($r[3] ?? 0)), 2),
