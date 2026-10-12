@@ -16,7 +16,7 @@ class SetApiLocale
     public function handle(Request $request, Closure $next): Response
     {
         // Falls back to the first entry when the header is missing or names another language.
-        App::setLocale($request->getPreferredLanguage(['tk', 'ru', 'en']));
+        App::setLocale($request->getPreferredLanguage(['tk', 'ru', 'en', 'tr']));
 
         return $next($request);
     }

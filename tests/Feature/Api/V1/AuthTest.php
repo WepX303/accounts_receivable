@@ -132,6 +132,12 @@ class AuthTest extends ApiTestCase
             ->assertStatus(401)
             ->assertJsonPath('message', 'Пожалуйста, войдите снова.');
 
+        $this->withHeader('Accept-Language', 'tr')->getJson('/api/v1/auth/me')
+            ->assertJsonPath('message', 'Lütfen tekrar giriş yapın.');
+
+        $this->withHeader('Accept-Language', 'tr')->login(['password' => 'nope'])
+            ->assertJsonPath('message', 'Kullanıcı adı veya şifre hatalı.');
+
         $this->withHeader('Accept-Language', 'de')->getJson('/api/v1/auth/me')
             ->assertJsonPath('message', 'Täzeden giriň.');
     }
