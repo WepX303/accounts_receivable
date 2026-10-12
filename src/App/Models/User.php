@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class User extends Authenticatable
 {
@@ -42,6 +43,28 @@ class User extends Authenticatable
         'daily_report' => 'boolean',
         'token_expires_at' => 'datetime',
     ];
+
+    /**
+     * API tokens do not outlive the reason they were trusted: a new password
+     * or a deactivated or deleted account ends them, wherever the change was
+     * made. The device a user changes their own password from stays signed in.
+     */
+    protected static function booted()
+    {
+        static::updated(function (User $user) {
+            if ($user->wasChanged('status') && ! $user->status) {
+                $user->tokens()->delete();
+            } elseif ($user->wasChanged('password')) {
+                $current = $user->currentAccessToken();
+
+                $user->tokens()
+                    ->when($current instanceof PersonalAccessToken, fn ($query) => $query->whereKeyNot($current->getKey()))
+                    ->delete();
+            }
+        });
+
+        static::deleted(fn (User $user) => $user->tokens()->delete());
+    }
 
     public function getFullNameAttribute(): string
     {

@@ -23,11 +23,6 @@ class ProfileController extends Controller
             return ApiResponse::error($e->getMessage(), 422, 'validation_failed', [$e->field => [$e->getMessage()]]);
         }
 
-        if ($result !== ProfileService::UNCHANGED && ! empty($validated['new_password'])) {
-            // Whoever else holds a token for this account is signed out; this device stays.
-            $user->tokens()->whereKeyNot($user->currentAccessToken()->getKey())->delete();
-        }
-
         $message = match ($result) {
             ProfileService::UNCHANGED => __('validations/validations.profile.no_changes'),
             ProfileService::PASSWORD_UPDATED => __('validations/validations.profile.password_updated'),

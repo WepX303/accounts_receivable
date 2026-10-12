@@ -203,8 +203,21 @@ class AuthTest extends ApiTestCase
         $user = $this->user();
         $this->signIn($user)->getJson('/api/v1/auth/me')->assertOk();
 
+        // Deactivating ends every session of the account on the spot.
         $user->update(['status' => false]);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+
         $this->app['auth']->forgetGuards();
+        $this->getJson('/api/v1/auth/me')->assertStatus(401);
+    }
+
+    public function test_a_token_that_survives_deactivation_is_still_refused(): void
+    {
+        $user = $this->user();
+        $this->signIn($user);
+
+        // Changed behind the model's back, e.g. straight in the database.
+        DB::table('users')->where('id', $user->id)->update(['status' => false]);
 
         $this->getJson('/api/v1/auth/me')
             ->assertStatus(403)

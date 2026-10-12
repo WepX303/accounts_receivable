@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Payments\PaymentController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
+use App\Http\Controllers\Api\V1\Sms\SmsController;
+use App\Http\Controllers\Api\V1\Users\UserController;
 use App\Http\Controllers\Customers\CustomersExportController;
 use App\Support\Access;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +62,21 @@ Route::prefix('v1')->group(function () {
                 ->defaults('report', $address)
                 ->middleware(Access::middleware($ability));
         }
+
+        Route::middleware(Access::middleware('sms'))->group(function () {
+            Route::get('/sms/customers', [SmsController::class, 'customers']);
+            Route::post('/sms/preview', [SmsController::class, 'preview']);
+            Route::post('/sms/preview/export', [SmsController::class, 'exportPreview']);
+            // Sending is the one action here that reaches outside; keep bursts small.
+            Route::post('/sms/send', [SmsController::class, 'send'])->middleware('throttle:6,1');
+        });
+
+        Route::middleware(Access::middleware('users'))->group(function () {
+            Route::get('/users', [UserController::class, 'index']);
+            Route::post('/users', [UserController::class, 'store']);
+            Route::put('/users/{user}', [UserController::class, 'update'])->whereNumber('user');
+            Route::delete('/users/{user}', [UserController::class, 'destroy'])->whereNumber('user');
+        });
 
         Route::post('/payments', [PaymentController::class, 'store'])
             ->middleware(Access::middleware('payments.take'));
