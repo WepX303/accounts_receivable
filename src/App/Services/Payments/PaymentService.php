@@ -43,6 +43,7 @@ class PaymentService
 
         $customerId = $data->creditSourceId;
         $userId = (int) $user->id;
+        $clientRequestId = $data->clientRequestId;
 
         $enteredAt = now();
         $paymentAtProvided = $data->paymentAt !== null;
@@ -56,13 +57,29 @@ class PaymentService
         $backdated = $paymentAtProvided && $now->lt($enteredAt->copy()->startOfMinute());
 
         try {
-            [$payment, $auditData] = DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, $receiverPhoneNumber) {
+            [$payment, $auditData] = DB::transaction(function () use ($customerId, $received, $userId, $user, $now, $enteredAt, $backdated, $method, $cashTotal, $cardTotal, $phoneTotal, $note, $receiverPhoneNumber, $clientRequestId) {
                 /** @var \App\Models\Credit $c */
                 $c = Credit::query()
                     ->where('active', true)
                     ->where('source_id', $customerId)
                     ->lockForUpdate()
                     ->firstOrFail();
+
+                // Looked up under the credit lock, so a request repeated while the
+                // first is still running waits here and then finds its payment.
+                if ($clientRequestId !== null) {
+                    $existing = CreditPayment::withoutGlobalScopes()
+                        ->where('client_request_id', $clientRequestId)
+                        ->first();
+
+                    if ($existing) {
+                        if ((int) $existing->credit_source_id !== $customerId || (int) $existing->created_by !== $userId) {
+                            throw new PaymentException('idempotency_key_reused', __('api.idempotency_key_reused'));
+                        }
+
+                        return [$existing, null];
+                    }
+                }
 
                 // ONLY LOCAL
                 if ($c->amount_local === null || $c->paid_local === null) {
@@ -191,6 +208,10 @@ class PaymentService
 
                     'note' => $note !== '' ? $note : null,
                     'created_at' => $now,
+
+                    // Named only when there is one, so the panel keeps working
+                    // on a database the column has not reached yet.
+                    ...($clientRequestId !== null ? ['client_request_id' => $clientRequestId] : []),
                 ]);
 
                 return [$payment, [
@@ -247,6 +268,11 @@ class PaymentService
             );
 
             throw $this->refused($e, $msg);
+        }
+
+        // A repeated submission: the payment was booked and logged the first time.
+        if ($auditData === null) {
+            return $payment;
         }
 
         $this->audit->log(

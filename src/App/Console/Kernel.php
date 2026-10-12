@@ -21,6 +21,8 @@ class Kernel extends ConsoleKernel
             ->runInBackground();
 
         $schedule->command('report:daily-payments')->dailyAt('23:00');
+
+        $schedule->command('sanctum:prune-expired --hours=24')->dailyAt('03:00');
     }
 
 

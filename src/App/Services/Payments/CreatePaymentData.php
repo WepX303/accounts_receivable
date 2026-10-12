@@ -9,6 +9,7 @@ class CreatePaymentData
     /**
      * @param  float  $received  the money handed over by the customer
      * @param  Carbon|null  $paymentAt  null when the payment is being entered as it happens
+     * @param  string|null  $clientRequestId  the same key on a repeated submission returns the first payment instead of booking another
      */
     public function __construct(
         public readonly int $creditSourceId,
@@ -19,6 +20,7 @@ class CreatePaymentData
         public readonly ?string $receiverPhoneNumber = null,
         public readonly string $note = '',
         public readonly ?Carbon $paymentAt = null,
+        public readonly ?string $clientRequestId = null,
     ) {
     }
 
@@ -33,6 +35,7 @@ class CreatePaymentData
             $this->receiverPhoneNumber,
             $this->note,
             $paymentAt,
+            $this->clientRequestId,
         );
     }
 }

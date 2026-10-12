@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Support\ApiResponse;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
@@ -20,31 +25,49 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
+     * API clients always get the JSON envelope; the panel keeps the framework's pages.
      */
-    // public function register(): void
-    // {
-    //     $this->reportable(function (Throwable $e) {
-    //         //
-    //     });
-    // }
+    public function render($request, Throwable $e)
+    {
+        if (! $request->is('api/*')) {
+            return parent::render($request, $e);
+        }
 
-    // public function register(): void
-    // {
-    //     // 1) HTTP hataları: 401/403/404/419/429/503 vs.
-    //     $this->renderable(function (HttpExceptionInterface $e, $request) {
-    //         $status = $e->getStatusCode();
+        // A response someone already built, e.g. by a rate limiter.
+        if ($e instanceof HttpResponseException) {
+            return $e->getResponse();
+        }
 
-    //         return match ($status) {
-    //             404 => response()->view('errors.404', ['exception' => $e], 404),
-    //             500 => response()->view('errors.500', ['exception' => $e], 500),
-    //             default => response()->view('errors.other', ['exception' => $e, 'status' => $status], $status),
-    //         };
-    //     });
+        if ($e instanceof ValidationException) {
+            return ApiResponse::error(__('api.validation_failed'), 422, 'validation_failed', $e->errors());
+        }
 
-    //     // 2) HttpException olmayan tüm hatalar (gerçek 500'ler)
-    //     $this->renderable(function (Throwable $e, $request) {
-    //         return response()->view('errors.500', ['exception' => $e], 500);
-    //     });
-    // }
+        if ($e instanceof AuthenticationException) {
+            return ApiResponse::error(__('api.unauthenticated'), 401, 'unauthenticated');
+        }
+
+        if ($e instanceof ModelNotFoundException) {
+            return ApiResponse::error(__('api.not_found'), 404, 'not_found');
+        }
+
+        if ($e instanceof HttpExceptionInterface) {
+            $status = $e->getStatusCode();
+
+            [$code, $message] = match ($status) {
+                401 => ['unauthenticated', __('api.unauthenticated')],
+                403 => ['forbidden', __('api.forbidden')],
+                404 => ['not_found', __('api.not_found')],
+                405 => ['method_not_allowed', __('api.method_not_allowed')],
+                429 => ['too_many_requests', __('api.too_many_requests')],
+                default => $status >= 500
+                    ? ['server_error', __('api.server_error')]
+                    : ['request_failed', __('api.request_failed')],
+            };
+
+            return ApiResponse::error($message, $status, $code)->withHeaders($e->getHeaders());
+        }
+
+        // Never the exception text: it can carry SQL or file paths.
+        return ApiResponse::error(__('api.server_error'), 500, 'server_error');
+    }
 }

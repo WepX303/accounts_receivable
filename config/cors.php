@@ -19,7 +19,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // The API is for the mobile app, which is not subject to CORS. No web page
+    // may call it from a browser unless its origin is listed here.
+    'allowed_origins' => array_values(array_filter(explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))),
 
     'allowed_origins_patterns' => [],
 
