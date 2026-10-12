@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Commands\CommandController;
 use App\Http\Controllers\Api\V1\Customers\CustomerController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
+use App\Http\Controllers\Api\V1\Logs\LogController;
 use App\Http\Controllers\Api\V1\Payments\PaymentController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
@@ -76,6 +78,15 @@ Route::prefix('v1')->group(function () {
             Route::post('/users', [UserController::class, 'store']);
             Route::put('/users/{user}', [UserController::class, 'update'])->whereNumber('user');
             Route::delete('/users/{user}', [UserController::class, 'destroy'])->whereNumber('user');
+        });
+
+        Route::get('/logs', LogController::class)->middleware(Access::middleware('logs'));
+
+        Route::middleware(Access::middleware('commands'))->group(function () {
+            Route::get('/commands', [CommandController::class, 'index']);
+            Route::post('/commands/{command}', [CommandController::class, 'run'])
+                ->whereIn('command', array_keys(CommandController::ACTIONS))
+                ->middleware('throttle:6,1');
         });
 
         Route::post('/payments', [PaymentController::class, 'store'])
