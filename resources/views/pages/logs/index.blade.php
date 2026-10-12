@@ -5,7 +5,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card card-animate">
                 <div class="card-body">
-                    <p class="text-uppercase fw-medium text-muted mb-0">Total Logs</p>
+                    <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/logs.total') }}</p>
                     <h4 class="mt-3 mb-0">{{ $stats['total'] }}</h4>
                 </div>
             </div>
@@ -14,7 +14,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card card-animate">
                 <div class="card-body">
-                    <p class="text-uppercase fw-medium text-muted mb-0">Activity Logs</p>
+                    <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/logs.activity') }}</p>
                     <h4 class="mt-3 mb-0">{{ $stats['activity'] }}</h4>
                 </div>
             </div>
@@ -23,7 +23,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card card-animate">
                 <div class="card-body">
-                    <p class="text-uppercase fw-medium text-muted mb-0">Login History</p>
+                    <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/logs.login') }}</p>
                     <h4 class="mt-3 mb-0">{{ $stats['login'] }}</h4>
                 </div>
             </div>
@@ -32,7 +32,7 @@
         <div class="col-xl-3 col-md-6">
             <div class="card card-animate">
                 <div class="card-body">
-                    <p class="text-uppercase fw-medium text-muted mb-0">Security Alerts</p>
+                    <p class="text-uppercase fw-medium text-muted mb-0">{{ __('pages/logs.alert') }}</p>
                     <h4 class="mt-3 mb-0">{{ $stats['alert'] }}</h4>
                 </div>
             </div>
@@ -44,19 +44,18 @@
             <form method="GET" action="{{ route('logs') }}">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Search</label>
+                        <label class="form-label">{{ __('pages/logs.search') }}</label>
                         <input type="text" name="q" class="form-control" value="{{ request('q') }}"
-                            placeholder="action, category, user, ip, route, browser...">
+                            placeholder="{{ __('pages/logs.search_placeholder') }}">
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Type</label>
+                        <label class="form-label">{{ __('pages/logs.type') }}</label>
                         <select name="type" class="form-select">
-                            <option value="all" {{ request('type', 'all') === 'all' ? 'selected' : '' }}>All</option>
-                            <option value="activity" {{ request('type') === 'activity' ? 'selected' : '' }}>Activity
-                            </option>
-                            <option value="login" {{ request('type') === 'login' ? 'selected' : '' }}>Login</option>
-                            <option value="alert" {{ request('type') === 'alert' ? 'selected' : '' }}>Alert</option>
+                            <option value="all" {{ request('type', 'all') === 'all' ? 'selected' : '' }}>{{ __('pages/logs.all') }}</option>
+                            <option value="activity" {{ request('type') === 'activity' ? 'selected' : '' }}>{{ __('pages/logs.type_activity') }}</option>
+                            <option value="login" {{ request('type') === 'login' ? 'selected' : '' }}>{{ __('pages/logs.type_login') }}</option>
+                            <option value="alert" {{ request('type') === 'alert' ? 'selected' : '' }}>{{ __('pages/logs.type_alert') }}</option>
                         </select>
                     </div>
 
@@ -64,10 +63,10 @@
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="d-flex gap-2">
                             <button class="btn btn-primary w-100" type="submit">
-                                <i class="ri-search-line align-bottom me-1"></i> Filter
+                                <i class="ri-search-line align-bottom me-1"></i> {{ __('pages/logs.filter') }}
                             </button>
                             <a href="{{ route('logs') }}" class="btn btn-light w-100">
-                                Reset
+                                {{ __('pages/logs.reset') }}
                             </a>
                         </div>
                     </div>
@@ -80,15 +79,16 @@
                 <table class="table table-nowrap align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Title</th>
-                            <th>User</th>
-                            <th>Status</th>
-                            <th>Level</th>
-                            <th>IP</th>
-                            <th>Message</th>
-                            <th class="text-end">Detail</th>
+                            <th>{{ __('pages/logs.date') }}</th>
+                            <th>{{ __('pages/logs.type') }}</th>
+                            <th>{{ __('pages/logs.entry') }}</th>
+                            <th>{{ __('pages/logs.user') }}</th>
+                            <th>{{ __('pages/logs.status') }}</th>
+                            <th>{{ __('pages/logs.level') }}</th>
+                            <th>{{ __('pages/logs.client') }}</th>
+                            <th>{{ __('pages/logs.ip') }}</th>
+                            <th>{{ __('pages/logs.message') }}</th>
+                            <th class="text-end">{{ __('pages/logs.detail') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -123,7 +123,7 @@
                                 <td>{{ optional($log['created_at'])->format('Y-m-d H:i:s') }}</td>
                                 <td>
                                     <span class="badge bg-{{ $typeClass }}">
-                                        {{ ucfirst($log['type']) }}
+                                        {{ __('pages/logs.type_' . $log['type']) }}
                                     </span>
                                 </td>
                                 <td>
@@ -141,6 +141,14 @@
                                         {{ $log['level_text'] ?: '-' }}
                                     </span>
                                 </td>
+                                <td>
+                                    {{-- Where the entry came from: the panel, the app or a scheduled command. --}}
+                                    @php
+                                        $client = in_array($log['client'] ?? null, ['web', 'mobile', 'system'], true) ? $log['client'] : 'unknown';
+                                        $clientClass = ['web' => 'primary', 'mobile' => 'success', 'system' => 'secondary', 'unknown' => 'light text-muted'][$client];
+                                    @endphp
+                                    <span class="badge bg-{{ $clientClass }}">{{ __('pages/logs.client_' . $client) }}</span>
+                                </td>
                                 <td>{{ $log['ip_address'] ?: '-' }}</td>
                                 <td class="text-truncate" style="max-width: 280px;">
                                     {{ $log['message'] ?: '-' }}
@@ -148,14 +156,14 @@
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-soft-primary" data-bs-toggle="modal"
                                         data-bs-target="#{{ $modalId }}">
-                                        View
+                                        {{ __('pages/logs.view') }}
                                     </button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    No logs found.
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    {{ __('pages/logs.empty') }}
                                 </td>
                             </tr>
                         @endforelse
@@ -184,7 +192,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            Log Detail #{{ $log['id'] }} - {{ ucfirst($log['type']) }}
+                            {{ __('pages/logs.detail_title') }} #{{ $log['id'] }} - {{ __('pages/logs.type_' . $log['type']) }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -219,7 +227,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                            Close
+                            {{ __('pages/logs.close') }}
                         </button>
                     </div>
                 </div>

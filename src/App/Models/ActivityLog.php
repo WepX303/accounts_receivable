@@ -20,6 +20,7 @@ class ActivityLog extends Model
         'is_suspicious',
         'subject_type',
         'subject_id',
+        'client',
         'ip_address',
         'user_agent',
         'device_type',

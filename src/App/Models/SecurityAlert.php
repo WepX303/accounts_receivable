@@ -13,6 +13,7 @@ class SecurityAlert extends Model
         'alert_type',
         'risk_level',
         'is_resolved',
+        'client',
         'ip_address',
         'message',
         'meta',

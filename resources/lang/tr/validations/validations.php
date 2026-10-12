@@ -144,8 +144,8 @@ return [
         'payment_save_failed' => 'Ödeme kaydedilemedi.',
         'payment_saved' => 'Ödeme başarıyla kaydedildi.',
 
-        'local_debt_missing' => 'Local borç verisi eksik (amount_local / paid_local NULL). Ödeme alınamaz.',
-        'debt_closed_paid_ge_total' => 'Bu müşterinin borcu kapanmış (paid_local >= amount_local). Ödeme alınamaz.',
+        'local_debt_missing' => 'Yerel borç verisi eksik. Ödeme alınamaz.',
+        'debt_closed_paid_ge_total' => 'Bu müşterinin borcu kapanmış. Ödeme alınamaz.',
         'debt_closed_remaining_zero' => 'Bu müşterinin borcu kapanmış (kalan 0). Ödeme alınamaz.',
         'overpayment_too_high' => 'Fazla ödeme çok yüksek. Maksimum para üstü: :max',
         'mixed_sum_must_equal_tx' => 'Mixed: Cash + Card toplamı Pay Amount ile eşit olmalı.',
@@ -178,7 +178,7 @@ return [
         'future_payment_date_not_allowed' => 'Gelecek tarihli ödeme yapılamaz.',
         'mixed_sum_must_equal' => 'Mixed: Cash + Card toplamı Pay Amount ile eşit olmalı.',
 
-        'local_debt_missing' => 'Local borç verisi eksik. Düzeltme yapılamaz.',
+        'local_debt_missing' => 'Yerel borç verisi eksik. Düzeltme yapılamaz.',
         'debt_closed_use_void_only' => 'Borç zaten kapanmış. Düzeltme ile yeni ödeme girilemez. Sadece VOID kullanın.',
         'overpayment_too_high' => 'Fazla ödeme çok yüksek. Maksimum para üstü: :max',
 
@@ -197,7 +197,7 @@ return [
         'admin_only' => 'Sadece Admin ödemeleri iptal edebilir.',
         'void_reason_required' => 'İptal sebebi zorunludur.',
         'already_voided' => 'Bu ödeme zaten iptal edilmiş (voided).',
-        'local_debt_missing' => 'Local borç verisi eksik (amount_local/paid_local NULL).',
+        'local_debt_missing' => 'Yerel borç verisi eksik.',
         'void_failed' => 'Ödeme iptal edilemedi.',
         'void_success' => 'Ödeme başarıyla iptal edildi.',
     ],

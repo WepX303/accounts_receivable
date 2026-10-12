@@ -13,7 +13,7 @@ return [
     'active' => 'Активен',
 
     'passport' => 'Паспорт',
-    'client_ref' => 'Client Ref',
+    'client_ref' => 'Код клиента',
     'credit_information' => 'Информация по кредиту',
     'will_pay_date' => 'Дата оплаты',
     'status' => 'Статус',

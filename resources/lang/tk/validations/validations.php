@@ -144,8 +144,8 @@ return [
         'payment_save_failed' => 'Töleg ýazdyrylmady.',
         'payment_saved' => 'Töleg üstünlikli ýazdyryldy.',
 
-        'local_debt_missing' => 'Local karz maglumatlary ýetmez (amount_local / paid_local = NULL). Töleg alnyp bilinmez.',
-        'debt_closed_paid_ge_total' => 'Bu müşderiniň karzy ýapyk (paid_local >= amount_local). Töleg alnyp bilinmez.',
+        'local_debt_missing' => 'Ýerli karz maglumatlary ýetmez. Töleg alnyp bilinmez.',
+        'debt_closed_paid_ge_total' => 'Bu müşderiniň karzy ýapyk. Töleg alnyp bilinmez.',
         'debt_closed_remaining_zero' => 'Bu müşderiniň karzy ýapyk (galyndy 0). Töleg alnyp bilinmez.',
         'overpayment_too_high' => 'Artykmaç töleg örän ýokary. Iň köp gaýtarylýan: :max',
         'mixed_sum_must_equal_tx' => 'Mixed: Cash + Card jemi Pay Amount bilen deň bolmaly.',
@@ -178,7 +178,7 @@ return [
         'future_payment_date_not_allowed' => 'Geljek seneli töleg rugsat berilmeýär.',
         'mixed_sum_must_equal' => 'Mixed: Cash + Card jemi Pay Amount bilen deň bolmaly.',
 
-        'local_debt_missing' => 'Local karz maglumatlary ýetmez. Düzediş edip bolmaýar.',
+        'local_debt_missing' => 'Ýerli karz maglumatlary ýetmez. Düzediş edip bolmaýar.',
         'debt_closed_use_void_only' => 'Karz eýýäm ýapyk. Düzedişde täze töleg girizip bolmaýar. Diňe VOID ulanyň.',
         'overpayment_too_high' => 'Artykmaç töleg örän ýokary. Iň köp gaýtarylýan: :max',
 
@@ -197,7 +197,7 @@ return [
         'admin_only' => 'Diňe Admin tölegleri ýatyryp biler.',
         'void_reason_required' => 'Ýatyrma sebäbi hökmanydyr.',
         'already_voided' => 'Bu töleg öňünden ýatyrylan (voided).',
-        'local_debt_missing' => 'Local karz maglumatlary ýetmez (amount_local/paid_local = NULL).',
+        'local_debt_missing' => 'Ýerli karz maglumatlary ýetmez.',
         'void_failed' => 'Tölegi ýatyrmak başartmady.',
         'void_success' => 'Töleg üstünlikli ýatyryldy.',
     ],

@@ -154,7 +154,7 @@
                         <li class="nav-item">
                             <a href="{{ route('logs') }}" class="nav-link">
                                 <i class="ri-file-list-3-line"></i>
-                                <span>Logs</span>
+                                <span>{{ __('pages/logs.title') }}</span>
                             </a>
                         </li>
                     @endif --}}
@@ -183,7 +183,7 @@
                                 @if (in_array($role, ['SuperAdmin'], true))
                                     <li class="nav-item">
                                         <a class="dropdown-item" href="{{ route('logs') }}">
-                                            <span>Logs</span>
+                                            <span>{{ __('pages/logs.title') }}</span>
                                         </a>
                                     </li>
                                 @endif

@@ -13,7 +13,7 @@ return [
     'active' => 'Işjeň',
 
     'passport' => 'Pasport',
-    'client_ref' => 'Client Ref',
+    'client_ref' => 'Müşderi belgisi',
     'credit_information' => 'Kredit Maglumatlary',
     'will_pay_date' => 'Töleg Senesi',
     'status' => 'Ýagdaý',

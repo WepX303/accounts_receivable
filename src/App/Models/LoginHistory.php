@@ -13,6 +13,7 @@ class LoginHistory extends Model
         'login_value',
         'status',
         'fail_reason',
+        'client',
         'ip_address',
         'user_agent',
         'device_type',

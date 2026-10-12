@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Support\ClientInfo;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -92,7 +93,7 @@ class LoginService
                 meta: [
                     'user_id' => $user->id,
                     'login' => $login,
-                    'ip' => request()->ip(),
+                    'ip' => ClientInfo::ip(),
 
                 ]
             );
@@ -181,47 +182,16 @@ class LoginService
         ?string $message = null,
         bool $isSuspicious = false
     ): void {
-        $ua = (string) request()->userAgent();
-        $uaLower = mb_strtolower($ua);
-
-        $deviceType = 'desktop';
-        if (str_contains($uaLower, 'mobile')) {
-            $deviceType = 'mobile';
-        } elseif (str_contains($uaLower, 'tablet') || str_contains($uaLower, 'ipad')) {
-            $deviceType = 'tablet';
-        }
-
-        $browser = 'Unknown';
-        if (str_contains($uaLower, 'edg')) {
-            $browser = 'Edge';
-        } elseif (str_contains($uaLower, 'chrome')) {
-            $browser = 'Chrome';
-        } elseif (str_contains($uaLower, 'firefox')) {
-            $browser = 'Firefox';
-        } elseif (str_contains($uaLower, 'safari') && !str_contains($uaLower, 'chrome')) {
-            $browser = 'Safari';
-        }
-
-        $platform = 'Unknown';
-        if (str_contains($uaLower, 'windows')) {
-            $platform = 'Windows';
-        } elseif (str_contains($uaLower, 'linux')) {
-            $platform = 'Linux';
-        } elseif (str_contains($uaLower, 'android')) {
-            $platform = 'Android';
-        } elseif (str_contains($uaLower, 'iphone') || str_contains($uaLower, 'ios')) {
-            $platform = 'iPhone';
-        } elseif (str_contains($uaLower, 'macintosh') || str_contains($uaLower, 'mac os')) {
-            $platform = 'Mac';
-        }
+        [$deviceType, $browser, $platform] = ClientInfo::agent();
 
         LoginHistory::create([
             'user_id' => $user?->id,
             'login_value' => $loginValue,
             'status' => $status,
             'fail_reason' => $failReason,
-            'ip_address' => request()->ip(),
-            'user_agent' => $ua,
+            'client' => ClientInfo::client(),
+            'ip_address' => ClientInfo::ip(),
+            'user_agent' => (string) request()->userAgent(),
             'device_type' => $deviceType,
             'browser' => $browser,
             'platform' => $platform,

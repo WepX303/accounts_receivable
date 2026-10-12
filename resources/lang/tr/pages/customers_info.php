@@ -13,7 +13,7 @@ return [
     'active' => 'Aktif',
 
     'passport' => 'Pasaport',
-    'client_ref' => 'Client Ref',
+    'client_ref' => 'Müşteri kodu',
     'credit_information' => 'Kredi Bilgileri',
     'will_pay_date' => 'Ödeme Tarihi',
     'status' => 'Durum',

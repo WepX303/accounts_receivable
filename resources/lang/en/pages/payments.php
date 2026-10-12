@@ -19,7 +19,7 @@ return [
         'name' => 'Name',
         'contract' => 'Contract',
         'remaining' => 'Remaining',
-        'paid_local' => 'Paid Local',
+        'paid_local' => 'Paid (local)',
         'last_paid' => 'Last Paid',
     ],
 
@@ -31,15 +31,15 @@ return [
     'select_customer' => 'Select a customer to see details and save payment.',
 
     'detail' => [
-        'total_local' => 'Total Local (amount_local)',
-        'paid_local' => 'Paid Local',
+        'total_local' => 'Total (local)',
+        'paid_local' => 'Paid (local)',
         'remaining' => 'Remaining',
         'last_paid_by' => 'Last Paid By',
         'last_paid_at' => 'Last Paid At',
     ],
 
-    'alert_local_missing' => 'Local fields are missing (amount_local / paid_local is NULL). Payment is disabled.',
-    'alert_closed' => 'This customer has no remaining debt (paid_local >= amount_local). Payment is disabled.',
+    'alert_local_missing' => 'Local debt data is missing. Payment is disabled.',
+    'alert_closed' => 'This customer has no remaining debt. Payment is disabled.',
 
     'last_payment_detail' => 'Last Payment Detail',
     'payment_history_last_10' => 'Payment History (Last 10)',
@@ -93,9 +93,9 @@ return [
         'change' => 'Change',
         'cash' => 'Cash',
         'card' => 'Card',
-        'total_local' => 'Total Local',
-        'old_paid_local' => 'Old Paid Local',
-        'new_paid_local' => 'New Paid Local',
+        'total_local' => 'Total (local)',
+        'old_paid_local' => 'Old paid (local)',
+        'new_paid_local' => 'New paid (local)',
         'old_remaining' => 'Old Remaining',
         'new_remaining' => 'New Remaining',
         'note' => 'Note',

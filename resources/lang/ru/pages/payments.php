@@ -19,7 +19,7 @@ return [
         'name' => 'Имя',
         'contract' => 'Договор',
         'remaining' => 'Остаток',
-        'paid_local' => 'Оплачено (Local)',
+        'paid_local' => 'Оплачено (локально)',
         'last_paid' => 'Последняя оплата',
     ],
 
@@ -31,15 +31,15 @@ return [
     'select_customer' => 'Выберите клиента, чтобы увидеть детали и сохранить оплату.',
 
     'detail' => [
-        'total_local' => 'Итого Local (amount_local)',
-        'paid_local' => 'Оплачено Local',
+        'total_local' => 'Итого (локально)',
+        'paid_local' => 'Оплачено (локально)',
         'remaining' => 'Остаток',
         'last_paid_by' => 'Кем оплачено',
         'last_paid_at' => 'Дата последней оплаты',
     ],
 
-    'alert_local_missing' => 'Local поля отсутствуют (amount_local / paid_local NULL). Оплата отключена.',
-    'alert_closed' => 'У клиента нет долга (paid_local >= amount_local). Оплата отключена.',
+    'alert_local_missing' => 'Локальные данные о долге отсутствуют. Оплата отключена.',
+    'alert_closed' => 'У клиента нет долга. Оплата отключена.',
 
     'last_payment_detail' => 'Детали последней оплаты',
     'payment_history_last_10' => 'История оплат (Последние 10)',
@@ -93,9 +93,9 @@ return [
         'change' => 'Сдача',
         'cash' => 'Наличные',
         'card' => 'Карта',
-        'total_local' => 'Итого Local',
-        'old_paid_local' => 'Было оплачено (Local)',
-        'new_paid_local' => 'Стало оплачено (Local)',
+        'total_local' => 'Итого (локально)',
+        'old_paid_local' => 'Было оплачено (локально)',
+        'new_paid_local' => 'Стало оплачено (локально)',
         'old_remaining' => 'Было остаток',
         'new_remaining' => 'Стало остаток',
         'note' => 'Заметка',

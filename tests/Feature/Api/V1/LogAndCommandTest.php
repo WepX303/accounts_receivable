@@ -33,6 +33,78 @@ class LogAndCommandTest extends ApiTestCase
         $this->getJson('/api/v1/logs?type=nonsense')->assertStatus(422);
     }
 
+    public function test_entries_say_whether_they_came_from_the_app_or_the_panel_and_from_which_address(): void
+    {
+        $this->user(UserRoleEnum::CASHIER, ['email' => 'aman@example.com']);
+
+        // The app, through a proxy: the connection is the proxy's, the visitor's address is forwarded.
+        $this->withHeaders([
+            'User-Agent' => 'AccountsReceivableMobile/1.0.0 (android; mobile)',
+            'X-Forwarded-For' => '95.85.100.20',
+        ])->postJson('/api/v1/auth/login', ['login' => 'aman@example.com', 'password' => 'password'])->assertOk();
+
+        $this->assertDatabaseHas('login_histories', [
+            'status' => 'success',
+            'client' => 'mobile',
+            'ip_address' => '95.85.100.20',
+            'device_type' => 'mobile',
+            'browser' => 'Mobile App 1.0.0',
+            'platform' => 'Android',
+        ]);
+        $this->assertDatabaseHas('activity_logs', ['action' => 'login_success', 'client' => 'mobile', 'ip_address' => '95.85.100.20']);
+
+        // The panel, in a browser.
+        $this->flushHeaders()->withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36',
+            'X-Forwarded-For' => '95.85.100.21',
+        ])->post('/login', ['login' => 'aman@example.com', 'password' => 'wrong']);
+
+        $this->assertDatabaseHas('login_histories', [
+            'status' => 'failed',
+            'client' => 'web',
+            'ip_address' => '95.85.100.21',
+            'device_type' => 'desktop',
+            'browser' => 'Chrome',
+            'platform' => 'Windows',
+        ]);
+        $this->assertDatabaseHas('security_alerts', ['alert_type' => 'wrong_password_attempt', 'client' => 'web', 'ip_address' => '95.85.100.21']);
+
+        $this->flushHeaders()->signIn($this->user(UserRoleEnum::SUPER_ADMIN));
+
+        // The source is shown with each entry and can be searched for.
+        $mobile = $this->getJson('/api/v1/logs?q=mobile&type=login')->assertOk();
+        $this->assertSame(1, $mobile->json('data.logs.meta.total'));
+        $this->assertSame('mobile', $mobile->json('data.logs.items.0.client'));
+        $this->assertSame('mobile', $mobile->json('data.logs.items.0.raw.client'));
+    }
+
+    public function test_logs_are_read_a_page_at_a_time_in_one_order(): void
+    {
+        foreach (range(1, 30) as $minute) {
+            DB::table('activity_logs')->insert(['action' => "a{$minute}", 'created_at' => now()->subMinutes($minute * 2)]);
+            DB::table('login_histories')->insert(['login_value' => "l{$minute}", 'status' => 'success', 'created_at' => now()->subMinutes($minute * 2 + 1)]);
+        }
+
+        $this->signIn($this->user(UserRoleEnum::SUPER_ADMIN));
+
+        $titles = [];
+        foreach ([1, 2, 3] as $page) {
+            $response = $this->getJson("/api/v1/logs?page={$page}")->assertOk()->assertJsonPath('data.logs.meta.total', 60);
+            $titles = array_merge($titles, array_map(
+                fn (array $row) => $row['type'] === 'activity' ? $row['main_title'] : $row['user_text'],
+                $response->json('data.logs.items')
+            ));
+        }
+
+        // Newest first across both tables, with nothing skipped or repeated between pages.
+        $expected = [];
+        foreach (range(1, 30) as $minute) {
+            $expected[] = "a{$minute}";
+            $expected[] = "l{$minute}";
+        }
+        $this->assertSame($expected, $titles);
+    }
+
     public function test_command_centre_lists_the_panels_commands(): void
     {
         $response = $this->signIn($this->user(UserRoleEnum::SUPER_ADMIN))->getJson('/api/v1/commands')->assertOk();

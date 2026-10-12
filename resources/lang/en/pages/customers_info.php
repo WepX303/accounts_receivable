@@ -13,7 +13,7 @@ return [
     'active' => 'Active',
 
     'passport' => 'Passport',
-    'client_ref' => 'Client Ref',
+    'client_ref' => 'Client ref',
     'credit_information' => 'Credit Information',
     'will_pay_date' => 'Will Pay Date',
     'status' => 'Status',

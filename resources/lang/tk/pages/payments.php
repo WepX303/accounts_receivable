@@ -19,7 +19,7 @@ return [
         'name' => 'Ady',
         'contract' => 'Şertnama',
         'remaining' => 'Galyndy',
-        'paid_local' => 'Tölenen (Local)',
+        'paid_local' => 'Tölenen (ýerli)',
         'last_paid' => 'Soňky töleg',
     ],
 
@@ -31,15 +31,15 @@ return [
     'select_customer' => 'Maglumat görmek we töleg ýazmak üçin müşderi saýlaň.',
 
     'detail' => [
-        'total_local' => 'Jemi Local (amount_local)',
-        'paid_local' => 'Tölenen Local',
+        'total_local' => 'Jemi (ýerli)',
+        'paid_local' => 'Tölenen (ýerli)',
         'remaining' => 'Galyndy',
         'last_paid_by' => 'Soňky tölegi alan',
         'last_paid_at' => 'Soňky töleg wagty',
     ],
 
-    'alert_local_missing' => 'Local maglumatlar ýok (amount_local / paid_local NULL). Töleg ýapyk.',
-    'alert_closed' => 'Bu müşderiniň bergisi ýok (paid_local >= amount_local). Töleg ýapyk.',
+    'alert_local_missing' => 'Ýerli karz maglumatlary ýok. Töleg ýapyk.',
+    'alert_closed' => 'Bu müşderiniň bergisi ýok. Töleg ýapyk.',
 
     'last_payment_detail' => 'Soňky töleg maglumatlary',
     'payment_history_last_10' => 'Töleg taryhy (Soňky 10)',
@@ -93,9 +93,9 @@ return [
         'change' => 'Gaýtargy',
         'cash' => 'Nagt',
         'card' => 'Kard',
-        'total_local' => 'Jemi Local',
-        'old_paid_local' => 'Öňki Tölenen (Local)',
-        'new_paid_local' => 'Täze Tölenen (Local)',
+        'total_local' => 'Jemi (ýerli)',
+        'old_paid_local' => 'Öňki tölenen (ýerli)',
+        'new_paid_local' => 'Täze tölenen (ýerli)',
         'old_remaining' => 'Öňki Galyndy',
         'new_remaining' => 'Täze Galyndy',
         'note' => 'Bellik',

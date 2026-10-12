@@ -38,10 +38,19 @@ class LogsController extends Controller
             ? $request->date('date_to')->endOfDay()
             : null;
 
+        $perPage = 20;
+        $currentPage = max(1, (int) LengthAwarePaginator::resolveCurrentPage());
+
+        // The page shown is cut from the three tables merged by date. Whatever
+        // lands on it is among the newest ($currentPage * $perPage) rows of
+        // each table, so no more than that is ever read from any of them.
+        $reach = $currentPage * $perPage;
+
         $items = collect();
+        $stats = ['total' => 0, 'activity' => 0, 'login' => 0, 'alert' => 0];
 
         if ($type === 'all' || $type === 'activity') {
-            $activityLogs = ActivityLog::query()
+            $query = ActivityLog::query()
                 ->when($q !== '', function ($query) use ($q) {
                     $like = '%' . $q . '%';
 
@@ -55,6 +64,7 @@ class LogsController extends Controller
                             ->orWhere('user_phone', 'ilike', $like)
                             ->orWhere('user_role', 'ilike', $like)
                             ->orWhere('ip_address', 'ilike', $like)
+                            ->orWhere('client', 'ilike', $like)
                             ->orWhere('browser', 'ilike', $like)
                             ->orWhere('platform', 'ilike', $like)
                             ->orWhere('route_name', 'ilike', $like)
@@ -64,8 +74,13 @@ class LogsController extends Controller
                 })
                 ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
                     $query->whereBetween('created_at', [$dateFrom, $dateTo]);
-                })
+                });
+
+            $stats['activity'] = (clone $query)->count();
+
+            $activityLogs = $query
                 ->latest('created_at')
+                ->limit($reach)
                 ->get()
                 ->map(function ($row) {
                     return [
@@ -78,6 +93,7 @@ class LogsController extends Controller
                         'status_text' => $row->is_success ? 'success' : 'failed',
                         'level_text' => $row->severity ?: 'info',
                         'ip_address' => $row->ip_address,
+                        'client' => $row->client,
                         'message' => $row->message,
                         'raw' => [
                             'id' => $row->id,
@@ -92,6 +108,7 @@ class LogsController extends Controller
                             'is_suspicious' => $row->is_suspicious,
                             'subject_type' => $row->subject_type,
                             'subject_id' => $row->subject_id,
+                            'client' => $row->client,
                             'ip_address' => $row->ip_address,
                             'user_agent' => $row->user_agent,
                             'device_type' => $row->device_type,
@@ -114,7 +131,7 @@ class LogsController extends Controller
         }
 
         if ($type === 'all' || $type === 'login') {
-            $loginHistories = LoginHistory::query()
+            $query = LoginHistory::query()
                 ->when($q !== '', function ($query) use ($q) {
                     $like = '%' . $q . '%';
 
@@ -124,6 +141,7 @@ class LogsController extends Controller
                             ->orWhere('fail_reason', 'ilike', $like)
                             ->orWhere('message', 'ilike', $like)
                             ->orWhere('ip_address', 'ilike', $like)
+                            ->orWhere('client', 'ilike', $like)
                             ->orWhere('browser', 'ilike', $like)
                             ->orWhere('platform', 'ilike', $like)
                             ->orWhere('device_type', 'ilike', $like);
@@ -131,8 +149,13 @@ class LogsController extends Controller
                 })
                 ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
                     $query->whereBetween('created_at', [$dateFrom, $dateTo]);
-                })
+                });
+
+            $stats['login'] = (clone $query)->count();
+
+            $loginHistories = $query
                 ->latest('created_at')
+                ->limit($reach)
                 ->get()
                 ->map(function ($row) {
                     return [
@@ -145,6 +168,7 @@ class LogsController extends Controller
                         'status_text' => $row->status ?: '-',
                         'level_text' => $row->is_suspicious ? 'warning' : 'info',
                         'ip_address' => $row->ip_address,
+                        'client' => $row->client,
                         'message' => $row->message,
                         'raw' => [
                             'id' => $row->id,
@@ -152,6 +176,7 @@ class LogsController extends Controller
                             'login_value' => $row->login_value,
                             'status' => $row->status,
                             'fail_reason' => $row->fail_reason,
+                            'client' => $row->client,
                             'ip_address' => $row->ip_address,
                             'user_agent' => $row->user_agent,
                             'device_type' => $row->device_type,
@@ -168,7 +193,7 @@ class LogsController extends Controller
         }
 
         if ($type === 'all' || $type === 'alert') {
-            $securityAlerts = SecurityAlert::query()
+            $query = SecurityAlert::query()
                 ->when($q !== '', function ($query) use ($q) {
                     $like = '%' . $q . '%';
 
@@ -176,13 +201,19 @@ class LogsController extends Controller
                         $sub->where('alert_type', 'ilike', $like)
                             ->orWhere('risk_level', 'ilike', $like)
                             ->orWhere('message', 'ilike', $like)
+                            ->orWhere('client', 'ilike', $like)
                             ->orWhere('ip_address', 'ilike', $like);
                     });
                 })
                 ->when($dateFrom && $dateTo, function ($query) use ($dateFrom, $dateTo) {
                     $query->whereBetween('created_at', [$dateFrom, $dateTo]);
-                })
+                });
+
+            $stats['alert'] = (clone $query)->count();
+
+            $securityAlerts = $query
                 ->latest('created_at')
+                ->limit($reach)
                 ->get()
                 ->map(function ($row) {
                     return [
@@ -195,6 +226,7 @@ class LogsController extends Controller
                         'status_text' => $row->is_resolved ? 'resolved' : 'open',
                         'level_text' => $row->risk_level ?: 'medium',
                         'ip_address' => $row->ip_address,
+                        'client' => $row->client,
                         'message' => $row->message,
                         'raw' => [
                             'id' => $row->id,
@@ -202,6 +234,7 @@ class LogsController extends Controller
                             'alert_type' => $row->alert_type,
                             'risk_level' => $row->risk_level,
                             'is_resolved' => $row->is_resolved,
+                            'client' => $row->client,
                             'ip_address' => $row->ip_address,
                             'message' => $row->message,
                             'meta' => $row->meta,
@@ -215,17 +248,11 @@ class LogsController extends Controller
         }
 
         $items = $items->sortByDesc('created_at')->values();
-
-        $perPage = 20;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-
-        $pageItems = $items
-            ->slice(($currentPage - 1) * $perPage, $perPage)
-            ->values();
+        $stats['total'] = $stats['activity'] + $stats['login'] + $stats['alert'];
 
         $logs = new LengthAwarePaginator(
-            $pageItems,
-            $items->count(),
+            $items->slice(($currentPage - 1) * $perPage, $perPage)->values(),
+            $stats['total'],
             $perPage,
             $currentPage,
             [
@@ -233,13 +260,6 @@ class LogsController extends Controller
                 'query' => request()->query(),
             ]
         );
-
-        $stats = [
-            'total' => $items->count(),
-            'activity' => $items->where('type', 'activity')->count(),
-            'login' => $items->where('type', 'login')->count(),
-            'alert' => $items->where('type', 'alert')->count(),
-        ];
 
         return view('pages.logs.index', compact('logs', 'stats', 'q', 'type'));
     }

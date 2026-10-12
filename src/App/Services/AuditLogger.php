@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ActivityLog;
 use App\Models\SecurityAlert;
+use App\Support\ClientInfo;
 
 class AuditLogger
 {
@@ -29,7 +30,7 @@ class AuditLogger
             $logUser = $subject;
         }
 
-        [$deviceType, $browser, $platform] = $this->parseUserAgent((string) $request->userAgent());
+        [$deviceType, $browser, $platform] = ClientInfo::agent($request);
 
         ActivityLog::create([
             'user_id' => $logUser?->id,
@@ -43,7 +44,8 @@ class AuditLogger
             'is_suspicious' => $isSuspicious,
             'subject_type' => is_object($subject) ? get_class($subject) : null,
             'subject_id' => is_object($subject) && method_exists($subject, 'getKey') ? $subject->getKey() : null,
-            'ip_address' => $request->ip(),
+            'client' => ClientInfo::client($request),
+            'ip_address' => ClientInfo::ip($request),
             'user_agent' => $request->userAgent(),
             'device_type' => $deviceType,
             'browser' => $browser,
@@ -73,50 +75,11 @@ class AuditLogger
             'alert_type' => $alertType,
             'risk_level' => $riskLevel,
             'is_resolved' => false,
-            'ip_address' => $ipAddress ?? request()->ip(),
+            'client' => ClientInfo::client(),
+            'ip_address' => $ipAddress ?? ClientInfo::ip(),
             'message' => $message,
             'meta' => $meta,
             'created_at' => now(),
         ]);
-    }
-
-    private function parseUserAgent(string $ua): array
-    {
-        $uaLower = mb_strtolower($ua);
-
-        $deviceType = 'desktop';
-        if (str_contains($uaLower, 'mobile')) {
-            $deviceType = 'mobile';
-        } elseif (str_contains($uaLower, 'tablet') || str_contains($uaLower, 'ipad')) {
-            $deviceType = 'tablet';
-        }
-
-        $browser = 'Unknown';
-        if (str_contains($uaLower, 'edg')) {
-            $browser = 'Edge';
-        } elseif (str_contains($uaLower, 'chrome')) {
-            $browser = 'Chrome';
-        } elseif (str_contains($uaLower, 'firefox')) {
-            $browser = 'Firefox';
-        } elseif (str_contains($uaLower, 'safari') && !str_contains($uaLower, 'chrome')) {
-            $browser = 'Safari';
-        } elseif (str_contains($uaLower, 'opera') || str_contains($uaLower, 'opr/')) {
-            $browser = 'Opera';
-        }
-
-        $platform = 'Unknown';
-        if (str_contains($uaLower, 'windows')) {
-            $platform = 'Windows';
-        } elseif (str_contains($uaLower, 'linux')) {
-            $platform = 'Linux';
-        } elseif (str_contains($uaLower, 'android')) {
-            $platform = 'Android';
-        } elseif (str_contains($uaLower, 'iphone') || str_contains($uaLower, 'ios')) {
-            $platform = 'iPhone';
-        } elseif (str_contains($uaLower, 'mac os') || str_contains($uaLower, 'macintosh')) {
-            $platform = 'Mac';
-        }
-
-        return [$deviceType, $browser, $platform];
     }
 }

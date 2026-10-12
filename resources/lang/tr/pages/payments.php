@@ -19,7 +19,7 @@ return [
         'name' => 'Ad',
         'contract' => 'Sözleşme',
         'remaining' => 'Kalan',
-        'paid_local' => 'Ödenen (Local)',
+        'paid_local' => 'Ödenen (yerel)',
         'last_paid' => 'Son Ödeme',
     ],
 
@@ -31,15 +31,15 @@ return [
     'select_customer' => 'Detay ve ödeme kaydı için bir müşteri seçin.',
 
     'detail' => [
-        'total_local' => 'Toplam Local (amount_local)',
-        'paid_local' => 'Ödenen Local',
+        'total_local' => 'Toplam (yerel)',
+        'paid_local' => 'Ödenen (yerel)',
         'remaining' => 'Kalan',
         'last_paid_by' => 'Son Ödemeyi Alan',
         'last_paid_at' => 'Son Ödeme Tarihi',
     ],
 
-    'alert_local_missing' => 'Local alanlar eksik (amount_local / paid_local NULL). Ödeme kapatıldı.',
-    'alert_closed' => 'Bu müşterinin borcu kalmadı (paid_local >= amount_local). Ödeme kapatıldı.',
+    'alert_local_missing' => 'Yerel borç verisi eksik. Ödeme kapatıldı.',
+    'alert_closed' => 'Bu müşterinin borcu kalmadı. Ödeme kapatıldı.',
 
     'last_payment_detail' => 'Son Ödeme Detayı',
     'payment_history_last_10' => 'Ödeme Geçmişi (Son 10)',
@@ -93,9 +93,9 @@ return [
         'change' => 'Para Üstü',
         'cash' => 'Nakit',
         'card' => 'Kart',
-        'total_local' => 'Toplam Local',
-        'old_paid_local' => 'Eski Ödenen (Local)',
-        'new_paid_local' => 'Yeni Ödenen (Local)',
+        'total_local' => 'Toplam (yerel)',
+        'old_paid_local' => 'Eski ödenen (yerel)',
+        'new_paid_local' => 'Yeni ödenen (yerel)',
         'old_remaining' => 'Eski Kalan',
         'new_remaining' => 'Yeni Kalan',
         'note' => 'Not',
