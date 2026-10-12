@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Profile;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Services\AuditLogger;
+use App\Services\Profile\ProfileException;
+use App\Services\Profile\ProfileService;
 
 class ProfileController extends Controller
 {
@@ -21,7 +21,7 @@ class ProfileController extends Controller
         return view('pages.profile.profile-settings', compact('user'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, ProfileService $profiles)
     {
 
         $user = $this->getAuthenticatedUser($request);
@@ -29,125 +29,19 @@ class ProfileController extends Controller
             return redirect()->route('login')->withCookie(cookie()->forget('auth_token'));
         }
 
-        $audit = app(AuditLogger::class);
+        $validated = $request->validate(ProfileService::rules($user), ProfileService::messages());
 
-        $old = $user->only([
-            'firstname',
-            'lastname',
-            'email',
-            'phonenumber',
-        ]);
-
-        $validated = $request->validate([
-            'firstname'    => 'required|string|max:255',
-            'lastname'     => 'required|string|max:255',
-            'email'        => 'required|email|max:255|unique:users,email,' . $user->id,
-            'phonenumber'  => 'required|string|max:50|unique:users,phonenumber,' . $user->id,
-            'old_password' => 'nullable|string',
-            'new_password' => 'nullable|string|confirmed|min:6',
-        ], [
-            // firstname
-            'firstname.required' => __('validations/validations.profile.firstname_required'),
-            'firstname.string'   => __('validations/validations.profile.firstname_string'),
-            'firstname.max'      => __('validations/validations.profile.firstname_max'),
-
-            // lastname
-            'lastname.required' => __('validations/validations.profile.lastname_required'),
-            'lastname.string'   => __('validations/validations.profile.lastname_string'),
-            'lastname.max'      => __('validations/validations.profile.lastname_max'),
-
-            // email
-            'email.required' => __('validations/validations.profile.email_required'),
-            'email.email'    => __('validations/validations.profile.email_email'),
-            'email.max'      => __('validations/validations.profile.email_max'),
-            'email.unique'   => __('validations/validations.profile.email_unique'),
-
-            // phonenumber
-            'phonenumber.required' => __('validations/validations.profile.phonenumber_required'),
-            'phonenumber.string'   => __('validations/validations.profile.phonenumber_string'),
-            'phonenumber.max'      => __('validations/validations.profile.phonenumber_max'),
-            'phonenumber.unique'   => __('validations/validations.profile.phonenumber_unique'),
-
-            // passwords
-            'old_password.string' => __('validations/validations.profile.old_password_string'),
-
-            'new_password.string'     => __('validations/validations.profile.new_password_string'),
-            'new_password.confirmed'  => __('validations/validations.profile.new_password_confirmed'),
-            'new_password.min'        => __('validations/validations.profile.new_password_min'),
-        ]);
-
-
-        $passwordChanged = false;
-        $otherChanged = false;
-
-        if (! empty($validated['new_password'])) {
-            if (empty($validated['old_password'])) {
-                return back()->withErrors(['old_password' => __('validations/validations.profile.old_password_required_for_change')]);
-            }
-
-            if (! Hash::check($validated['old_password'], $user->password)) {
-                return back()->withErrors(['old_password' => __('validations/validations.profile.old_password_incorrect')]);
-            }
-
-            $user->password = Hash::make($validated['new_password']);
-            $passwordChanged = true;
+        try {
+            $result = $profiles->update($user, $validated);
+        } catch (ProfileException $e) {
+            return back()->withErrors([$e->field => $e->getMessage()]);
         }
 
-
-        foreach (['firstname', 'lastname', 'email', 'phonenumber'] as $field) {
-            $newValue = $validated[$field] ?? null;
-            if ($newValue !== $user->$field) {
-                $user->$field = $newValue;
-                $otherChanged = true;
-            }
-        }
-
-        if (! $passwordChanged && ! $otherChanged) {
-            return back()->with('info', __('validations/validations.profile.no_changes'));
-        }
-
-        $user->save();
-
-        $new = $user->only([
-            'firstname',
-            'lastname',
-            'email',
-            'phonenumber',
-        ]);
-
-        $audit->log(
-            action: 'profile_updated',
-            category: 'profile',
-            subject: $user,
-            oldValues: $old,
-            newValues: $new,
-            extra: [
-                'password_changed' => $passwordChanged,
-            ],
-            message: 'Profile updated',
-            isSuccess: true,
-            severity: $passwordChanged ? 'warning' : 'info',
-            isSuspicious: $passwordChanged
-        );
-
-        if ($passwordChanged) {
-            $audit->alert(
-                alertType: 'password_changed',
-                riskLevel: 'medium',
-                message: 'User password changed',
-                meta: [
-                    'user_id' => $user->id,
-                    'email' => $user->email,
-                ]
-            );
-        }
-
-        if ($passwordChanged && ! $otherChanged) {
-            return back()->with('success', __('validations/validations.profile.password_updated'));
-        }
-
-        return back()->with('success', __('validations/validations.profile.profile_updated'));
-
+        return match ($result) {
+            ProfileService::UNCHANGED => back()->with('info', __('validations/validations.profile.no_changes')),
+            ProfileService::PASSWORD_UPDATED => back()->with('success', __('validations/validations.profile.password_updated')),
+            default => back()->with('success', __('validations/validations.profile.profile_updated')),
+        };
     }
 
     // Helper function that returns the user logging in via token

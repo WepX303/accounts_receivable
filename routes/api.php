@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Customers\CustomerController;
 use App\Http\Controllers\Api\V1\Payments\PaymentController;
+use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use App\Support\Access;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,9 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+        // Limited further: the form takes the current password, which could be guessed at.
+        Route::put('/profile', [ProfileController::class, 'update'])->middleware('throttle:10,1');
 
         Route::middleware(Access::middleware('customers.info'))->group(function () {
             Route::get('/customers/search', [CustomerController::class, 'search']);
