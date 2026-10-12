@@ -30,7 +30,10 @@ class ApiResponse
         ], $status);
     }
 
-    public static function paginated(LengthAwarePaginator $paginator, mixed $items): JsonResponse
+    /**
+     * @param  array  $extra  further top-level keys, e.g. the counters shown above a list
+     */
+    public static function paginated(LengthAwarePaginator $paginator, mixed $items, array $extra = []): JsonResponse
     {
         return response()->json([
             'success' => true,
@@ -42,6 +45,7 @@ class ApiResponse
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
             ],
+            ...$extra,
         ]);
     }
 }

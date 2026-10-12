@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Customers\CustomerController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Payments\PaymentController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
+use App\Http\Controllers\Customers\CustomersExportController;
 use App\Support\Access;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/customers/search', [CustomerController::class, 'search']);
             Route::get('/customers/{credit}', [CustomerController::class, 'show'])->whereNumber('credit');
             Route::get('/customers/{credit}/payments', [CustomerController::class, 'payments'])->whereNumber('credit');
+        });
+
+        Route::middleware(Access::middleware('customers.list'))->group(function () {
+            Route::get('/customers', [CustomerController::class, 'index']);
+            // The panel's own export: same filters, same file, same audit entry.
+            Route::get('/customers/export', CustomersExportController::class);
+            Route::get('/customers/{credit}/statement', [CustomerController::class, 'statement'])->whereNumber('credit');
         });
 
         Route::post('/payments', [PaymentController::class, 'store'])
