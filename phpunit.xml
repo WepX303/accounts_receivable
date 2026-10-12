@@ -21,8 +21,11 @@
         <env name="APP_ENV" value="testing"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!-- Tests need PostgreSQL (ilike, raw PG SQL) and must never touch the working database. -->
+        <env name="DB_CONNECTION" value="pgsql" force="true"/>
+        <env name="DB_DATABASE" value="accounts_receivable_test" force="true"/>
+        <env name="SECOND_PGSQL_HOST" value="127.0.0.1" force="true"/>
+        <env name="SECOND_PGSQL_DATABASE" value="accounts_receivable_test" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

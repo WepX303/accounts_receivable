@@ -2,15 +2,18 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRoleEnum;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
+    protected $model = User::class;
+
     /**
      * The current password being used by the factory.
      */
@@ -24,21 +27,38 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'firstname' => fake()->firstName(),
+            'lastname' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'phonenumber' => fake()->unique()->numerify('9936#######'),
+            'role' => UserRoleEnum::CASHIER,
+            'branches' => null,
+            'status' => true,
             'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function role(UserRoleEnum $role): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'role' => $role,
+        ]);
+    }
+
+    /**
+     * @param  string[]  $branches
+     */
+    public function branches(array $branches): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'branches' => $branches,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => false,
         ]);
     }
 }
