@@ -103,59 +103,17 @@ class SmsTest extends ApiTestCase
             ->assertJsonPath('errors.skipped.0.reason', 'empty');
     }
 
-    public function test_send_hands_the_distribution_to_the_sms_service(): void
-    {
-        Http::fake(['sms.test/*' => Http::response(['id' => 77, 'queued' => 1], 200)]);
-        $operator = $this->user(UserRoleEnum::OPERATOR, ['firstname' => 'Oraz', 'lastname' => 'Orazow']);
-
-        $this->signIn($operator)->postJson('/api/v1/sms/send', [
-            'selected_customers' => [$this->aman->source_id, $this->noPhone->source_id],
-            'message' => 'Salam {name}',
-            'schedule_type' => 'after_5m',
-        ])
-            ->assertOk()
-            ->assertJsonPath('message', __('messages.sms_send_request_success'))
-            ->assertJsonPath('data.result.id', 77)
-            ->assertJsonPath('data.skipped_no_phone', 1);
-
-        Http::assertSentCount(1);
-        Http::assertSent(function ($request) use ($operator) {
-            return $request->url() === 'https://sms.test/api/distributions/manual'
-                && $request->hasHeader('X-SMS-API-KEY', 'secret-key')
-                && $request['service_name'] === 'DISTRIBUTION_KREDIT'
-                && $request['start_time'] === '2026-10-14 15:05:00'
-                && $request['created_by']['id'] === $operator->id
-                && $request['created_by']['name'] === 'Oraz Orazow'
-                && count($request['messages']) === 1
-                && $request['messages'][0]['phone'] === '99361000001'
-                && $request['messages'][0]['content'] === 'Salam Aman Amanow';
-        });
-    }
-
-    public function test_send_is_refused_without_reaching_the_sms_service_when_input_is_wrong(): void
+    public function test_nothing_can_be_sent_through_the_api(): void
     {
         Http::fake();
-        $this->signIn($this->user(UserRoleEnum::OPERATOR));
 
-        $this->postJson('/api/v1/sms/send', ['selected_customers' => [$this->aman->source_id], 'message' => 'x'])
-            ->assertStatus(422)->assertJsonPath('errors.schedule_type.0', __('messages.schedule_type_required'));
-        $this->postJson('/api/v1/sms/send', ['selected_customers' => [$this->aman->source_id], 'message' => 'x', 'schedule_type' => 'custom', 'scheduled_at' => '2026-10-14 14:00'])
-            ->assertStatus(422)->assertJsonPath('errors.scheduled_at.0', __('messages.scheduled_at_must_be_future'));
-        $this->postJson('/api/v1/sms/send', ['selected_customers' => [$this->noPhone->source_id], 'message' => 'x', 'schedule_type' => 'now'])
-            ->assertStatus(422)->assertJsonPath('errors.selected_customers.0', __('messages.no_customer_with_phone'));
-
-        Http::assertNothingSent();
-    }
-
-    public function test_a_failing_sms_service_is_reported_not_swallowed(): void
-    {
-        Http::fake(['sms.test/*' => Http::response(['error' => 'down'], 503)]);
-
-        $this->signIn($this->user(UserRoleEnum::OPERATOR))->postJson('/api/v1/sms/send', [
+        $this->signIn($this->user(UserRoleEnum::SUPER_ADMIN))->postJson('/api/v1/sms/send', [
             'selected_customers' => [$this->aman->source_id],
             'message' => 'x',
             'schedule_type' => 'now',
-        ])->assertStatus(422)->assertJsonPath('errors.api.0', __('messages.sms_api_request_failed') . ' (503)');
+        ])->assertNotFound();
+
+        Http::assertNothingSent();
     }
 
     public function test_branch_restricted_operator_cannot_message_another_branch(): void
@@ -167,7 +125,7 @@ class SmsTest extends ApiTestCase
 
         $this->getJson('/api/v1/sms/customers')->assertJsonPath('data.customers.meta.total', 2);
         $this->postJson('/api/v1/sms/preview', ['selected_customers' => [$lebap->source_id], 'message' => 'x'])->assertStatus(422);
-        $this->postJson('/api/v1/sms/send', ['selected_customers' => [$lebap->source_id], 'message' => 'x', 'schedule_type' => 'now'])->assertStatus(422);
+        $this->postJson('/api/v1/sms/preview/export', ['selected_customers' => [$lebap->source_id], 'message' => 'x'])->assertStatus(422);
 
         Http::assertNothingSent();
     }
@@ -179,7 +137,8 @@ class SmsTest extends ApiTestCase
         foreach ([UserRoleEnum::CASHIER, UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
             $this->signIn($this->user($role));
             $this->getJson('/api/v1/sms/customers')->assertForbidden();
-            $this->postJson('/api/v1/sms/send', ['selected_customers' => [$this->aman->source_id], 'message' => 'x', 'schedule_type' => 'now'])->assertForbidden();
+            $this->postJson('/api/v1/sms/preview', ['selected_customers' => [$this->aman->source_id], 'message' => 'x'])->assertForbidden();
+            $this->postJson('/api/v1/sms/preview/export', ['selected_customers' => [$this->aman->source_id], 'message' => 'x'])->assertForbidden();
         }
 
         foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN, UserRoleEnum::OPERATOR] as $role) {

@@ -10,7 +10,8 @@ use App\Support\ViewData;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * SMS distribution, run by the panel's own controller. The panel keeps the
+ * SMS distribution up to the spreadsheet of messages, run by the panel's own
+ * controller; nothing is sent through the API. The panel keeps the
  * preview in the session between its steps; the app has no session, so each
  * call here carries everything it needs.
  */
@@ -69,20 +70,6 @@ class SmsController extends Controller
         }
 
         return $response;
-    }
-
-    public function send()
-    {
-        $response = Panel::call(CustomerSmsController::class, 'send');
-
-        if ($refusal = Panel::refusal($response)) {
-            return $refusal;
-        }
-
-        return ApiResponse::success([
-            'result' => Panel::flashed($response, 'sms_api_result'),
-            'skipped_no_phone' => (int) Panel::flashed($response, 'sms_skipped_no_phone'),
-        ], Panel::flashed($response, 'success'));
     }
 
     private function buildPreview()

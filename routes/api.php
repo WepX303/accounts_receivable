@@ -68,9 +68,9 @@ Route::prefix('v1')->group(function () {
         Route::middleware(Access::middleware('sms'))->group(function () {
             Route::get('/sms/customers', [SmsController::class, 'customers']);
             Route::post('/sms/preview', [SmsController::class, 'preview']);
+            // The app prepares the messages and takes them away as a spreadsheet.
+            // Sending stays in the panel: there is no address for it here.
             Route::post('/sms/preview/export', [SmsController::class, 'exportPreview']);
-            // Sending is the one action here that reaches outside; keep bursts small.
-            Route::post('/sms/send', [SmsController::class, 'send'])->middleware('throttle:6,1');
         });
 
         Route::middleware(Access::middleware('users'))->group(function () {
