@@ -70,7 +70,7 @@ class CustomerTest extends ApiTestCase
             ->assertJsonPath('data.credit.id', $credit->source_id)
             ->assertJsonPath('data.credit.remaining', '880.00')
             ->assertJsonCount(2, 'data.schedule')
-            ->assertJsonPath('data.schedule.0.due_date', '2026-10-01')
+            ->assertJsonPath('data.schedule.0.will_pay_date', '2026-10-01')
             ->assertJsonPath('data.schedule.0.monthly_payment', '166.67')
             ->assertJsonCount(10, 'data.recent_payments')
             ->assertJsonPath('data.recent_payments.0.remaining_after', '880.00');

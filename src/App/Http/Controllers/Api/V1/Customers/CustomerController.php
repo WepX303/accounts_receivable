@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Customers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CreditResource;
 use App\Http\Resources\PaymentResource;
+use App\Http\Resources\ScheduleRowResource;
 use App\Models\AvshocrecatReport;
 use App\Models\Credit;
 use App\Models\CreditPayment;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 class CustomerController extends Controller
 {
     private const PAYMENT_RELATIONS = [
+        'createdByUser:id,firstname,lastname',
         'correctedByUser:id,firstname,lastname',
         'voidedByUser:id,firstname,lastname',
     ];
@@ -64,20 +66,19 @@ class CustomerController extends Controller
         return ApiResponse::success([
             'credit' => [
                 ...(new CreditResource($credit))->resolve(),
+                'logical_ref' => $credit->logicalref,
+                'is_active' => (bool) $credit->active,
+                // What the source system holds; the panel shows it next to the local figures.
+                'source_amount' => $credit->amount,
+                'source_paid' => $credit->paid,
                 'note' => $credit->note,
+                'paid_note' => $credit->paid_note,
                 'promised_payment_date' => $credit->willpaiddate?->toDateString(),
                 'last_noted_at' => $credit->lastnoteddate?->toIso8601String(),
                 'last_payment_at' => $credit->paid_updated_at?->toIso8601String(),
                 'last_payment_by' => $credit->paidUpdatedByUser?->full_name,
             ],
-            'schedule' => $schedule->map(fn (AvshocrecatReport $row) => [
-                'due_date' => $row->tolejek_senesi,
-                'debit' => $row->kt_cykdajy,
-                'credit' => $row->dt_girdeji,
-                'monthly_payment' => $row->aylyk_tolegi,
-                'remaining' => $row->galyndy,
-                'status' => $row->statusy,
-            ])->all(),
+            'schedule' => ScheduleRowResource::collection($schedule)->resolve(),
             'recent_payments' => PaymentResource::collection($payments)->resolve(),
         ]);
     }

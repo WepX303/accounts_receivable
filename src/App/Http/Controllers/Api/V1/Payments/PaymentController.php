@@ -107,7 +107,7 @@ class PaymentController extends Controller
      */
     private function booked(CreditPayment $payment, int $status = 200): JsonResponse
     {
-        $payment->load(['correctedByUser:id,firstname,lastname', 'voidedByUser:id,firstname,lastname']);
+        $payment->load(['createdByUser:id,firstname,lastname', 'correctedByUser:id,firstname,lastname', 'voidedByUser:id,firstname,lastname']);
 
         return ApiResponse::success([
             'payment' => (new PaymentResource($payment))->resolve(),

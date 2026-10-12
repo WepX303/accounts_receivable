@@ -34,7 +34,8 @@ class PaymentResource extends JsonResource
 
             'note' => $this->note,
             'paid_at' => $this->created_at?->toIso8601String(),
-            'cashier' => $this->created_by_name,
+            // The cashier's current name when it was loaded, as the panel shows; otherwise the name kept at the time.
+            'cashier' => ($this->relationLoaded('createdByUser') ? $this->createdByUser?->full_name : null) ?? $this->created_by_name,
 
             'is_voided' => $this->is_voided,
             'voided_at' => $this->voided_at?->toIso8601String(),
