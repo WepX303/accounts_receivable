@@ -131,10 +131,7 @@ class PaymentVoidTest extends PaymentTestCase
         $credit = $this->credit('1000.00', '0.00', ['branch' => 'Lebap']);
         $payment = $this->takePayment($credit, ['pay_amount' => '300']);
 
-        // Route binding runs before auth.token signs the user in, so the payment
-        // resolves; it is the locked re-read inside the transaction that refuses.
-        $this->signIn($this->user(UserRoleEnum::ADMIN, ['branches' => ['Mary']]))->void($payment)
-            ->assertSessionHas('warning', 'No query results for model [App\\Models\\CreditPayment].');
+        $this->signIn($this->user(UserRoleEnum::ADMIN, ['branches' => ['Mary']]))->void($payment)->assertNotFound();
 
         $this->assertNull($this->lastPayment($credit)->voided_at);
         $this->assertSame('300.00', $this->creditRow($credit)->paid_local);

@@ -239,8 +239,7 @@ class PaymentCorrectTest extends PaymentTestCase
         $credit = $this->credit('1000.00', '0.00', ['branch' => 'Lebap']);
         $old = $this->takePayment($credit, ['pay_amount' => '300']);
 
-        $this->signIn($this->user(UserRoleEnum::ADMIN, ['branches' => ['Mary']]))->correct($old)
-            ->assertSessionHas('warning', "No query results for model [App\\Models\\CreditPayment] {$old->id}");
+        $this->signIn($this->user(UserRoleEnum::ADMIN, ['branches' => ['Mary']]))->correct($old)->assertNotFound();
 
         $this->assertCount(1, $this->paymentsOf($credit));
         $this->assertNull($this->lastPayment($credit)->voided_at);
