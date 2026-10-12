@@ -70,6 +70,22 @@ class Credit extends Model
             ->orderByDesc('id');
     }
 
+    /**
+     * Credits whose customer, phone, passport, contract or client reference contains the text.
+     */
+    public function scopeMatching($query, string $q)
+    {
+        $like = '%' . $q . '%';
+
+        return $query->where(function ($qq) use ($like) {
+            $qq->where('name', 'ilike', $like)
+                ->orWhere('phone', 'ilike', $like)
+                ->orWhere('passport', 'ilike', $like)
+                ->orWhere('contract', 'ilike', $like)
+                ->orWhere('clientref', 'ilike', $like);
+        });
+    }
+
     // Local remaining accessor (LOCAL ONLY)
     public function getLocalRemainingAttribute(): ?float
     {
