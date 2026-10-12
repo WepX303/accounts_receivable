@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Customers\CustomerController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Payments\PaymentController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
+use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Customers\CustomersExportController;
 use App\Support\Access;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,19 @@ Route::prefix('v1')->group(function () {
             Route::get('/customers/export', CustomersExportController::class);
             Route::get('/customers/{credit}/statement', [CustomerController::class, 'statement'])->whereNumber('credit');
         });
+
+        // Exports first: their addresses end in /export and must not be taken for a report.
+        foreach (ReportController::EXPORTS as $address => [, , $ability]) {
+            Route::get("/reports/{$address}", [ReportController::class, 'export'])
+                ->defaults('report', $address)
+                ->middleware(Access::middleware($ability));
+        }
+
+        foreach (ReportController::REPORTS as $address => [, , $ability]) {
+            Route::get("/reports/{$address}", [ReportController::class, 'show'])
+                ->defaults('report', $address)
+                ->middleware(Access::middleware($ability));
+        }
 
         Route::post('/payments', [PaymentController::class, 'store'])
             ->middleware(Access::middleware('payments.take'));
