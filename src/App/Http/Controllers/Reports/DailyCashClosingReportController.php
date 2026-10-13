@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Enums\UserRoleEnum;
 use App\Models\CreditPayment;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -76,12 +78,29 @@ class DailyCashClosingReportController extends Controller
             ->orderBy('branch')
             ->pluck('branch');
 
+        // Offered in the filter: the cashiers working today. Payments keep the
+        // name of whoever took them for good, so going by the payments alone
+        // also listed admins who once took one, and people long since deleted.
+        $working = User::query()
+            ->where('role', UserRoleEnum::CASHIER)
+            ->where('status', true)
+            ->get()
+            ->map(fn (User $user) => $user->full_name)
+            ->filter()
+            ->unique();
+
+        // Of those, the ones with payments this user may see: the branch limit
+        // on payments decides, as it does for the figures themselves.
         $cashiers = CreditPayment::query()
-            ->whereNotNull('created_by_name')
-            ->where('created_by_name', '!=', '')
+            ->whereIn('created_by_name', $working->all())
             ->distinct()
             ->orderBy('created_by_name')
             ->pluck('created_by_name');
+
+        // A name already filtered by stays in the list, so the filter shows what it is set to.
+        if ($cashier !== '' && ! $cashiers->contains($cashier)) {
+            $cashiers = $cashiers->push($cashier)->sort()->values();
+        }
 
         return view('pages.reports.daily-cash-closing.index', [
             'summary' => $summary,

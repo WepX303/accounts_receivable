@@ -105,6 +105,44 @@ class ReportTest extends ApiTestCase
         $this->assertCount(2, $response->json('data.daily_rows'));
     }
 
+    public function test_daily_cash_closing_offers_the_cashiers_working_today_in_its_filter(): void
+    {
+        // All of these took a payment; only one of them is a cashier working today.
+        $admin = $this->user(UserRoleEnum::ADMIN, ['firstname' => 'Oraz', 'lastname' => 'Adminow']);
+        $left = $this->user(UserRoleEnum::CASHIER, ['firstname' => 'Giden', 'lastname' => 'Kassir']);
+        $deleted = $this->user(UserRoleEnum::CASHIER, ['firstname' => 'Pozulan', 'lastname' => 'Kassir']);
+        // A cashier who has taken nothing yet has nothing to be filtered by.
+        $this->user(UserRoleEnum::CASHIER, ['firstname' => 'Taze', 'lastname' => 'Kassir']);
+
+        foreach ([$admin, $left, $deleted] as $user) {
+            $this->take($user, $this->lebap, 10, '2026-10-14 12:00');
+        }
+        $left->update(['status' => false]);
+        $deleted->delete();
+        auth()->forgetGuards();
+
+        $this->signIn($this->user(UserRoleEnum::ANALYST));
+
+        $this->assertSame(['Aman Amanow'], $this->getJson('/api/v1/reports/daily-cash-closing')->assertOk()->json('data.cashiers'));
+
+        // Their payments are still in the figures, and can still be asked for by name.
+        $filtered = $this->getJson('/api/v1/reports/daily-cash-closing?cashier=' . urlencode('Pozulan Kassir'))->assertOk();
+        $this->assertSame(1, $filtered->json('data.summary.tx_count'));
+        $this->assertSame(['Aman Amanow', 'Pozulan Kassir'], $filtered->json('data.cashiers'));
+    }
+
+    public function test_daily_cash_closing_lists_only_the_cashiers_of_the_branches_a_user_may_see(): void
+    {
+        $other = $this->user(UserRoleEnum::CASHIER, ['firstname' => 'Lebap', 'lastname' => 'Kassir']);
+        $this->take($other, $this->lebap, 10, '2026-10-14 12:00');
+        auth()->forgetGuards();
+
+        // Aman took payments in both branches; the other cashier only in Lebap.
+        $this->signIn($this->user(UserRoleEnum::ANALYST, ['branches' => ['Mary']]));
+
+        $this->assertSame(['Aman Amanow'], $this->getJson('/api/v1/reports/daily-cash-closing')->assertOk()->json('data.cashiers'));
+    }
+
     public function test_paged_reports_return_items_and_paging(): void
     {
         $this->signIn($this->user(UserRoleEnum::ADMIN))->getJson('/api/v1/reports/avshocrecat')
