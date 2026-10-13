@@ -8,7 +8,7 @@ return [
     'empty_desc' => 'Ýa-da :customers_info bölüminde müşderileri saýlap :payment düwmesine basyň.',
     'customers_info' => 'Müşderi Maglumatlary',
     'payment' => 'Töleg',
-    'payment_statement' => 'Töleg dökümi',
+    'payment_statement' => 'Töleg geçmişi',
     'print' => 'Çap et',
     'statement_customer_info' => 'Müşderi maglumatlary',
     'statement_debt_status' => 'Bergi ýagdaýy',

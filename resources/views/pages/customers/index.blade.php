@@ -168,6 +168,18 @@
                                         </option>
                                     </optgroup>
 
+                                    <optgroup label="{{ __('pages/customers_index.qf_due') }}">
+                                        <option value="due_today" @selected(request('quick_filter') === 'due_today')>
+                                            {{ __('pages/customers_index.due_today') }}
+                                        </option>
+                                        <option value="due_3d" @selected(request('quick_filter') === 'due_3d')>
+                                            {{ __('pages/customers_index.due_3d') }}
+                                        </option>
+                                        <option value="due_7d" @selected(request('quick_filter') === 'due_7d')>
+                                            {{ __('pages/customers_index.due_7d') }}
+                                        </option>
+                                    </optgroup>
+
                                     <optgroup label="{{ __('pages/customers_index.qf_debt') }}">
                                         <option value="has_debt" @selected(request('quick_filter') === 'has_debt')>
                                             {{ __('pages/customers_index.has_debt') }}

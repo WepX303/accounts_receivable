@@ -7,19 +7,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\AuditLogger;
+use App\Services\Customers\CustomerListService;
 
 class CustomersExportController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $request->validate([
-            'q' => 'nullable|string|max:100',
-            'quick_filter' => 'nullable|in:all,paid_today,paid_yesterday,paid_7d,paid_14d,paid_1m,paid_3m,paid_6m,paid_9m,paid_12m,has_debt,no_debt,no_payment,blocked,active,bermejek,paid_mismatch',
-        ], [
-            'q.string' => __('validations/validations.customers.q_string'),
-            'q.max' => __('validations/validations.customers.q_max'),
-            'quick_filter.in' => __('validations/validations.customers.quick_invalid'),
-        ]);
+        // The list's own rules: whatever the list accepts, its export accepts.
+        $request->validate(CustomerListService::rules(), CustomerListService::messages());
 
         $audit = app(AuditLogger::class);
 
@@ -32,6 +27,8 @@ class CustomersExportController extends Controller
             extra: [
                 'q' => $request->get('q'),
                 'quick_filter' => $request->get('quick_filter'),
+                'date_from' => $request->get('date_from'),
+                'date_to' => $request->get('date_to'),
             ],
             message: 'Customers export downloaded',
             isSuccess: true,

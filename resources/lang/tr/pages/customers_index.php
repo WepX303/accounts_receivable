@@ -46,6 +46,10 @@ return [
 
     'qf_payments' => 'Ödemeler',
     'qf_debt' => 'Borç Durumu',
+    'qf_due' => 'Ödeme vadesi',
+    'due_today' => 'Bugün ödemeli',
+    'due_3d' => '3 gün içinde ödemeli',
+    'due_7d' => '1 hafta içinde ödemeli',
     'qf_status' => 'Durum',
 
     'has_debt' => 'Borcu olanlar',

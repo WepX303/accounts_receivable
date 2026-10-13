@@ -44,6 +44,10 @@ return [
 
     'qf_payments' => 'Tölegler',
     'qf_debt' => 'Karz ýagdaýy',
+    'qf_due' => 'Töleg möhleti',
+    'due_today' => 'Şu gün tölemeli',
+    'due_3d' => '3 günüň dowamynda tölemeli',
+    'due_7d' => '1 hepdäniň dowamynda tölemeli',
     'qf_status' => 'Ýagdaý',
     'has_debt' => 'Karzy bar bolanlar',
     'no_debt' => 'Karzy ýok bolanlar',

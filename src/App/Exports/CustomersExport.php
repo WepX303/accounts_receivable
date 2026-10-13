@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Credit;
+use App\Services\Customers\CustomerListService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -23,78 +23,15 @@ class CustomersExport implements FromQuery, WithHeadings, WithMapping, WithChunk
         }
     }
 
+    /**
+     * The list's own query: the spreadsheet holds exactly the customers the
+     * screen shows for the same search, quick filter and dates.
+     */
     public function query()
     {
-        $q = trim((string) ($this->request->get('q') ?? ''));
-        if ($q === 'null') $q = '';
-
-        $quick = (string) $this->request->get('quick_filter', 'all');
-
-        [$from, $to] = match ($quick) {
-            'paid_today' => [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()],
-            'paid_yesterday' => [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()],
-            'paid_7d' => [Carbon::now()->subDays(7), Carbon::now()],
-            'paid_14d' => [Carbon::now()->subDays(14), Carbon::now()],
-            'paid_1m' => [Carbon::now()->subMonth(), Carbon::now()],
-            'paid_3m' => [Carbon::now()->subMonths(3), Carbon::now()],
-            'paid_6m' => [Carbon::now()->subMonths(6), Carbon::now()],
-            'paid_9m' => [Carbon::now()->subMonths(9), Carbon::now()],
-            'paid_12m' => [Carbon::now()->subMonths(12), Carbon::now()],
-            default => [null, null],
-        };
-
-        $query = Credit::query()
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%' . $q . '%';
-                $query->where(function ($qq) use ($like) {
-                    $qq->where('name', 'ilike', $like)
-                        ->orWhere('phone', 'ilike', $like)
-                        ->orWhere('passport', 'ilike', $like)
-                        ->orWhere('contract', 'ilike', $like)
-                        ->orWhere('clientref', 'ilike', $like)
-                        ->orWhere('assurance', 'ilike', $like);
-                });
-            })
-            ->when($from && $to, function ($query) use ($from, $to) {
-                $table = $query->getModel()->getTable();
-
-                $query->whereExists(function ($sub) use ($from, $to, $table) {
-                    $sub->selectRaw('1')
-                        ->from('credit_payments')
-                        ->whereColumn(
-                            'credit_payments.credit_source_id',
-                            $table . '.source_id'
-                        )
-                        ->whereBetween('credit_payments.created_at', [$from, $to]);
-                });
-            })
-            ->when($quick === 'has_debt', fn($q) => $q->whereRaw('COALESCE(amount, 0) > COALESCE(paid, 0)'))
-            ->when($quick === 'no_debt', fn($q) => $q->whereRaw('COALESCE(amount, 0) <= COALESCE(paid, 0)'))
-            ->when($quick === 'no_payment', function ($query) {
-                $table = $query->getModel()->getTable();
-                $query->whereNotExists(function ($sub) use ($table) {
-                    $sub->selectRaw('1')
-                        ->from('credit_payments')
-                        ->whereColumn(
-                            'credit_payments.credit_source_id',
-                            $table . '.source_id'
-                        );
-                });
-            })
-            ->when($quick === 'blocked', fn($q) => $q->where('active', false))
-            ->when($quick === 'active', fn($q) => $q->where('active', true))
-            ->when($quick === 'bermejek', function ($q) {
-                $q->whereNotNull('status')
-                    ->where('status', '!=', '')
-                    ->whereRaw('LOWER(TRIM(status)) = ?', ['bermejek']);
-            })
-            ->when($quick === 'paid_mismatch', function ($query) {
-                $query->whereNotNull('paid_local')
-                    ->whereRaw('ROUND(COALESCE(paid_local,0)::numeric, 2) <> ROUND(COALESCE(paid,0)::numeric, 2)');
-            })
-            ->orderByDesc('rv_bigint');
-
-        return $query;
+        return app(CustomerListService::class)->query(
+            $this->request->only(['q', 'quick_filter', 'date_from', 'date_to'])
+        );
     }
 
     public function chunkSize(): int

@@ -44,6 +44,10 @@ return [
 
     'qf_payments' => 'Payments',
     'qf_debt' => 'Debt Status',
+    'qf_due' => 'Payment due',
+    'due_today' => 'Due today',
+    'due_3d' => 'Due within 3 days',
+    'due_7d' => 'Due within a week',
     'qf_status' => 'Status',
     'has_debt' => 'With debt',
     'no_debt' => 'No debt',
