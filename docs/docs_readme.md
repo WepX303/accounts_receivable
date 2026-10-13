@@ -56,6 +56,8 @@ docs/
 
 # 📚 Project Documentation Index
 
+> **Mobil API ve mobil uygulama:** [`mobile-api/MOBILE_API.md`](mobile-api/MOBILE_API.md) — API'nin mimarisi, uçları, güvenlik önlemleri, panelde değişen davranışlar, canlıya alma adımları ve canlı ortam notları.
+
 Bu klasör, **Accounts Receivable** projesinin tüm teknik ve işsel dokümantasyonunu içerir.
 
 Amaç:
