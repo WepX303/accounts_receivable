@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'Aljaklary Dolandyrmak',
+    'app_name' => 'Algylary Dolandyrmak',
     'welcome_back' => 'Gaýtadan Hoş Geldiňiz!',
     'signin_to_continue' => 'Dowam etmek üçin giriň.',
     'username' => 'Ulanyjy Ady',
