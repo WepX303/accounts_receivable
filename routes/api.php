@@ -48,7 +48,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware(Access::middleware('customers.list'))->group(function () {
             Route::get('/customers', [CustomerController::class, 'index']);
             // The panel's own export: same filters, same file, same audit entry.
-            Route::get('/customers/export', CustomersExportController::class);
+            Route::get('/customers/export', CustomersExportController::class)->middleware(['throttle:api-exports', 'api.one-export']);
             Route::get('/customers/{credit}/statement', [CustomerController::class, 'statement'])->whereNumber('credit');
         });
 
@@ -56,13 +56,13 @@ Route::prefix('v1')->group(function () {
         foreach (ReportController::EXPORTS as $address => [, , $ability]) {
             Route::get("/reports/{$address}", [ReportController::class, 'export'])
                 ->defaults('report', $address)
-                ->middleware(Access::middleware($ability));
+                ->middleware([Access::middleware($ability), 'throttle:api-exports', 'api.one-export']);
         }
 
         foreach (ReportController::REPORTS as $address => [, , $ability]) {
             Route::get("/reports/{$address}", [ReportController::class, 'show'])
                 ->defaults('report', $address)
-                ->middleware(Access::middleware($ability));
+                ->middleware([Access::middleware($ability), 'throttle:api-reports']);
         }
 
         Route::middleware(Access::middleware('sms'))->group(function () {
@@ -70,14 +70,15 @@ Route::prefix('v1')->group(function () {
             Route::post('/sms/preview', [SmsController::class, 'preview']);
             // The app prepares the messages and takes them away as a spreadsheet.
             // Sending stays in the panel: there is no address for it here.
-            Route::post('/sms/preview/export', [SmsController::class, 'exportPreview']);
+            Route::post('/sms/preview/export', [SmsController::class, 'exportPreview'])
+                ->middleware(['throttle:api-exports', 'api.one-export']);
         });
 
         Route::middleware(Access::middleware('users'))->group(function () {
             Route::get('/users', [UserController::class, 'index']);
-            Route::post('/users', [UserController::class, 'store']);
-            Route::put('/users/{user}', [UserController::class, 'update'])->whereNumber('user');
-            Route::delete('/users/{user}', [UserController::class, 'destroy'])->whereNumber('user');
+            Route::post('/users', [UserController::class, 'store'])->middleware('throttle:api-writes');
+            Route::put('/users/{user}', [UserController::class, 'update'])->whereNumber('user')->middleware('throttle:api-writes');
+            Route::delete('/users/{user}', [UserController::class, 'destroy'])->whereNumber('user')->middleware('throttle:api-writes');
         });
 
         Route::get('/logs', LogController::class)->middleware(Access::middleware('logs'));
@@ -89,13 +90,16 @@ Route::prefix('v1')->group(function () {
                 ->middleware('throttle:6,1');
         });
 
-        Route::post('/payments', [PaymentController::class, 'store'])
-            ->middleware(Access::middleware('payments.take'));
-        Route::post('/payments/{payment}/void', [PaymentController::class, 'void'])
-            ->whereNumber('payment')
-            ->middleware(Access::middleware('payments.void'));
-        Route::post('/payments/{payment}/correct', [PaymentController::class, 'correct'])
-            ->whereNumber('payment')
-            ->middleware(Access::middleware('payments.correct'));
+        // No cashier books this many payments a minute; a script might try.
+        Route::middleware('throttle:api-writes')->group(function () {
+            Route::post('/payments', [PaymentController::class, 'store'])
+                ->middleware(Access::middleware('payments.take'));
+            Route::post('/payments/{payment}/void', [PaymentController::class, 'void'])
+                ->whereNumber('payment')
+                ->middleware(Access::middleware('payments.void'));
+            Route::post('/payments/{payment}/correct', [PaymentController::class, 'correct'])
+                ->whereNumber('payment')
+                ->middleware(Access::middleware('payments.correct'));
+        });
     });
 });

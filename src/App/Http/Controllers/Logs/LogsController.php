@@ -18,6 +18,8 @@ class LogsController extends Controller
             'type' => 'nullable|in:all,activity,login,alert',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            // Each page reads that many rows more; far pages are reached by search and dates instead.
+            'page' => 'nullable|integer|min:1|max:500',
         ], [
             'q.string' => __('validations/validations.logs.q_string', [], app()->getLocale()),
             'q.max' => __('validations/validations.logs.q_max', [], app()->getLocale()),

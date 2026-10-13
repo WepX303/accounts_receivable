@@ -7,6 +7,8 @@ return [
     'not_found' => 'Ýazgy tapylmady.',
     'validation_failed' => 'Girizilen maglumatlary barlaň.',
     'too_many_requests' => 'Synanyşyk gaty köp. Soňrak gaýtalaň.',
+    'export_in_progress' => 'Häzir başga bir eksport taýýarlanýar. Gutaransoň täzeden synanyşyň.',
+    'payload_too_large' => 'Haýyş gaty uly.',
     'method_not_allowed' => 'Bu haýyş goldanylmaýar.',
     'request_failed' => 'Haýyşy ýerine ýetirip bolmady.',
     'server_error' => 'Serwerde ýalňyşlyk ýüze çykdy.',

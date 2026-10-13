@@ -27,8 +27,28 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Everyday use of the app stays far below these; a script hammering
+        // the API does not. A signed-in user is counted by account, wherever
+        // the requests come from; anyone else by address, and more tightly.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return $request->user()
+                ? Limit::perMinute(180)->by('user:' . $request->user()->id)
+                : Limit::perMinute(40)->by('ip:' . $request->ip());
+        });
+
+        // Reports run the heaviest queries of the panel.
+        RateLimiter::for('api-reports', function (Request $request) {
+            return Limit::perMinute(40)->by('user:' . ($request->user()?->id ?: $request->ip()));
+        });
+
+        // A spreadsheet can take the server minutes and a great deal of memory.
+        RateLimiter::for('api-exports', function (Request $request) {
+            return Limit::perMinute(6)->by('user:' . ($request->user()?->id ?: $request->ip()));
+        });
+
+        // Whatever changes something: payments, users, the profile, commands.
+        RateLimiter::for('api-writes', function (Request $request) {
+            return Limit::perMinute(40)->by('user:' . ($request->user()?->id ?: $request->ip()));
         });
 
         // Guessing one account's password is slowed down wherever the guesses

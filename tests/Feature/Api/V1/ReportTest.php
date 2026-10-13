@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1;
 
+use Illuminate\Support\Facades\Cache;
 use App\Enums\UserRoleEnum;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Models\AvshocrecatReport;
@@ -82,6 +83,9 @@ class ReportTest extends ApiTestCase
         $this->signIn($this->user(UserRoleEnum::ADMIN));
 
         foreach (array_keys(ReportController::EXPORTS) as $report) {
+            // Exports are limited to a few a minute; each of these stands for a request of its own time.
+            Cache::flush();
+
             $address = $this->address($report) . ($report === 'customer-statement/export' ? '?contract=C-000111' : '');
             $response = $this->get($address);
 

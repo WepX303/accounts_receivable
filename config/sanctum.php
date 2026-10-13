@@ -33,7 +33,8 @@ return [
     |
     */
 
-    'guard' => ['web'],
+    // The API is reached with a token only; a browser's panel session opens nothing here.
+    'guard' => [],
 
     /*
     |--------------------------------------------------------------------------

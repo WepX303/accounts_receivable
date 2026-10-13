@@ -20,6 +20,15 @@ class ApiSecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'no-referrer');
+        // Data, never a page: nothing in an answer may load or run anything.
+        $response->headers->set('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+        $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+
+        // Once reached over https, never again over plain http.
+        if ($request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
 
         return $response;
     }

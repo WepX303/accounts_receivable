@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
+    private const MAX_DEVICES = 5;
+
     public function login(Request $request, LoginService $logins)
     {
         $data = $request->validate([
@@ -42,6 +44,11 @@ class AuthController extends Controller
 
         // A token of its own per device; the panel's session is not touched.
         $token = $user->createToken($data['device_name'] ?? 'mobile');
+
+        // A handful of devices at most: beyond that the oldest sign-ins end,
+        // so tokens of phones long gone do not pile up as ways in.
+        $keep = $user->tokens()->latest('id')->limit(self::MAX_DEVICES)->pluck('id');
+        $user->tokens()->whereNotIn('id', $keep)->delete();
 
         $logins->recordSuccess($user, $login);
 

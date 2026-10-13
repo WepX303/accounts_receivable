@@ -7,6 +7,8 @@ return [
     'not_found' => 'The record was not found.',
     'validation_failed' => 'Please check the entered data.',
     'too_many_requests' => 'Too many attempts. Please try again later.',
+    'export_in_progress' => 'Another export is being prepared. Try again when it is done.',
+    'payload_too_large' => 'The request is too large.',
     'method_not_allowed' => 'This request is not supported.',
     'request_failed' => 'The request could not be completed.',
     'server_error' => 'Something went wrong on the server.',
