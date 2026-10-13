@@ -50,6 +50,29 @@ class SmsTest extends ApiTestCase
         $this->getJson('/api/v1/sms/customers?phone_status=no_phone')->assertJsonPath('data.customers.items.0.name', 'No Phone');
     }
 
+    public function test_only_credits_given_from_august_2024_on_are_offered(): void
+    {
+        $this->credit('1200.00', '0.00', ['name' => 'Last Day Before', 'phone' => '99361000006', 'date_' => '2024-07-31']);
+        $this->credit('1200.00', '0.00', ['name' => 'First Day', 'phone' => '99361000007', 'date_' => '2024-08-01']);
+        $this->credit('1200.00', '0.00', ['name' => 'No Date', 'phone' => '99361000008', 'date_' => null]);
+
+        $this->signIn($this->user(UserRoleEnum::OPERATOR));
+
+        $names = array_column($this->getJson('/api/v1/sms/customers')->assertOk()->json('data.customers.items'), 'name');
+        $this->assertContains('First Day', $names);
+        $this->assertNotContains('Last Day Before', $names);
+        $this->assertNotContains('No Date', $names);
+
+        // "Everyone the filter matches" goes by the same list.
+        $rows = $this->postJson('/api/v1/sms/preview', ['preview_mode' => 'filtered', 'message' => 'Salam {name}'])->assertOk()->json('data.rows');
+        $this->assertContains('First Day', array_column($rows, 'name'));
+        $this->assertNotContains('Last Day Before', array_column($rows, 'name'));
+
+        // The day is a setting.
+        config(['services.sms_api.customers_from' => '2024-07-01']);
+        $this->assertContains('Last Day Before', array_column($this->getJson('/api/v1/sms/customers')->json('data.customers.items'), 'name'));
+    }
+
     public function test_preview_renders_the_message_for_each_selected_customer(): void
     {
         $this->signIn($this->user(UserRoleEnum::OPERATOR))->postJson('/api/v1/sms/preview', [

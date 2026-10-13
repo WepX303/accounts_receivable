@@ -126,7 +126,10 @@ class CustomerSmsController extends Controller
         return Credit::query()
             ->where('active', true)
             ->where('is_blocked', 0)
-            ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)');
+            ->whereRaw('COALESCE(amount_local, amount, 0) > COALESCE(paid_local, paid, 0)')
+            // Only credits given from this day on are messaged; older ones are
+            // followed up outside the SMS list. A credit without a date is left out too.
+            ->whereDate('date_', '>=', config('services.sms_api.customers_from'));
     }
 
     private function applySmsFilters($query, Request $request)

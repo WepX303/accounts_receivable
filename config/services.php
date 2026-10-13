@@ -34,6 +34,8 @@ return [
     'sms_api' => [
         'base_url' => env('SMS_API_BASE_URL'),
         'token' => env('SMS_API_TOKEN'),
+        // The SMS list offers credits given on or after this day.
+        'customers_from' => env('SMS_CUSTOMERS_FROM', '2024-08-01'),
     ],
 
 ];
