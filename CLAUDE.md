@@ -1,6 +1,6 @@
 # Accounts Receivable — Çalışma Rehberi
 
-> Projeyi tek dosyada anlatan rehber. Durum: 2026-10-20, dal `mobile-api` (son commit `2d96bcb`).
+> Projeyi tek dosyada anlatan rehber. Durum: 2026-10-20. Canlı kod `production` dalında, çalışma dalı `mobile-api` (bkz. §12).
 > Ayrıntılı dokümanlar: `docs/PROJECT_OVERVIEW.md` (panel), `docs/mobile-api/MOBILE_API.md` (API + canlı ortam).
 > `docs/` altındaki eski dosyaların bir kısmı güncel değil (MSSQL, 3 rol vb. anlatır) — kod esas alınır.
 
@@ -317,22 +317,28 @@ php artisan test
 - Önde ayrı sunucuda Docker içinde nginx (`ssh -p 221 xcess@93.171.223.137`); başka siteler ve VPN de orada — dokunmadan önce onay.
 
 ### Deploy (yalnızca onayla)
-Sunucu GitHub'dan çekemez; yerelden sunucu deposuna yan dal olarak itilir:
+Canlıya giden kod `production` dalındadır. Sunucu kendi `crdt-serv` dalında kalır ve yalnızca
+`production`'dan **ileri sarılır** (`--ff-only`; merge commit'i oluşmaz).
 ```sh
 # Yerelde
 php artisan test
-GIT_SSH_COMMAND="ssh -p 225" git push credit@93.171.223.137:/var/www/accounts_receivable mobile-api:refs/heads/deploy-mobile-api
+git checkout production && git merge --ff-only mobile-api
+git push origin production
 
 # Sunucuda
 cd /var/www/accounts_receivable
 git status --porcelain              # boş olmalı
-php artisan down --retry=10
-git merge --ff-only deploy-mobile-api
+php artisan down --retry=10         # yalnızca migration varsa gerekli
+git pull --ff-only origin production
 php artisan migrate --force
 php artisan view:clear
 php artisan queue:restart
 php artisan up
 ```
+- Sunucuda **düz `git pull` yazma**: GitHub'daki `origin/crdt-serv` eski bir kopya. Her zaman `origin production`.
+- Sunucu GitHub'dan çekemezse (otomatik SSH oturumunda çekemiyordu), yerelden doğrudan itilir ve aynı şekilde ileri sarılır:
+  `GIT_SSH_COMMAND="ssh -p 225" git push credit@93.171.223.137:/var/www/accounts_receivable production:refs/heads/deploy-production`,
+  sunucuda `git merge --ff-only deploy-production`.
 Geri dönüş için önceki commit: `storage/app/last-deploy-prev.txt`.
 Kontrol: giriş sayfası 200, tokensiz `GET /api/v1/auth/me` → 401 JSON.
 
@@ -342,9 +348,10 @@ Kontrol: giriş sayfası 200, tokensiz `GET /api/v1/auth/me` → 401 JSON.
 
 | Dal | Durum |
 |---|---|
-| `mobile-api` | **Aktif çalışma dalı** (`wepx`'ten açıldı, 23 commit ileride). Canlı bu dalın içeriği |
-| `wepx` | Mobil öncesi ana çalışma dalı |
-| `crdt-serv` (origin + sunucu) | Canlının dalı; `mobile-api`'ye ileri sarılarak güncellenir |
+| `production` | **Canlıda çalışan kod.** Yalnızca ileri sarılır (`--ff-only`); doğrudan commit atılmaz |
+| `mobile-api` | **Aktif çalışma dalı.** Test edilen iş buradan `production`'a ileri sarılır |
+| `wepx` | Mobil öncesi ana çalışma dalı (tamamı `mobile-api` içinde) |
+| `crdt-serv` (sunucu) | Sunucudaki yerel dal; `production`'dan `git pull --ff-only origin production` ile güncellenir. GitHub'daki `origin/crdt-serv` eski (Haziran), kullanma |
 | `main` | Yalnızca ilk commit — PR hedefi olarak kullanma |
 | `wepx-api`, `wepx-local`, `wepx-reports`, `server`, `prod-server` | Eski; referans |
 
