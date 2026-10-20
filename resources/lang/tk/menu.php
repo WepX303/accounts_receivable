@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'dashboard' => 'Dolandyryş Paneli',
+    'dashboard' => 'Baş sahypa',
     'store' => 'Dükan',
     'report' => 'Hasabatlar',
     'customers' => 'Müşderiler',

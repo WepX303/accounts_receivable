@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'dashboard' => 'Панель управления',
+    'dashboard' => 'Главная',
     'store' => 'Магазин',
     'report' => 'Отчёты',
     'customers' => 'Клиенты',
