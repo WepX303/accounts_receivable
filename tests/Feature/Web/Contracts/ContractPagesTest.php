@@ -228,6 +228,39 @@ class ContractPagesTest extends TestCase
         $this->assertSame(1, $contract->fresh()->print_count);
     }
 
+    public function test_the_qr_code_opens_the_contract_for_staff(): void
+    {
+        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER, ['Mary']));
+        $url = route('contracts.verify', $contract->verify_token);
+
+        $this->get($url)
+            ->assertRedirect(route('contracts.show', $contract))
+            ->assertSessionHas('success', __('pages/contracts.verified', ['number' => $contract->number]));
+
+        // A made-up code finds nothing.
+        $this->get(route('contracts.verify', str_repeat('a', 40)))->assertNotFound();
+        $this->get('/contracts/v/' . $contract->number)->assertNotFound();
+
+        $this->signIn(UserRoleEnum::ADMIN);
+        $this->post(route('contracts.cancel', $contract), ['cancel_reason' => 'x']);
+        $this->get($url)->assertSessionHas('warning', __('pages/contracts.verified_cancelled', ['number' => $contract->number]));
+
+        // Only staff who handle contracts, and only within their branches.
+        $this->signIn(UserRoleEnum::ANALYST);
+        $this->get($url)->assertForbidden();
+        $this->signIn(UserRoleEnum::CASHIER, ['Lebap']);
+        $this->get($url)->assertNotFound();
+    }
+
+    public function test_the_qr_code_asks_for_a_sign_in_first(): void
+    {
+        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
+
+        $this->withCookie('auth_token', '')
+            ->get(route('contracts.verify', $contract->verify_token))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_a_contract_of_another_branch_cannot_be_opened(): void
     {
         $contract = $this->draft($this->signIn(UserRoleEnum::ADMIN), ['branch' => 'Lebap', 'customer_name' => 'Other Customer']);

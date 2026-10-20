@@ -40,6 +40,8 @@ return [
     'all_statuses' => 'All statuses',
     'filter' => 'Filter',
     'clear' => 'Clear',
+    'verified' => 'QR code checked: contract :number is on record.',
+    'verified_cancelled' => 'QR code checked: contract :number is CANCELLED.',
     'printed_times' => 'Printed',
     'print_confirm' => 'Once printed the contract is locked and cannot be changed. Continue?',
     'save_new' => 'Create',

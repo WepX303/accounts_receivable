@@ -11,6 +11,7 @@ use App\Services\AuditLogger;
 use App\Support\Access;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Makes, changes, cancels and prints şertnamas. A contract can be changed
@@ -148,6 +149,7 @@ class ContractService
         $contract = DB::transaction(function () use ($user, $data) {
             $contract = new CustomerContract($data->attributes() + [
                 'number' => $this->nextNumber((int) now()->year),
+                'verify_token' => Str::random(40),
                 'status' => CustomerContract::DRAFT,
                 'template_version' => ContractPdfService::VERSION,
                 'created_by' => $user->id,
@@ -334,6 +336,7 @@ class ContractService
             'installment_part' => $c->installment_part,
             'goods' => $c->goods ?? [],
             'history' => $c->history ?? [],
+            'verify_url' => route('contracts.verify', $c->verify_token),
         ];
     }
 

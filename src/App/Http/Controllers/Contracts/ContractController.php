@@ -114,6 +114,20 @@ class ContractController extends Controller
         return redirect()->route('contracts.show', $contract)->with('success', __('pages/contracts.created') . ': ' . $contract->number);
     }
 
+    /**
+     * Where the QR code on the paper leads: the contract's own page, if the
+     * code is real and the contract is one the user may see.
+     */
+    public function verify(string $token)
+    {
+        $contract = CustomerContract::query()->where('verify_token', $token)->firstOrFail();
+
+        return redirect()->route('contracts.show', $contract)->with(
+            $contract->isCancelled() ? 'warning' : 'success',
+            __($contract->isCancelled() ? 'pages/contracts.verified_cancelled' : 'pages/contracts.verified', ['number' => $contract->number])
+        );
+    }
+
     public function show(CustomerContract $contract)
     {
         $user = Auth::user();

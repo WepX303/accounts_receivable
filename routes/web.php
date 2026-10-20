@@ -123,6 +123,8 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/', [ContractController::class, 'index'])->name('index');
         Route::get('/create', [ContractController::class, 'create'])->name('create');
         Route::post('/', [ContractController::class, 'store'])->name('store');
+        // The QR code printed on page 2 leads here.
+        Route::get('/v/{token}', [ContractController::class, 'verify'])->where('token', '[A-Za-z0-9]{40}')->name('verify');
         Route::get('/{contract}', [ContractController::class, 'show'])->whereNumber('contract')->name('show');
         Route::put('/{contract}', [ContractController::class, 'update'])->whereNumber('contract')->name('update');
         Route::get('/{contract}/print', [ContractController::class, 'print'])->whereNumber('contract')->name('print');

@@ -48,6 +48,7 @@ class CustomerContract extends Model
 
     protected $fillable = [
         'number',
+        'verify_token',
         'status',
         'template_version',
         'branch',
