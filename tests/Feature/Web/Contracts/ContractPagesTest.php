@@ -66,7 +66,7 @@ class ContractPagesTest extends TestCase
         foreach ([UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
             $this->signIn($role);
             $this->get('/contracts')->assertForbidden();
-            $this->get('/contracts/blank')->assertForbidden();
+            $this->post('/contracts/blank', ['branch' => 'Mary'])->assertForbidden();
         }
     }
 
@@ -215,10 +215,38 @@ class ContractPagesTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
         $this->assertStringContainsString($contract->number . '.pdf', $response->headers->get('Content-Disposition'));
         $this->assertSame(1, $contract->fresh()->print_count);
+    }
 
-        $blank = $this->get(route('contracts.blank'));
+    public function test_a_blank_form_takes_the_next_number_and_can_be_filled_in_later(): void
+    {
+        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
+        $this->draft(UserFactory::new()->make(), []);
+
+        $blank = $this->post(route('contracts.blank'), ['branch' => 'Mary']);
+
         $blank->assertOk()->assertHeader('Content-Type', 'application/pdf');
-        $this->assertSame(file_get_contents(resource_path('contract-templates/v1/shertnama.pdf')), $blank->getContent());
+        $issued = CustomerContract::latest('id')->firstOrFail();
+        $this->assertTrue($issued->isIssued());
+        $this->assertSame('UT-' . now()->year . '-0000002', $issued->number);
+        $this->assertStringContainsString($issued->number . '.pdf', $blank->headers->get('Content-Disposition'));
+        $this->assertSame(1, $issued->print_count);
+
+        $this->post(route('contracts.blank'), ['branch' => 'Lebap'])
+            ->assertSessionHas('warning', __('validations/validations.contracts.branch_not_allowed'));
+        $this->assertSame(2, CustomerContract::count());
+
+        $this->get('/contracts?status=issued')->assertOk()->assertSee($issued->number);
+        $this->get(route('contracts.show', $issued))
+            ->assertOk()
+            ->assertSee(__('pages/contracts.issued_hint'))
+            ->assertSee('name="_method" value="PUT"', false);
+
+        // The details from the paper are entered later; it becomes a draft to approve.
+        $this->put(route('contracts.update', $issued), $this->form(['customer_name' => 'From Paper']))->assertSessionHas('success');
+        $fresh = $issued->fresh();
+        $this->assertTrue($fresh->isDraft());
+        $this->assertSame('From Paper', $fresh->customer_name);
+        $this->assertSame($issued->number, $fresh->number);
     }
 
     public function test_a_contract_of_another_branch_cannot_be_opened(): void

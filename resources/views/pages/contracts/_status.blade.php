@@ -1,5 +1,6 @@
 @php
     $badge = [
+        'issued' => 'bg-info-subtle text-info',
         'draft' => 'bg-warning-subtle text-warning',
         'approved' => 'bg-success-subtle text-success',
         'cancelled' => 'bg-danger-subtle text-danger',

@@ -4,6 +4,8 @@ return [
     'title' => 'Şertnamalar',
     'create' => 'Şertnama döret',
     'new' => 'Täze şertnama',
+    'blank_hint' => 'Indiki belgi berilýär we diňe belgili boş blank çap edilýär. Belgi hasaba alynýar we gaýtadan berilmeýär.',
+    'issued_hint' => 'Bu belgi boş blank hökmünde çap edildi. Kagyzdaky maglumatlary şu ýere girizseňiz, şertnama garalama bolýar we tassyklap bolýar. Ulanylmadyk bolsa ýatyryň.',
     'blank' => 'Boş şablony çap et',
     'search_customer' => 'Müşderi gözle (ady, pasport, telefon, şertnama)',
     'search' => 'Gözle',
@@ -88,12 +90,14 @@ return [
     ],
 
     'statuses' => [
+        'issued' => 'Boş çap edildi',
         'draft' => 'Garalama',
         'approved' => 'Tassyklanan',
         'cancelled' => 'Ýatyrylan',
     ],
 
     'actions' => [
+        'contract_issued' => 'Boş blank çap edildi',
         'contract_created' => 'Döredildi',
         'contract_updated' => 'Üýtgedildi',
         'contract_approved' => 'Tassyklandy',

@@ -10,9 +10,9 @@
                             <h5 class="card-title mb-0">{{ __('pages/contracts.title') }}</h5>
                         </div>
                         <div class="col-sm-auto d-flex flex-wrap gap-2">
-                            <a href="{{ route('contracts.blank') }}" target="_blank" class="btn btn-soft-secondary">
+                            <button type="button" class="btn btn-soft-secondary" data-bs-toggle="modal" data-bs-target="#blankModal">
                                 <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.blank') }}
-                            </a>
+                            </button>
                             <a href="{{ route('contracts.create') }}" class="btn btn-success">
                                 <i class="ri-add-line align-bottom me-1"></i> {{ __('pages/contracts.create') }}
                             </a>
@@ -32,7 +32,7 @@
                         <div class="col-md-3">
                             <select name="status" class="form-select">
                                 <option value="">{{ __('pages/contracts.all_statuses') }}</option>
-                                @foreach (['draft', 'approved', 'cancelled'] as $s)
+                                @foreach (['issued', 'draft', 'approved', 'cancelled'] as $s)
                                     <option value="{{ $s }}" @selected($status === $s)>{{ __('pages/contracts.statuses.' . $s) }}</option>
                                 @endforeach
                             </select>
@@ -67,7 +67,7 @@
                                         </td>
                                         <td>{{ $contract->contract_date?->format('d.m.Y') }}</td>
                                         <td>
-                                            <div class="fw-medium">{{ $contract->customer_name }}</div>
+                                            <div class="fw-medium">{{ $contract->customer_name ?: '—' }}</div>
                                             <div class="text-muted small">{{ trim($contract->passport_series . ' ' . $contract->passport_number) ?: '-' }}</div>
                                         </td>
                                         <td>{{ $contract->branch }}</td>
@@ -94,4 +94,6 @@
             </div>
         </div>
     </div>
+
+    @include('pages.contracts._blank')
 @endsection

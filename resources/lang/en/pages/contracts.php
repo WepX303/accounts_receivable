@@ -4,6 +4,8 @@ return [
     'title' => 'Contracts',
     'create' => 'Create contract',
     'new' => 'New contract',
+    'blank_hint' => 'The next number is given out and a blank form is printed with only that number on it. The number is recorded and never given again.',
+    'issued_hint' => 'This number was printed on a blank form. Enter the details from the paper here to make it a draft that can be approved; cancel it if the form was not used.',
     'blank' => 'Print blank template',
     'search_customer' => 'Find customer (name, passport, phone, contract)',
     'search' => 'Search',
@@ -88,12 +90,14 @@ return [
     ],
 
     'statuses' => [
+        'issued' => 'Blank issued',
         'draft' => 'Draft',
         'approved' => 'Approved',
         'cancelled' => 'Cancelled',
     ],
 
     'actions' => [
+        'contract_issued' => 'Blank issued',
         'contract_created' => 'Created',
         'contract_updated' => 'Changed',
         'contract_approved' => 'Approved',

@@ -26,7 +26,7 @@
                                 {{ __('pages/contracts.fields.number') }} {{ $contract->number }}
                                 @include('pages.contracts._status', ['status' => $contract->status])
                             </h5>
-                            <div class="text-muted">{{ $contract->customer_name }} · {{ $contract->branch }}</div>
+                            <div class="text-muted">{{ $contract->customer_name ?: '—' }} · {{ $contract->branch }}</div>
                         </div>
                         <div class="col-sm-auto d-flex flex-wrap gap-2">
                             <a href="{{ route('contracts.index') }}" class="btn btn-soft-secondary">
@@ -88,6 +88,10 @@
             </div>
 
             {{-- A draft is changed here; anything else is shown as it was signed --}}
+            @if ($contract->isIssued())
+                <div class="alert alert-info">{{ __('pages/contracts.issued_hint') }}</div>
+            @endif
+
             @if ($canEdit)
                 @include('pages.contracts._form', [
                     'form' => $contract->only([
@@ -99,7 +103,7 @@
                     'submitLabel' => __('pages/contracts.save_changes'),
                 ])
             @else
-                @if (! $contract->isDraft())
+                @if (! $contract->isOpen())
                     <div class="alert alert-secondary">{{ __('pages/contracts.locked') }}</div>
                 @endif
                 <div class="card">

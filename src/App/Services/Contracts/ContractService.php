@@ -172,7 +172,52 @@ class ContractService
     }
 
     /**
-     * Changes a draft. Every change is logged with what it replaced.
+     * Gives out the next number on a blank form, to be filled in by hand.
+     * The number is kept on record like any contract, so it is never given twice.
+     *
+     * @throws ContractException
+     */
+    public function issueBlank(User $user, string $branch): CustomerContract
+    {
+        $this->authorize($user, 'contracts.create');
+
+        $branch = trim($branch);
+        if ($branch === '' || ! $user->canAccessBranch($branch)) {
+            throw new ContractException('branch_not_allowed', __('validations/validations.contracts.branch_not_allowed'));
+        }
+
+        $contract = DB::transaction(function () use ($user, $branch) {
+            $contract = new CustomerContract([
+                'number' => $this->nextNumber((int) now()->year),
+                'status' => CustomerContract::ISSUED,
+                'template_version' => ContractPdfService::VERSION,
+                'branch' => $branch,
+                'contract_date' => now()->toDateString(),
+                // Written on the paper by hand; entered here later, if at all.
+                'customer_name' => '',
+                'created_by' => $user->id,
+                'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
+            ]);
+            $contract->save();
+
+            return $contract;
+        });
+
+        $this->audit->log(
+            action: 'contract_issued',
+            category: 'contract',
+            subject: $contract,
+            newValues: ['branch' => $branch],
+            extra: ['number' => $contract->number],
+            message: 'Blank contract issued',
+        );
+
+        return $contract;
+    }
+
+    /**
+     * Changes a draft, or fills in a blank (which makes it a draft). Every
+     * change is logged with what it replaced.
      *
      * @throws ContractException
      */
@@ -184,11 +229,11 @@ class ContractService
         [$contract, $old, $new] = DB::transaction(function () use ($contract, $data) {
             $c = $this->lock($contract);
 
-            if (! $c->isDraft()) {
+            if (! $c->isOpen()) {
                 throw new ContractException('not_draft', __('validations/validations.contracts.not_draft'));
             }
 
-            $c->fill($data->attributes());
+            $c->fill($data->attributes() + ['status' => CustomerContract::DRAFT]);
             $dirty = $c->getDirty();
 
             if ($dirty === []) {
@@ -254,7 +299,7 @@ class ContractService
     }
 
     /**
-     * Cancels a draft or an approved contract. It stays on record, with why.
+     * Cancels a contract that is not cancelled yet. It stays on record, with why.
      *
      * @throws ContractException
      */
@@ -313,7 +358,8 @@ class ContractService
 
     /**
      * The PDF of a contract. Every print is counted and logged; a draft or a
-     * cancelled contract says so across its pages.
+     * cancelled contract says so across its pages, and a blank carries its
+     * number only.
      *
      * @return array{0: string, 1: string} file name, PDF
      */
@@ -325,7 +371,8 @@ class ContractService
             default => null,
         };
 
-        $pdf = $this->pdf->render($this->printable($contract), $mark);
+        $printable = $contract->isIssued() ? ['number' => $contract->number] : $this->printable($contract);
+        $pdf = $this->pdf->render($printable, $mark);
 
         DB::transaction(function () use ($contract) {
             $c = $this->lock($contract);
@@ -345,20 +392,6 @@ class ContractService
         );
 
         return ["{$contract->number}.pdf", $pdf];
-    }
-
-    /**
-     * The template as the bank approved it, to fill in by hand.
-     */
-    public function blank(): string
-    {
-        $this->audit->log(
-            action: 'contract_blank_printed',
-            category: 'contract',
-            message: 'Blank contract printed',
-        );
-
-        return $this->pdf->blank();
     }
 
     /**

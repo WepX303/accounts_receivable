@@ -29,7 +29,7 @@ class ContractController extends Controller
     {
         $request->validate([
             'q' => 'nullable|string|max:100',
-            'status' => 'nullable|in:draft,approved,cancelled',
+            'status' => 'nullable|in:issued,draft,approved,cancelled',
         ]);
 
         $q = trim((string) $request->get('q', ''));
@@ -50,7 +50,12 @@ class ContractController extends Controller
             ->paginate(20)
             ->appends($request->query());
 
-        return view('pages.contracts.index', compact('contracts', 'q', 'status'));
+        return view('pages.contracts.index', [
+            'contracts' => $contracts,
+            'q' => $q,
+            'status' => $status,
+            'branches' => $this->branches(),
+        ]);
     }
 
     /**
@@ -122,7 +127,7 @@ class ContractController extends Controller
             'contract' => $contract,
             'changes' => $changes,
             'branches' => $this->branches(),
-            'canEdit' => $contract->isDraft() && Access::allows($user, 'contracts.create'),
+            'canEdit' => $contract->isOpen() && Access::allows($user, 'contracts.create'),
             'canApprove' => $contract->isDraft() && Access::allows($user, 'contracts.approve'),
             'canCancel' => ! $contract->isCancelled() && Access::allows($user, 'contracts.cancel'),
         ]);
@@ -175,9 +180,22 @@ class ContractController extends Controller
         return $this->pdf($pdf, $name);
     }
 
-    public function blank()
+    /**
+     * A blank form with the next number on it, opened straight away to print.
+     */
+    public function blank(Request $request)
     {
-        return $this->pdf($this->contracts->blank(), 'shertnama.pdf');
+        $request->validate(['branch' => 'required|string|max:50'], $this->messages(), $this->attributes());
+
+        try {
+            $user = Auth::user();
+            $contract = $this->contracts->issueBlank($user, (string) $request->input('branch'));
+            [$name, $pdf] = $this->contracts->print($user, $contract);
+        } catch (ContractException $e) {
+            return back()->with('warning', $e->getMessage());
+        }
+
+        return $this->pdf($pdf, $name);
     }
 
     private function pdf(string $pdf, string $name)

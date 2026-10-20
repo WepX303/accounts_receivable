@@ -333,6 +333,57 @@ class ContractServiceTest extends TestCase
         $this->assertSame(2, $contract->fresh()->print_count);
     }
 
+    public function test_a_blank_takes_a_number_and_prints_only_that(): void
+    {
+        $user = $this->user(UserRoleEnum::CASHIER, ['Mary']);
+
+        $blank = $this->service->issueBlank($user, 'Mary');
+        $next = $this->service->create($user, $this->data());
+
+        $this->assertTrue($blank->isIssued());
+        $this->assertSame('', $blank->customer_name);
+        $this->assertSame('UT-2026-0000001', $blank->number);
+        $this->assertSame('UT-2026-0000002', $next->number);
+        $this->assertSame(1, ActivityLog::where('action', 'contract_issued')->count());
+
+        $this->assertRefused('branch_not_allowed', fn () => $this->service->issueBlank($user, 'Lebap'));
+        $this->assertRefused('forbidden', fn () => $this->service->issueBlank($this->user(UserRoleEnum::ANALYST), 'Mary'));
+
+        [, $pdf] = $this->service->print($user, $blank);
+        $this->assertStringStartsWith('%PDF', $pdf);
+        $this->assertSame(1, $blank->fresh()->print_count);
+    }
+
+    public function test_a_blank_is_filled_in_to_become_a_draft_and_cannot_be_approved_before(): void
+    {
+        $user = $this->user(UserRoleEnum::ADMIN);
+        $blank = $this->service->issueBlank($user, 'Mary');
+
+        $this->assertRefused('not_draft', fn () => $this->service->approve($user, $blank));
+
+        $this->service->update($user, $blank, $this->data());
+
+        $fresh = $blank->fresh();
+        $this->assertTrue($fresh->isDraft());
+        $log = ActivityLog::where('action', 'contract_updated')->sole();
+        $this->assertSame('issued', $log->old_values['status']);
+        $this->assertSame('draft', $log->new_values['status']);
+
+        $this->service->approve($user, $fresh);
+        $this->assertTrue($blank->fresh()->isApproved());
+    }
+
+    public function test_an_unused_blank_is_cancelled_without_an_alert(): void
+    {
+        $user = $this->user(UserRoleEnum::ADMIN);
+        $blank = $this->service->issueBlank($user, 'Mary');
+
+        $this->service->cancel($user, $blank, 'Spoilt paper');
+
+        $this->assertTrue($blank->fresh()->isCancelled());
+        $this->assertSame(0, SecurityAlert::count());
+    }
+
     public function test_contracts_never_change_credits_or_payments(): void
     {
         $credit = CreditFactory::new()->debt('1500.00', '500.00')->create(['branch' => 'Mary', 'passport' => 'I-AŞ 350924']);
@@ -351,6 +402,8 @@ class ContractServiceTest extends TestCase
         $this->service->approve($admin, $contract);
         $this->service->print($admin, $contract->fresh());
         $this->service->cancel($admin, $contract->fresh(), 'x');
+        $blank = $this->service->issueBlank($admin, 'Mary');
+        $this->service->print($admin, $blank);
 
         $this->assertSame($before, $snapshot());
     }

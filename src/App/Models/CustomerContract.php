@@ -9,13 +9,17 @@ use LogicException;
 /**
  * A şertnama made in the panel.
  *
- * Only a draft can be changed. Once approved, what was signed stays as it was:
+ * Only a draft, or a blank printed with its number for filling in by hand,
+ * can be changed. Once approved, what was signed stays as it was:
  * the row may still be cancelled and its prints counted, nothing else. A
  * contract is never deleted.
  */
 class CustomerContract extends Model
 {
     public const DRAFT = 'draft';
+
+    // A blank form printed with its number only, to be filled in by hand.
+    public const ISSUED = 'issued';
 
     public const APPROVED = 'approved';
 
@@ -92,7 +96,7 @@ class CustomerContract extends Model
             $was = $contract->getOriginal('status');
 
             $allowed = match ($was) {
-                self::DRAFT => null,
+                self::DRAFT, self::ISSUED => null,
                 self::APPROVED => self::AFTER_APPROVAL,
                 default => self::AFTER_CANCEL,
             };
@@ -102,7 +106,7 @@ class CustomerContract extends Model
             }
 
             // An approved contract can only move on to cancelled; nothing goes back to a draft.
-            if ($was !== self::DRAFT && $contract->isDirty('status') && ! ($was === self::APPROVED && $contract->status === self::CANCELLED)) {
+            if (! in_array($was, [self::DRAFT, self::ISSUED], true) && $contract->isDirty('status') && ! ($was === self::APPROVED && $contract->status === self::CANCELLED)) {
                 throw new LogicException("Contract {$contract->number} cannot go from {$was} to {$contract->status}.");
             }
         });
@@ -115,6 +119,19 @@ class CustomerContract extends Model
     public function isDraft(): bool
     {
         return $this->status === self::DRAFT;
+    }
+
+    public function isIssued(): bool
+    {
+        return $this->status === self::ISSUED;
+    }
+
+    /**
+     * Whether its details may still be changed.
+     */
+    public function isOpen(): bool
+    {
+        return $this->isDraft() || $this->isIssued();
     }
 
     public function isApproved(): bool

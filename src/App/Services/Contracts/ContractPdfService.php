@@ -136,7 +136,10 @@ class ContractPdfService
 
         $this->templatePage($pdf, 2);
         $this->pageTwo($pdf, $c, $date);
-        $this->history($pdf, $c['history'] ?? [], $mark);
+        // A blank form for filling in by hand has no list at all.
+        if (array_key_exists('history', $c)) {
+            $this->history($pdf, $c['history'] ?? [], $mark);
+        }
         $this->mark($pdf, $mark);
 
         return $pdf->Output('', 'S');

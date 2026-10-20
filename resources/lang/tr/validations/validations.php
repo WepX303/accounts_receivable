@@ -204,11 +204,11 @@ return [
 
     'contracts' => [
         'forbidden' => 'Bu işlem için yetkiniz yok.',
-        'not_draft' => 'Yalnızca taslak durumundaki şertnama değiştirilebilir veya onaylanabilir.',
+        'not_draft' => 'Yalnızca taslak durumundaki sözleşme değiştirilebilir veya onaylanabilir.',
         'cancel_reason_required' => 'İptal sebebi zorunludur.',
-        'already_cancelled' => 'Bu şertnama zaten iptal edilmiş.',
+        'already_cancelled' => 'Bu sözleşme zaten iptal edilmiş.',
         'customer_name_required' => 'Alıcının adı zorunludur.',
-        'branch_not_allowed' => 'Bu şube için şertnama oluşturamazsınız.',
+        'branch_not_allowed' => 'Bu şube için sözleşme oluşturamazsınız.',
         'credit_not_found' => 'Seçilen kredi bulunamadı.',
     ],
 

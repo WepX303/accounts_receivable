@@ -123,7 +123,7 @@ Route::middleware(['auth.token'])->group(function () {
         Route::get('/', [ContractController::class, 'index'])->name('index');
         Route::get('/create', [ContractController::class, 'create'])->name('create');
         Route::post('/', [ContractController::class, 'store'])->name('store');
-        Route::get('/blank', [ContractController::class, 'blank'])->name('blank');
+        Route::post('/blank', [ContractController::class, 'blank'])->name('blank');
         Route::get('/{contract}', [ContractController::class, 'show'])->whereNumber('contract')->name('show');
         Route::put('/{contract}', [ContractController::class, 'update'])->whereNumber('contract')->name('update');
         Route::get('/{contract}/print', [ContractController::class, 'print'])->whereNumber('contract')->name('print');

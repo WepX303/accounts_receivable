@@ -15,9 +15,9 @@
                             <a href="{{ route('contracts.index') }}" class="btn btn-soft-secondary">
                                 <i class="ri-arrow-left-line align-bottom me-1"></i> {{ __('pages/contracts.back') }}
                             </a>
-                            <a href="{{ route('contracts.blank') }}" target="_blank" class="btn btn-soft-secondary">
+                            <button type="button" class="btn btn-soft-secondary" data-bs-toggle="modal" data-bs-target="#blankModal">
                                 <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.blank') }}
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -105,4 +105,6 @@
             @endif
         </div>
     </div>
+
+    @include('pages.contracts._blank')
 @endsection
