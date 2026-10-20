@@ -204,7 +204,7 @@ return [
 
     'contracts' => [
         'forbidden' => 'Bu işlem için yetkiniz yok.',
-        'not_draft' => 'Yalnızca taslak durumundaki sözleşme değiştirilebilir veya onaylanabilir.',
+        'locked' => 'Basılmış sözleşme değiştirilemez.',
         'cancel_reason_required' => 'İptal sebebi zorunludur.',
         'already_cancelled' => 'Bu sözleşme zaten iptal edilmiş.',
         'customer_name_required' => 'Alıcının adı zorunludur.',

@@ -47,7 +47,6 @@ class AuthTest extends ApiTestCase
                 'logs' => false,
                 'commands' => false,
                 'contracts.create' => true,
-                'contracts.approve' => false,
                 'contracts.cancel' => false,
             ])
             ->assertJsonMissingPath('data.user.password')
@@ -261,15 +260,15 @@ class AuthTest extends ApiTestCase
         ));
 
         $this->assertSame(
-            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'logs', 'commands', 'contracts.create', 'contracts.approve', 'contracts.cancel'],
+            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'logs', 'commands', 'contracts.create', 'contracts.cancel'],
             $abilities(UserRoleEnum::SUPER_ADMIN)
         );
         $this->assertSame(
-            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'contracts.create', 'contracts.approve', 'contracts.cancel'],
+            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'contracts.create', 'contracts.cancel'],
             $abilities(UserRoleEnum::ADMIN)
         );
         $this->assertSame(['customers.list', 'reports.avshocrecat', 'reports'], $abilities(UserRoleEnum::ANALYST));
-        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms', 'contracts.create', 'contracts.approve'], $abilities(UserRoleEnum::OPERATOR));
+        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms', 'contracts.create', 'contracts.cancel'], $abilities(UserRoleEnum::OPERATOR));
         $this->assertSame(['customers.list'], $abilities(UserRoleEnum::MANAGER));
         $this->assertSame([], $abilities(UserRoleEnum::USER));
     }

@@ -251,42 +251,62 @@ class ContractServiceTest extends TestCase
         $this->assertSame(1, ActivityLog::where('action', 'contract_updated')->count());
     }
 
-    public function test_an_approved_contract_cannot_be_changed_or_approved_again(): void
-    {
-        $contract = $this->service->create($this->user(UserRoleEnum::CASHIER), $this->data());
-        $operator = $this->user(UserRoleEnum::OPERATOR);
-
-        $this->service->approve($operator, $contract);
-
-        $fresh = $contract->fresh();
-        $this->assertTrue($fresh->isApproved());
-        $this->assertSame($operator->id, $fresh->approved_by);
-        $this->assertSame(1, ActivityLog::where('action', 'contract_approved')->count());
-
-        $this->assertRefused('not_draft', fn () => $this->service->update($operator, $fresh, $this->data(['address' => 'x'])));
-        $this->assertRefused('not_draft', fn () => $this->service->approve($operator, $fresh));
-        $this->assertSame('Aşgabat', $contract->fresh()->address);
-    }
-
-    public function test_a_cashier_cannot_approve_or_cancel_and_an_operator_cannot_cancel(): void
+    public function test_the_first_print_locks_the_contract(): void
     {
         $cashier = $this->user(UserRoleEnum::CASHIER);
         $contract = $this->service->create($cashier, $this->data());
 
-        $this->assertRefused('forbidden', fn () => $this->service->approve($cashier, $contract));
-        $this->assertRefused('forbidden', fn () => $this->service->cancel($cashier, $contract, 'x'));
-        $this->assertRefused('forbidden', fn () => $this->service->cancel($this->user(UserRoleEnum::OPERATOR), $contract, 'x'));
+        // Corrected before it went on paper.
+        $this->service->update($cashier, $contract, $this->data(['address' => 'Mary şäheri']));
+        $this->assertTrue($contract->fresh()->isDraft());
+
+        $this->service->print($cashier, $contract);
+
+        $fresh = $contract->fresh();
+        $this->assertTrue($fresh->isPrinted());
+        $this->assertSame($cashier->id, $fresh->printed_by);
+        $this->assertNotNull($fresh->printed_at);
+
+        $log = ActivityLog::where('action', 'contract_printed')->sole();
+        $this->assertSame(['status' => 'printed'], $log->new_values);
+
+        $this->assertRefused('locked', fn () => $this->service->update($cashier, $fresh, $this->data(['address' => 'x'])));
+        $this->assertSame('Mary şäheri', $contract->fresh()->address);
     }
 
-    public function test_cancelling_needs_a_reason_and_an_approved_one_raises_an_alert(): void
+    public function test_reprinting_keeps_who_printed_it_first(): void
+    {
+        $first = $this->user(UserRoleEnum::CASHIER);
+        $contract = $this->service->create($first, $this->data());
+        $this->service->print($first, $contract);
+
+        $this->service->print($this->user(UserRoleEnum::ADMIN), $contract->fresh());
+
+        $fresh = $contract->fresh();
+        $this->assertSame($first->id, $fresh->printed_by);
+        $this->assertSame(2, $fresh->print_count);
+    }
+
+    public function test_who_may_cancel(): void
+    {
+        $cashier = $this->user(UserRoleEnum::CASHIER);
+        $contract = $this->service->create($cashier, $this->data());
+
+        $this->assertRefused('forbidden', fn () => $this->service->cancel($cashier, $contract, 'x'));
+
+        $this->service->cancel($this->user(UserRoleEnum::OPERATOR), $contract, 'Typed twice');
+        $this->assertTrue($contract->fresh()->isCancelled());
+    }
+
+    public function test_cancelling_needs_a_reason_and_a_printed_one_raises_an_alert(): void
     {
         $contract = $this->service->create($this->user(UserRoleEnum::CASHIER), $this->data());
         $admin = $this->user(UserRoleEnum::ADMIN);
-        $this->service->approve($admin, $contract);
+        $this->service->print($admin, $contract);
 
-        $this->assertRefused('cancel_reason_required', fn () => $this->service->cancel($admin, $contract, '  '));
+        $this->assertRefused('cancel_reason_required', fn () => $this->service->cancel($admin, $contract->fresh(), '  '));
 
-        $this->service->cancel($admin, $contract, ' Wrong   passport ');
+        $this->service->cancel($admin, $contract->fresh(), ' Wrong   passport ');
 
         $fresh = $contract->fresh();
         $this->assertTrue($fresh->isCancelled());
@@ -297,7 +317,7 @@ class ContractServiceTest extends TestCase
         $this->assertRefused('already_cancelled', fn () => $this->service->cancel($admin, $fresh, 'again'));
     }
 
-    public function test_a_draft_can_be_cancelled_without_an_alert(): void
+    public function test_an_unprinted_contract_is_cancelled_without_an_alert(): void
     {
         $contract = $this->service->create($this->user(UserRoleEnum::CASHIER), $this->data());
 
@@ -321,67 +341,17 @@ class ContractServiceTest extends TestCase
         $this->assertSame(2, ActivityLog::where('action', 'contract_printed')->count());
     }
 
-    public function test_an_approved_and_a_cancelled_contract_can_still_be_printed(): void
+    public function test_a_cancelled_contract_can_still_be_printed(): void
     {
         $user = $this->user(UserRoleEnum::ADMIN);
         $contract = $this->service->create($user, $this->data());
-        $this->service->approve($user, $contract);
-        $this->service->print($user, $contract->fresh());
+        $this->service->print($user, $contract);
         $this->service->cancel($user, $contract->fresh(), 'x');
         $this->service->print($user, $contract->fresh());
 
-        $this->assertSame(2, $contract->fresh()->print_count);
-    }
-
-    public function test_a_blank_takes_a_number_and_prints_only_that(): void
-    {
-        $user = $this->user(UserRoleEnum::CASHIER, ['Mary']);
-
-        $blank = $this->service->issueBlank($user, 'Mary');
-        $next = $this->service->create($user, $this->data());
-
-        $this->assertTrue($blank->isIssued());
-        $this->assertSame('', $blank->customer_name);
-        $this->assertSame('UT-2026-0000001', $blank->number);
-        $this->assertSame('UT-2026-0000002', $next->number);
-        $this->assertSame(1, ActivityLog::where('action', 'contract_issued')->count());
-
-        $this->assertRefused('branch_not_allowed', fn () => $this->service->issueBlank($user, 'Lebap'));
-        $this->assertRefused('forbidden', fn () => $this->service->issueBlank($this->user(UserRoleEnum::ANALYST), 'Mary'));
-
-        [, $pdf] = $this->service->print($user, $blank);
-        $this->assertStringStartsWith('%PDF', $pdf);
-        $this->assertSame(1, $blank->fresh()->print_count);
-    }
-
-    public function test_a_blank_is_filled_in_to_become_a_draft_and_cannot_be_approved_before(): void
-    {
-        $user = $this->user(UserRoleEnum::ADMIN);
-        $blank = $this->service->issueBlank($user, 'Mary');
-
-        $this->assertRefused('not_draft', fn () => $this->service->approve($user, $blank));
-
-        $this->service->update($user, $blank, $this->data());
-
-        $fresh = $blank->fresh();
-        $this->assertTrue($fresh->isDraft());
-        $log = ActivityLog::where('action', 'contract_updated')->sole();
-        $this->assertSame('issued', $log->old_values['status']);
-        $this->assertSame('draft', $log->new_values['status']);
-
-        $this->service->approve($user, $fresh);
-        $this->assertTrue($blank->fresh()->isApproved());
-    }
-
-    public function test_an_unused_blank_is_cancelled_without_an_alert(): void
-    {
-        $user = $this->user(UserRoleEnum::ADMIN);
-        $blank = $this->service->issueBlank($user, 'Mary');
-
-        $this->service->cancel($user, $blank, 'Spoilt paper');
-
-        $this->assertTrue($blank->fresh()->isCancelled());
-        $this->assertSame(0, SecurityAlert::count());
+        $fresh = $contract->fresh();
+        $this->assertTrue($fresh->isCancelled());
+        $this->assertSame(2, $fresh->print_count);
     }
 
     public function test_contracts_never_change_credits_or_payments(): void
@@ -399,11 +369,8 @@ class ContractServiceTest extends TestCase
         $form = $this->service->prefill($credit);
         $contract = $this->service->create($admin, $this->data(['creditSourceId' => $form['credit_source_id'], 'history' => $form['history']]));
         $this->service->update($admin, $contract, $this->data(['creditSourceId' => $form['credit_source_id'], 'address' => 'x']));
-        $this->service->approve($admin, $contract);
         $this->service->print($admin, $contract->fresh());
         $this->service->cancel($admin, $contract->fresh(), 'x');
-        $blank = $this->service->issueBlank($admin, 'Mary');
-        $this->service->print($admin, $blank);
 
         $this->assertSame($before, $snapshot());
     }

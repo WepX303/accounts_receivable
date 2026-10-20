@@ -27,10 +27,15 @@ class ContractPdfService
 
     private const SIZE = 10;
 
-    // A blank's underscores sit at the bottom of its text line; the writing goes just above them.
-    private const LINE_HEIGHT = 3.9;
+    // The template is set in 10pt Times: a line's baseline lies 0.891em (3.14 mm) below
+    // its top. Writing on that baseline sits on the blank's underscores like typed text.
+    private const BASELINE = 3.14;
 
-    private const LIFT = 0.9;
+    // Room left before writing that starts at a blank's left edge, so it does not run into the word before it.
+    private const INDENT = 2.0;
+
+    // Baseline of the text in a goods table row, from the row's top.
+    private const ROW_BASELINE = 3.1;
 
     private const MONTHS = [
         1 => 'ýanwar', 'fewral', 'mart', 'aprel', 'maý', 'iýun',
@@ -53,8 +58,6 @@ class ContractPdfService
         'months' => [145.3, 110.6, 15.9],
         'monthly_amount' => [22.0, 114.7, 26.4],
         'installment_part' => [58.9, 122.8, 54.7],
-        // The buyer's column of the signature block.
-        'buyer_lines' => [123.6, [248.6, 252.6, 256.7, 260.7, 264.8, 268.8], 58.2],
     ];
 
     private const P2 = [
@@ -66,7 +69,6 @@ class ContractPdfService
         'goods_total_tenne' => [32.0, 109.8, 17.6],
         // Goods table: the top of each of its seven rows, and the column edges.
         'goods_rows' => [67.4, 71.7, 75.9, 80.5, 84.7, 88.9, 93.1],
-        'goods_row_height' => 4.2,
         'goods_columns' => [31.9, 43.8, 97.1, 119.7, 156.0, 194.8],
         // Free space below the stamp, for the earlier credits.
         'history_top' => 174.0,
@@ -94,14 +96,6 @@ class ContractPdfService
     public function templatePath(string $version = self::VERSION): string
     {
         return resource_path("contract-templates/{$version}/shertnama.pdf");
-    }
-
-    /**
-     * The template exactly as the bank approved it, for filling in by hand.
-     */
-    public function blank(string $version = self::VERSION): string
-    {
-        return (string) file_get_contents($this->templatePath($version));
     }
 
     /**
@@ -136,10 +130,7 @@ class ContractPdfService
 
         $this->templatePage($pdf, 2);
         $this->pageTwo($pdf, $c, $date);
-        // A blank form for filling in by hand has no list at all.
-        if (array_key_exists('history', $c)) {
-            $this->history($pdf, $c['history'] ?? [], $mark);
-        }
+        $this->history($pdf, $c['history'] ?? [], $mark);
         $this->mark($pdf, $mark);
 
         return $pdf->Output('', 'S');
@@ -173,7 +164,7 @@ class ContractPdfService
         $number = trim((string) ($c['passport_number'] ?? ''));
         $address = trim((string) ($c['address'] ?? ''));
         $head = $number !== '' && $address !== '' ? $number . ', ' . $address : $number . $address;
-        [$first, $rest] = $this->split($pdf, $head, $f['passport_number'][2]);
+        [$first, $rest] = $this->split($pdf, $head, $f['passport_number'][2] - self::INDENT);
         $this->put($pdf, $f['passport_number'], $first);
         $this->put($pdf, $f['address'], $rest);
 
@@ -183,24 +174,8 @@ class ContractPdfService
         $this->put($pdf, $f['monthly_amount'], $this->amount($c['monthly_amount'] ?? null), 'C');
         $this->put($pdf, $f['installment_part'], $c['installment_part'] ?? null, 'C');
 
-        // "Satyş hünärmeni" is left blank: the seller signs and writes it by hand.
-
-        // Buyer's column: name, passport, address over up to three lines, phone.
-        [$x, $ys, $w] = $f['buyer_lines'];
-        $passport = trim(($c['passport_series'] ?? '') . ' № ' . ($c['passport_number'] ?? ''), ' №');
-        [$addr1, $more] = $this->split($pdf, $address, $w, 9);
-        [$addr2, $addr3] = $this->split($pdf, $more, $w, 9);
-        $lines = [
-            $c['customer_name'] ?? null,
-            $passport !== '' ? 'pasport ' . $passport : null,
-            $addr1,
-            $addr2,
-            $addr3,
-            $c['phone'] ?? null,
-        ];
-        foreach ($lines as $i => $line) {
-            $this->put($pdf, [$x, $ys[$i], $w], $line, 'L', 9);
-        }
+        // The signature block is left blank, "Satyş hünärmeni" and the buyer's ("ALYJY")
+        // column alike: they are written in by hand when the contract is signed.
     }
 
     private function pageTwo(Fpdi $pdf, array $c, ?Carbon $date): void
@@ -218,8 +193,8 @@ class ContractPdfService
         $sum = 0.0;
 
         foreach (array_slice($goods, 0, count($f['goods_rows'])) as $i => $g) {
-            // Written in the middle of the row rather than on a line.
-            $y = $f['goods_rows'][$i] + ($f['goods_row_height'] - self::LINE_HEIGHT) / 2 + self::LIFT;
+            // put() takes a line's top; this puts the baseline at the row's.
+            $y = $f['goods_rows'][$i] + self::ROW_BASELINE - self::BASELINE;
             $total = $g['total'] ?? null;
             if (($total === null || $total === '') && is_numeric($g['price'] ?? null) && is_numeric($g['quantity'] ?? null)) {
                 $total = (float) $g['price'] * (float) $g['quantity'];
@@ -332,15 +307,21 @@ class ContractPdfService
 
         [$x, $y, $w] = $at;
 
+        if ($align === 'L') {
+            $x += self::INDENT;
+            $w -= self::INDENT;
+        }
+
         $pdf->SetFont(self::FONT, $style, $size);
         while ($size > 6 && $pdf->GetStringWidth($text) > $w) {
             $size -= 0.5;
             $pdf->SetFont(self::FONT, $style, $size);
         }
 
-        $pdf->SetXY($x, $y - self::LIFT);
+        // Placed by its baseline ('L'), the same as the template's own text on that line.
         // Stretch 1: squeezed horizontally only if it still does not fit.
-        $pdf->Cell($w, self::LINE_HEIGHT, $text, 0, 0, $align, false, '', 1);
+        $pdf->SetXY($x, $y + self::BASELINE);
+        $pdf->Cell($w, 0, $text, 0, 0, $align, false, '', 1, false, 'L', 'B');
     }
 
     /**

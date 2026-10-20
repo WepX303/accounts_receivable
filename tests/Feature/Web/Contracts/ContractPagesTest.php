@@ -59,14 +59,13 @@ class ContractPagesTest extends TestCase
     {
         foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN, UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR] as $role) {
             $this->signIn($role);
-            $this->get('/contracts')->assertOk()->assertSee(__('pages/contracts.title'));
+            $this->get('/contracts')->assertOk()->assertSee(__('pages/contracts.title'))->assertSee(__('pages/contracts.clear'));
             $this->get('/')->assertSee(route('contracts.index'));
         }
 
         foreach ([UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
             $this->signIn($role);
             $this->get('/contracts')->assertForbidden();
-            $this->post('/contracts/blank', ['branch' => 'Mary'])->assertForbidden();
         }
     }
 
@@ -77,10 +76,18 @@ class ContractPagesTest extends TestCase
             'branch' => 'Mary', 'name' => 'Aman Amanow', 'passport' => 'I-AŞ 350924', 'assurance' => 'Aşgabat, jaý 5',
         ]);
 
-        $this->get('/contracts/create?q=Aman')->assertOk()->assertSee('Aman Amanow');
+        $this->get('/contracts/create?q=Aman')
+            ->assertOk()
+            ->assertViewIs('pages.contracts.create')
+            ->assertSee('Aman Amanow')
+            ->assertDontSee('name="customer_name"', false);
 
+        // The chosen customer's contract opens on a page of its own, laid out as the paper.
         $this->get("/contracts/create?q=Aman&credit={$credit->source_id}")
             ->assertOk()
+            ->assertViewIs('pages.contracts.compose')
+            ->assertSee('ŞERTNAMASY №')
+            ->assertSee('value="Aman Amanow"', false)
             ->assertSee('value="I-AŞ"', false)
             ->assertSee('value="350924"', false)
             ->assertSee('Aşgabat, jaý 5')
@@ -164,38 +171,42 @@ class ContractPagesTest extends TestCase
             ->assertSessionHas('info', __('pages/contracts.nothing_changed'));
     }
 
-    public function test_an_operator_approves_and_the_contract_locks(): void
+    public function test_a_cashier_prints_the_contract_and_it_locks(): void
     {
-        $cashier = $this->signIn(UserRoleEnum::CASHIER);
-        $contract = $this->draft($cashier);
+        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
 
-        $this->post(route('contracts.approve', $contract))->assertForbidden();
+        $this->get(route('contracts.show', $contract))
+            ->assertOk()
+            ->assertSee(__('pages/contracts.statuses.draft'))
+            // Printing asks first, since it locks the contract.
+            ->assertSee('onclick="if (! confirm(', false)
+            ->assertSee('name="_method" value="PUT"', false);
 
-        $this->signIn(UserRoleEnum::OPERATOR);
-        $this->get(route('contracts.show', $contract))->assertSee(__('pages/contracts.approve'));
-        $this->post(route('contracts.approve', $contract))->assertSessionHas('success');
+        $this->get(route('contracts.print', $contract))->assertOk()->assertHeader('Content-Type', 'application/pdf');
 
-        $this->assertTrue($contract->fresh()->isApproved());
+        $this->assertTrue($contract->fresh()->isPrinted());
 
         $this->get(route('contracts.show', $contract))
             ->assertOk()
             ->assertSee(__('pages/contracts.locked'))
+            ->assertSee('ŞERTNAMASY №')
+            ->assertSee('Aman Amanow')
+            ->assertDontSee('name="customer_name"', false)
             ->assertDontSee('name="_method" value="PUT"', false)
-            ->assertDontSee(__('pages/contracts.approve_confirm'));
+            ->assertDontSee('onclick="if (! confirm(', false);
 
         $this->put(route('contracts.update', $contract), $this->form(['address' => 'x']))
-            ->assertSessionHas('warning', __('validations/validations.contracts.not_draft'));
+            ->assertSessionHas('warning', __('validations/validations.contracts.locked'));
         $this->assertSame('Aşgabat', $contract->fresh()->address);
     }
 
-    public function test_an_admin_cancels_with_a_reason(): void
+    public function test_an_operator_cancels_with_a_reason(): void
     {
         $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
-
-        $this->signIn(UserRoleEnum::OPERATOR);
+        $this->get(route('contracts.show', $contract))->assertDontSee('cancelModal');
         $this->post(route('contracts.cancel', $contract), ['cancel_reason' => 'x'])->assertForbidden();
 
-        $this->signIn(UserRoleEnum::ADMIN);
+        $this->signIn(UserRoleEnum::OPERATOR);
         $this->post(route('contracts.cancel', $contract), ['cancel_reason' => ''])
             ->assertSessionHas('warning', __('validations/validations.contracts.cancel_reason_required'));
 
@@ -215,38 +226,6 @@ class ContractPagesTest extends TestCase
         $this->assertStringStartsWith('%PDF', $response->getContent());
         $this->assertStringContainsString($contract->number . '.pdf', $response->headers->get('Content-Disposition'));
         $this->assertSame(1, $contract->fresh()->print_count);
-    }
-
-    public function test_a_blank_form_takes_the_next_number_and_can_be_filled_in_later(): void
-    {
-        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
-        $this->draft(UserFactory::new()->make(), []);
-
-        $blank = $this->post(route('contracts.blank'), ['branch' => 'Mary']);
-
-        $blank->assertOk()->assertHeader('Content-Type', 'application/pdf');
-        $issued = CustomerContract::latest('id')->firstOrFail();
-        $this->assertTrue($issued->isIssued());
-        $this->assertSame('UT-' . now()->year . '-0000002', $issued->number);
-        $this->assertStringContainsString($issued->number . '.pdf', $blank->headers->get('Content-Disposition'));
-        $this->assertSame(1, $issued->print_count);
-
-        $this->post(route('contracts.blank'), ['branch' => 'Lebap'])
-            ->assertSessionHas('warning', __('validations/validations.contracts.branch_not_allowed'));
-        $this->assertSame(2, CustomerContract::count());
-
-        $this->get('/contracts?status=issued')->assertOk()->assertSee($issued->number);
-        $this->get(route('contracts.show', $issued))
-            ->assertOk()
-            ->assertSee(__('pages/contracts.issued_hint'))
-            ->assertSee('name="_method" value="PUT"', false);
-
-        // The details from the paper are entered later; it becomes a draft to approve.
-        $this->put(route('contracts.update', $issued), $this->form(['customer_name' => 'From Paper']))->assertSessionHas('success');
-        $fresh = $issued->fresh();
-        $this->assertTrue($fresh->isDraft());
-        $this->assertSame('From Paper', $fresh->customer_name);
-        $this->assertSame($issued->number, $fresh->number);
     }
 
     public function test_a_contract_of_another_branch_cannot_be_opened(): void

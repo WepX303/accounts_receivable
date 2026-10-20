@@ -26,9 +26,9 @@ class CustomerContractModelTest extends TestCase
         ]);
     }
 
-    private function approve(CustomerContract $contract): CustomerContract
+    private function printed(CustomerContract $contract): CustomerContract
     {
-        $contract->forceFill(['status' => CustomerContract::APPROVED, 'approved_at' => now()])->save();
+        $contract->forceFill(['status' => CustomerContract::PRINTED, 'printed_at' => now()])->save();
 
         return $contract;
     }
@@ -42,27 +42,27 @@ class CustomerContractModelTest extends TestCase
         $this->assertSame('Changed', $contract->fresh()->customer_name);
     }
 
-    public function test_an_approved_contract_cannot_be_changed(): void
+    public function test_a_printed_contract_cannot_be_changed(): void
     {
-        $contract = $this->approve($this->contract());
+        $contract = $this->printed($this->contract());
 
         $this->expectException(LogicException::class);
 
         $contract->update(['customer_name' => 'Changed']);
     }
 
-    public function test_an_approved_contract_cannot_go_back_to_draft(): void
+    public function test_a_printed_contract_cannot_go_back_to_draft(): void
     {
-        $contract = $this->approve($this->contract());
+        $contract = $this->printed($this->contract());
 
         $this->expectException(LogicException::class);
 
         $contract->forceFill(['status' => CustomerContract::DRAFT])->save();
     }
 
-    public function test_an_approved_contract_can_be_cancelled_and_printed(): void
+    public function test_a_printed_contract_can_be_cancelled_and_printed_again(): void
     {
-        $contract = $this->approve($this->contract());
+        $contract = $this->printed($this->contract());
 
         $contract->forceFill(['print_count' => 1, 'last_printed_at' => now()])->save();
         $contract->forceFill([
@@ -80,10 +80,10 @@ class CustomerContractModelTest extends TestCase
 
     public function test_a_cancelled_contract_cannot_be_changed_or_reopened(): void
     {
-        $contract = $this->approve($this->contract());
+        $contract = $this->printed($this->contract());
         $contract->forceFill(['status' => CustomerContract::CANCELLED, 'cancelled_at' => now(), 'cancel_reason' => 'x'])->save();
 
-        foreach ([['customer_name' => 'Changed'], ['status' => CustomerContract::APPROVED], ['cancel_reason' => 'y']] as $change) {
+        foreach ([['customer_name' => 'Changed'], ['status' => CustomerContract::PRINTED], ['cancel_reason' => 'y']] as $change) {
             try {
                 $contract->fresh()->forceFill($change)->save();
                 $this->fail('Change was accepted: ' . json_encode($change));

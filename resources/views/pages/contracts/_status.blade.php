@@ -1,8 +1,7 @@
 @php
     $badge = [
-        'issued' => 'bg-info-subtle text-info',
         'draft' => 'bg-warning-subtle text-warning',
-        'approved' => 'bg-success-subtle text-success',
+        'printed' => 'bg-success-subtle text-success',
         'cancelled' => 'bg-danger-subtle text-danger',
     ][$status] ?? 'bg-light text-muted';
 @endphp

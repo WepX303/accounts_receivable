@@ -32,18 +32,13 @@
                             <a href="{{ route('contracts.index') }}" class="btn btn-soft-secondary">
                                 <i class="ri-arrow-left-line align-bottom me-1"></i> {{ __('pages/contracts.back') }}
                             </a>
-                            <a href="{{ route('contracts.print', $contract) }}" target="_blank" class="btn btn-primary">
+                            {{-- The first print locks a contract: ask, then show it locked. --}}
+                            <a href="{{ route('contracts.print', $contract) }}" target="_blank" class="btn btn-primary"
+                                @if ($contract->isDraft())
+                                    onclick="if (! confirm(@js(__('pages/contracts.print_confirm')))) return false; setTimeout(function () { window.location.reload(); }, 1500);"
+                                @endif>
                                 <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.print') }}
                             </a>
-                            @if ($canApprove)
-                                <form method="POST" action="{{ route('contracts.approve', $contract) }}"
-                                    onsubmit="return confirm(@js(__('pages/contracts.approve_confirm')));">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="ri-check-double-line align-bottom me-1"></i> {{ __('pages/contracts.approve') }}
-                                    </button>
-                                </form>
-                            @endif
                             @if ($canCancel)
                                 <button type="button" class="btn btn-soft-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                     <i class="ri-close-circle-line align-bottom me-1"></i> {{ __('pages/contracts.cancel') }}
@@ -65,9 +60,9 @@
                             <div class="text-muted small">{{ $contract->created_at?->format('d.m.Y H:i') }}</div>
                         </div>
                         <div class="col-md-3">
-                            <div class="text-muted small">{{ __('pages/contracts.fields.approved_by') }}</div>
-                            <div class="fw-medium">{{ $contract->approved_by_name ?? '-' }}</div>
-                            <div class="text-muted small">{{ $contract->approved_at?->format('d.m.Y H:i') }}</div>
+                            <div class="text-muted small">{{ __('pages/contracts.fields.printed_by') }}</div>
+                            <div class="fw-medium">{{ $contract->printed_by_name ?? '-' }}</div>
+                            <div class="text-muted small">{{ $contract->printed_at?->format('d.m.Y H:i') }}</div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-muted small">{{ __('pages/contracts.fields.print_count') }}</div>
@@ -88,12 +83,9 @@
             </div>
 
             {{-- A draft is changed here; anything else is shown as it was signed --}}
-            @if ($contract->isIssued())
-                <div class="alert alert-info">{{ __('pages/contracts.issued_hint') }}</div>
-            @endif
-
             @if ($canEdit)
-                @include('pages.contracts._form', [
+                @include('pages.contracts._document', [
+                    'number' => $contract->number,
                     'form' => $contract->only([
                         'credit_source_id', 'branch', 'contract_date', 'customer_name', 'passport_series', 'passport_number',
                         'address', 'phone', 'months', 'monthly_amount', 'installment_part', 'goods', 'history',
@@ -103,78 +95,17 @@
                     'submitLabel' => __('pages/contracts.save_changes'),
                 ])
             @else
-                @if (! $contract->isOpen())
+                @if (! $contract->isDraft())
                     <div class="alert alert-secondary">{{ __('pages/contracts.locked') }}</div>
                 @endif
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">{{ __('pages/contracts.details') }}</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            @foreach (['customer_name', 'passport_series', 'passport_number', 'phone', 'address', 'months', 'monthly_amount', 'installment_part'] as $key)
-                                <div class="col-md-{{ $key === 'address' ? 12 : 3 }}">
-                                    <div class="text-muted small">{{ __('pages/contracts.fields.' . $key) }}</div>
-                                    <div class="fw-medium">{{ $contract->{$key} ?? '-' }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                        @if (! empty($contract->goods))
-                            <h6 class="mt-4">{{ __('pages/contracts.section_goods') }}</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>{{ __('pages/contracts.fields.goods_name') }}</th>
-                                            <th>{{ __('pages/contracts.fields.quantity') }}</th>
-                                            <th>{{ __('pages/contracts.fields.price') }}</th>
-                                            <th>{{ __('pages/contracts.fields.total') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($contract->goods as $i => $g)
-                                            <tr>
-                                                <td>{{ $i + 1 }}</td>
-                                                <td>{{ $g['name'] ?? '' }}</td>
-                                                <td>{{ $g['quantity'] ?? '' }}</td>
-                                                <td>{{ $g['price'] ?? '' }}</td>
-                                                <td>{{ $g['total'] ?? '' }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-
-                        <h6 class="mt-4">{{ __('pages/contracts.section_history') }}</h6>
-                        @if (empty($contract->history))
-                            <div class="text-muted">{{ __('pages/contracts.no_changes') }}</div>
-                        @else
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            @foreach (['contract', 'date', 'amount', 'paid', 'remaining', 'status', 'closed_at', 'duration', 'overdue'] as $k)
-                                                <th>{{ __('pages/contracts.history.' . $k) }}</th>
-                                            @endforeach
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($contract->history as $row)
-                                            <tr>
-                                                @foreach (['contract', 'date', 'amount', 'paid', 'remaining', 'status', 'closed_at', 'duration', 'overdue'] as $k)
-                                                    <td>{{ $row[$k] ?? '' }}</td>
-                                                @endforeach
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                @include('pages.contracts._document', [
+                    'editable' => false,
+                    'number' => $contract->number,
+                    'form' => $contract->only([
+                        'branch', 'contract_date', 'customer_name', 'passport_series', 'passport_number',
+                        'address', 'phone', 'months', 'monthly_amount', 'installment_part', 'goods', 'history',
+                    ]),
+                ])
             @endif
 
             {{-- Who did what --}}

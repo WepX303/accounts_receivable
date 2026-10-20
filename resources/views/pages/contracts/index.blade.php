@@ -10,9 +10,6 @@
                             <h5 class="card-title mb-0">{{ __('pages/contracts.title') }}</h5>
                         </div>
                         <div class="col-sm-auto d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-soft-secondary" data-bs-toggle="modal" data-bs-target="#blankModal">
-                                <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.blank') }}
-                            </button>
                             <a href="{{ route('contracts.create') }}" class="btn btn-success">
                                 <i class="ri-add-line align-bottom me-1"></i> {{ __('pages/contracts.create') }}
                             </a>
@@ -32,15 +29,20 @@
                         <div class="col-md-3">
                             <select name="status" class="form-select">
                                 <option value="">{{ __('pages/contracts.all_statuses') }}</option>
-                                @foreach (['issued', 'draft', 'approved', 'cancelled'] as $s)
+                                @foreach (['draft', 'printed', 'cancelled'] as $s)
                                     <option value="{{ $s }}" @selected($status === $s)>{{ __('pages/contracts.statuses.' . $s) }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="ri-equalizer-fill align-bottom me-1"></i> {{ __('pages/contracts.filter') }}
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary w-100 text-nowrap">
+                                    <i class="ri-equalizer-fill align-bottom me-1"></i> {{ __('pages/contracts.filter') }}
+                                </button>
+                                <a href="{{ route('contracts.index') }}" class="btn btn-light border w-100 text-nowrap">
+                                    {{ __('pages/contracts.clear') }}
+                                </a>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -94,6 +96,4 @@
             </div>
         </div>
     </div>
-
-    @include('pages.contracts._blank')
 @endsection

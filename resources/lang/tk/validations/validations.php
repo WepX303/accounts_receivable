@@ -204,7 +204,7 @@ return [
 
     'contracts' => [
         'forbidden' => 'Bu amal üçin rugsadyňyz ýok.',
-        'not_draft' => 'Diňe garalama ýagdaýyndaky şertnama üýtgedilip ýa-da tassyklanyp bilner.',
+        'locked' => 'Çap edilen şertnamany üýtgedip bolmaýar.',
         'cancel_reason_required' => 'Ýatyrma sebäbi hökmanydyr.',
         'already_cancelled' => 'Bu şertnama öňünden ýatyrylan.',
         'customer_name_required' => 'Alyjynyň ady hökmanydyr.',

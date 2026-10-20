@@ -24,8 +24,7 @@ class Access
         'logs' => [Role::SUPER_ADMIN],
         'commands' => [Role::SUPER_ADMIN],
         'contracts.create' => [Role::SUPER_ADMIN, Role::ADMIN, Role::CASHIER, Role::OPERATOR],
-        'contracts.approve' => [Role::SUPER_ADMIN, Role::ADMIN, Role::OPERATOR],
-        'contracts.cancel' => [Role::SUPER_ADMIN, Role::ADMIN],
+        'contracts.cancel' => [Role::SUPER_ADMIN, Role::ADMIN, Role::OPERATOR],
     ];
 
     /**

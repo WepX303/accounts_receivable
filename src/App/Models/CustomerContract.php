@@ -9,26 +9,22 @@ use LogicException;
 /**
  * A şertnama made in the panel.
  *
- * Only a draft, or a blank printed with its number for filling in by hand,
- * can be changed. Once approved, what was signed stays as it was:
- * the row may still be cancelled and its prints counted, nothing else. A
- * contract is never deleted.
+ * A contract can be changed until it is first printed; what went on paper then
+ * stays as it was: the row may still be cancelled and its prints counted,
+ * nothing else. A contract is never deleted.
  */
 class CustomerContract extends Model
 {
     public const DRAFT = 'draft';
 
-    // A blank form printed with its number only, to be filled in by hand.
-    public const ISSUED = 'issued';
-
-    public const APPROVED = 'approved';
+    public const PRINTED = 'printed';
 
     public const CANCELLED = 'cancelled';
 
     /**
-     * What may still change on an approved contract.
+     * What may still change on a printed contract.
      */
-    private const AFTER_APPROVAL = [
+    private const AFTER_PRINT = [
         'status',
         'cancelled_by',
         'cancelled_by_name',
@@ -82,7 +78,7 @@ class CustomerContract extends Model
         'monthly_amount' => 'decimal:2',
         'goods' => 'array',
         'history' => 'array',
-        'approved_at' => 'datetime',
+        'printed_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'last_printed_at' => 'datetime',
         'print_count' => 'integer',
@@ -96,8 +92,8 @@ class CustomerContract extends Model
             $was = $contract->getOriginal('status');
 
             $allowed = match ($was) {
-                self::DRAFT, self::ISSUED => null,
-                self::APPROVED => self::AFTER_APPROVAL,
+                self::DRAFT => null,
+                self::PRINTED => self::AFTER_PRINT,
                 default => self::AFTER_CANCEL,
             };
 
@@ -105,8 +101,8 @@ class CustomerContract extends Model
                 throw new LogicException("Contract {$contract->number} is {$was} and cannot be changed.");
             }
 
-            // An approved contract can only move on to cancelled; nothing goes back to a draft.
-            if (! in_array($was, [self::DRAFT, self::ISSUED], true) && $contract->isDirty('status') && ! ($was === self::APPROVED && $contract->status === self::CANCELLED)) {
+            // A printed contract can only move on to cancelled; nothing goes back to a draft.
+            if ($was !== self::DRAFT && $contract->isDirty('status') && ! ($was === self::PRINTED && $contract->status === self::CANCELLED)) {
                 throw new LogicException("Contract {$contract->number} cannot go from {$was} to {$contract->status}.");
             }
         });
@@ -121,22 +117,9 @@ class CustomerContract extends Model
         return $this->status === self::DRAFT;
     }
 
-    public function isIssued(): bool
+    public function isPrinted(): bool
     {
-        return $this->status === self::ISSUED;
-    }
-
-    /**
-     * Whether its details may still be changed.
-     */
-    public function isOpen(): bool
-    {
-        return $this->isDraft() || $this->isIssued();
-    }
-
-    public function isApproved(): bool
-    {
-        return $this->status === self::APPROVED;
+        return $this->status === self::PRINTED;
     }
 
     public function isCancelled(): bool
@@ -149,9 +132,9 @@ class CustomerContract extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function approver()
+    public function printer()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'printed_by');
     }
 
     public function canceller()

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->bigIncrements('id');
 
             $table->string('number', 30)->unique(); // UT-2026-0000001
-            $table->string('status', 20)->default('draft'); // draft, approved, cancelled
+            $table->string('status', 20)->default('draft'); // issued (blank), draft, printed, cancelled
             $table->string('template_version', 10);
             $table->string('branch', 50);
 
@@ -45,9 +45,10 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by')->nullable();
             $table->string('created_by_name', 255)->nullable();
 
-            $table->unsignedBigInteger('approved_by')->nullable();
-            $table->string('approved_by_name', 255)->nullable();
-            $table->timestamp('approved_at')->nullable();
+            // The first print, which locks the contract
+            $table->unsignedBigInteger('printed_by')->nullable();
+            $table->string('printed_by_name', 255)->nullable();
+            $table->timestamp('printed_at')->nullable();
 
             $table->unsignedBigInteger('cancelled_by')->nullable();
             $table->string('cancelled_by_name', 255)->nullable();
@@ -67,7 +68,7 @@ return new class extends Migration
             $table->index('created_by');
 
             $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
-            $table->foreign('approved_by')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('printed_by')->references('id')->on('users')->nullOnDelete();
             $table->foreign('cancelled_by')->references('id')->on('users')->nullOnDelete();
         });
     }

@@ -15,30 +15,24 @@
                             <a href="{{ route('contracts.index') }}" class="btn btn-soft-secondary">
                                 <i class="ri-arrow-left-line align-bottom me-1"></i> {{ __('pages/contracts.back') }}
                             </a>
-                            <button type="button" class="btn btn-soft-secondary" data-bs-toggle="modal" data-bs-target="#blankModal">
-                                <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.blank') }}
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <form method="GET" action="{{ route('contracts.create') }}" class="row g-2">
-                        <div class="col-md-8">
-                            <div class="search-box">
-                                <input type="text" name="q" class="form-control" maxlength="100" autofocus
-                                    placeholder="{{ __('pages/contracts.search_customer') }}" value="{{ $q }}">
-                                <i class="ri-search-line search-icon"></i>
-                            </div>
+                    {{-- The buttons take the room their labels need; on a narrow screen they move below. --}}
+                    <form method="GET" action="{{ route('contracts.create') }}" class="d-flex flex-wrap gap-2">
+                        <div class="search-box flex-grow-1" style="min-width: 260px;">
+                            <input type="text" name="q" class="form-control" maxlength="100" autofocus
+                                placeholder="{{ __('pages/contracts.search_customer') }}" value="{{ $q }}">
+                            <i class="ri-search-line search-icon"></i>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">{{ __('pages/contracts.search') }}</button>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('contracts.create', ['manual' => 1]) }}" class="btn btn-soft-warning w-100">
-                                {{ __('pages/contracts.manual') }}
-                            </a>
-                        </div>
+                        <button type="submit" class="btn btn-primary text-nowrap">
+                            <i class="ri-search-line align-bottom me-1"></i> {{ __('pages/contracts.search') }}
+                        </button>
+                        <a href="{{ route('contracts.create', ['manual' => 1]) }}" class="btn btn-soft-warning text-nowrap">
+                            <i class="ri-edit-line align-bottom me-1"></i> {{ __('pages/contracts.manual') }}
+                        </a>
                     </form>
 
                     @if ($credits !== null)
@@ -55,7 +49,7 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($credits as $c)
-                                        <tr @class(['table-active' => $credit && (int) $credit->source_id === (int) $c->source_id])>
+                                        <tr>
                                             <td>
                                                 <div class="fw-medium">{{ $c->name }}</div>
                                                 <div class="text-muted small">{{ $c->passport ?? '-' }}</div>
@@ -67,7 +61,7 @@
                                                 <div class="text-muted small">{{ $c->date_?->format('d.m.Y') ?? '-' }}</div>
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('contracts.create', ['q' => $q, 'credit' => $c->source_id, 'page' => request('page')]) }}"
+                                                <a href="{{ route('contracts.create', ['q' => $q, 'credit' => $c->source_id]) }}"
                                                     class="btn btn-sm btn-primary">{{ __('pages/contracts.select') }}</a>
                                             </td>
                                         </tr>
@@ -86,25 +80,6 @@
                 </div>
             </div>
 
-            {{-- The form --}}
-            @if ($form !== null)
-                @if ($credit)
-                    <div class="alert alert-info">
-                        {{ __('pages/contracts.filled_from') }}: <strong>{{ $credit->contract }}</strong>
-                        — {{ $credit->name }} ({{ $credit->branch }})
-                    </div>
-                @else
-                    <div class="alert alert-warning">{{ __('pages/contracts.manual_hint') }}</div>
-                @endif
-
-                @include('pages.contracts._form', [
-                    'action' => route('contracts.store'),
-                    'method' => 'POST',
-                    'submitLabel' => __('pages/contracts.save_draft'),
-                ])
-            @endif
         </div>
     </div>
-
-    @include('pages.contracts._blank')
 @endsection

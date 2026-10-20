@@ -29,7 +29,7 @@ class ContractController extends Controller
     {
         $request->validate([
             'q' => 'nullable|string|max:100',
-            'status' => 'nullable|in:issued,draft,approved,cancelled',
+            'status' => 'nullable|in:draft,printed,cancelled',
         ]);
 
         $q = trim((string) $request->get('q', ''));
@@ -54,7 +54,6 @@ class ContractController extends Controller
             'contracts' => $contracts,
             'q' => $q,
             'status' => $status,
-            'branches' => $this->branches(),
         ]);
     }
 
@@ -87,14 +86,18 @@ class ContractController extends Controller
 
         if ($form !== null) {
             $form += ['contract_date' => now()->toDateString(), 'goods' => []];
+
+            return view('pages.contracts.compose', [
+                'q' => $q,
+                'credit' => $credit,
+                'form' => $form,
+                'branches' => $this->branches(),
+            ]);
         }
 
         return view('pages.contracts.create', [
             'q' => $q,
             'credits' => $credits,
-            'credit' => $credit,
-            'form' => $form,
-            'branches' => $this->branches(),
         ]);
     }
 
@@ -127,8 +130,7 @@ class ContractController extends Controller
             'contract' => $contract,
             'changes' => $changes,
             'branches' => $this->branches(),
-            'canEdit' => $contract->isOpen() && Access::allows($user, 'contracts.create'),
-            'canApprove' => $contract->isDraft() && Access::allows($user, 'contracts.approve'),
+            'canEdit' => $contract->isDraft() && Access::allows($user, 'contracts.create'),
             'canCancel' => ! $contract->isCancelled() && Access::allows($user, 'contracts.cancel'),
         ]);
     }
@@ -149,17 +151,6 @@ class ContractController extends Controller
             ->with($changed ? 'success' : 'info', __($changed ? 'pages/contracts.updated' : 'pages/contracts.nothing_changed'));
     }
 
-    public function approve(CustomerContract $contract)
-    {
-        try {
-            $this->contracts->approve(Auth::user(), $contract);
-        } catch (ContractException $e) {
-            return back()->with('warning', $e->getMessage());
-        }
-
-        return back()->with('success', __('pages/contracts.approved'));
-    }
-
     public function cancel(Request $request, CustomerContract $contract)
     {
         $request->validate(['cancel_reason' => 'nullable|string|max:1000']);
@@ -176,24 +167,6 @@ class ContractController extends Controller
     public function print(CustomerContract $contract)
     {
         [$name, $pdf] = $this->contracts->print(Auth::user(), $contract);
-
-        return $this->pdf($pdf, $name);
-    }
-
-    /**
-     * A blank form with the next number on it, opened straight away to print.
-     */
-    public function blank(Request $request)
-    {
-        $request->validate(['branch' => 'required|string|max:50'], $this->messages(), $this->attributes());
-
-        try {
-            $user = Auth::user();
-            $contract = $this->contracts->issueBlank($user, (string) $request->input('branch'));
-            [$name, $pdf] = $this->contracts->print($user, $contract);
-        } catch (ContractException $e) {
-            return back()->with('warning', $e->getMessage());
-        }
 
         return $this->pdf($pdf, $name);
     }

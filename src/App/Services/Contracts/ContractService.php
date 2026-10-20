@@ -13,7 +13,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Makes, changes, approves, cancels and prints şertnamas.
+ * Makes, changes, cancels and prints şertnamas. A contract can be changed
+ * until it is first printed; printing locks it.
  *
  * Contracts stand apart from the money: credits and payments are only read
  * here, to fill the form in, and are never written to.
@@ -21,8 +22,6 @@ use Illuminate\Support\Facades\DB;
 class ContractService
 {
     public const PREFIX = 'UT';
-
-    private const MARK_DRAFT = 'GARALAMA';
 
     private const MARK_CANCELLED = 'ÝATYRYLDY';
 
@@ -172,52 +171,8 @@ class ContractService
     }
 
     /**
-     * Gives out the next number on a blank form, to be filled in by hand.
-     * The number is kept on record like any contract, so it is never given twice.
-     *
-     * @throws ContractException
-     */
-    public function issueBlank(User $user, string $branch): CustomerContract
-    {
-        $this->authorize($user, 'contracts.create');
-
-        $branch = trim($branch);
-        if ($branch === '' || ! $user->canAccessBranch($branch)) {
-            throw new ContractException('branch_not_allowed', __('validations/validations.contracts.branch_not_allowed'));
-        }
-
-        $contract = DB::transaction(function () use ($user, $branch) {
-            $contract = new CustomerContract([
-                'number' => $this->nextNumber((int) now()->year),
-                'status' => CustomerContract::ISSUED,
-                'template_version' => ContractPdfService::VERSION,
-                'branch' => $branch,
-                'contract_date' => now()->toDateString(),
-                // Written on the paper by hand; entered here later, if at all.
-                'customer_name' => '',
-                'created_by' => $user->id,
-                'created_by_name' => mb_substr((string) $user->full_name, 0, 255),
-            ]);
-            $contract->save();
-
-            return $contract;
-        });
-
-        $this->audit->log(
-            action: 'contract_issued',
-            category: 'contract',
-            subject: $contract,
-            newValues: ['branch' => $branch],
-            extra: ['number' => $contract->number],
-            message: 'Blank contract issued',
-        );
-
-        return $contract;
-    }
-
-    /**
-     * Changes a draft, or fills in a blank (which makes it a draft). Every
-     * change is logged with what it replaced.
+     * Changes a contract that has not been printed yet. Every change is logged
+     * with what it replaced.
      *
      * @throws ContractException
      */
@@ -229,11 +184,11 @@ class ContractService
         [$contract, $old, $new] = DB::transaction(function () use ($contract, $data) {
             $c = $this->lock($contract);
 
-            if (! $c->isOpen()) {
-                throw new ContractException('not_draft', __('validations/validations.contracts.not_draft'));
+            if (! $c->isDraft()) {
+                throw new ContractException('locked', __('validations/validations.contracts.locked'));
             }
 
-            $c->fill($data->attributes() + ['status' => CustomerContract::DRAFT]);
+            $c->fill($data->attributes());
             $dirty = $c->getDirty();
 
             if ($dirty === []) {
@@ -254,46 +209,9 @@ class ContractService
                 oldValues: $this->plain($old),
                 newValues: $this->plain($new),
                 extra: ['number' => $contract->number],
-                message: 'Contract draft changed',
+                message: 'Contract changed',
             );
         }
-
-        return $contract;
-    }
-
-    /**
-     * @throws ContractException
-     */
-    public function approve(User $user, CustomerContract $contract): CustomerContract
-    {
-        $this->authorize($user, 'contracts.approve');
-
-        $contract = DB::transaction(function () use ($user, $contract) {
-            $c = $this->lock($contract);
-
-            if (! $c->isDraft()) {
-                throw new ContractException('not_draft', __('validations/validations.contracts.not_draft'));
-            }
-
-            $c->forceFill([
-                'status' => CustomerContract::APPROVED,
-                'approved_by' => $user->id,
-                'approved_by_name' => mb_substr((string) $user->full_name, 0, 255),
-                'approved_at' => now(),
-            ])->save();
-
-            return $c;
-        });
-
-        $this->audit->log(
-            action: 'contract_approved',
-            category: 'contract',
-            subject: $contract,
-            oldValues: ['status' => CustomerContract::DRAFT],
-            newValues: ['status' => CustomerContract::APPROVED],
-            extra: ['number' => $contract->number],
-            message: 'Contract approved',
-        );
 
         return $contract;
     }
@@ -341,14 +259,15 @@ class ContractService
             extra: ['number' => $contract->number, 'reason' => $reason],
             message: 'Contract cancelled',
             severity: 'warning',
-            isSuspicious: $was === CustomerContract::APPROVED,
+            isSuspicious: $was === CustomerContract::PRINTED,
         );
 
-        if ($was === CustomerContract::APPROVED) {
+        // It had gone out on paper.
+        if ($was === CustomerContract::PRINTED) {
             $this->audit->alert(
                 alertType: 'contract_cancelled',
                 riskLevel: 'medium',
-                message: 'An approved contract was cancelled',
+                message: 'A printed contract was cancelled',
                 meta: ['number' => $contract->number, 'reason' => $reason],
             );
         }
@@ -357,36 +276,39 @@ class ContractService
     }
 
     /**
-     * The PDF of a contract. Every print is counted and logged; a draft or a
-     * cancelled contract says so across its pages, and a blank carries its
-     * number only.
+     * The PDF of a contract. The first print locks it; every print is counted
+     * and logged. A cancelled contract says so across its pages.
      *
      * @return array{0: string, 1: string} file name, PDF
      */
     public function print(User $user, CustomerContract $contract): array
     {
-        $mark = match (true) {
-            $contract->isDraft() => self::MARK_DRAFT,
-            $contract->isCancelled() => self::MARK_CANCELLED,
-            default => null,
-        };
-
-        $printable = $contract->isIssued() ? ['number' => $contract->number] : $this->printable($contract);
-        $pdf = $this->pdf->render($printable, $mark);
-
-        DB::transaction(function () use ($contract) {
+        [$pdf, $locked] = DB::transaction(function () use ($user, $contract) {
             $c = $this->lock($contract);
+            $locked = $c->isDraft();
+
             $c->forceFill([
                 'print_count' => $c->print_count + 1,
                 'last_printed_at' => now(),
+                ...($locked ? ['status' => CustomerContract::PRINTED] : []),
+                ...($c->printed_at === null ? [
+                    'printed_by' => $user->id,
+                    'printed_by_name' => mb_substr((string) $user->full_name, 0, 255),
+                    'printed_at' => now(),
+                ] : []),
             ])->save();
             $contract->setRawAttributes($c->getAttributes(), true);
+
+            // Made in here, so a PDF that fails leaves the contract as it was.
+            return [$this->pdf->render($this->printable($c), $c->isCancelled() ? self::MARK_CANCELLED : null), $locked];
         });
 
         $this->audit->log(
             action: 'contract_printed',
             category: 'contract',
             subject: $contract,
+            oldValues: $locked ? ['status' => CustomerContract::DRAFT] : null,
+            newValues: $locked ? ['status' => CustomerContract::PRINTED] : null,
             extra: ['number' => $contract->number, 'status' => $contract->status, 'print_count' => $contract->print_count],
             message: 'Contract printed',
         );

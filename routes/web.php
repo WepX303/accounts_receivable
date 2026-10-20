@@ -116,22 +116,18 @@ Route::middleware(['auth.token'])->group(function () {
 
     /**
      * CONTRACTS (şertnama)
-     * Made by SuperAdmin + Admin + Cashier + Operator; approved by SuperAdmin + Admin + Operator;
-     * cancelled by SuperAdmin + Admin. Same roles as App\Support\Access.
+     * Made and printed by SuperAdmin + Admin + Cashier + Operator; cancelled by
+     * SuperAdmin + Admin + Operator. Same roles as App\Support\Access.
      */
     Route::middleware(['role:SuperAdmin,Admin,Cashier,Operator'])->prefix('contracts')->name('contracts.')->group(function () {
         Route::get('/', [ContractController::class, 'index'])->name('index');
         Route::get('/create', [ContractController::class, 'create'])->name('create');
         Route::post('/', [ContractController::class, 'store'])->name('store');
-        Route::post('/blank', [ContractController::class, 'blank'])->name('blank');
         Route::get('/{contract}', [ContractController::class, 'show'])->whereNumber('contract')->name('show');
         Route::put('/{contract}', [ContractController::class, 'update'])->whereNumber('contract')->name('update');
         Route::get('/{contract}/print', [ContractController::class, 'print'])->whereNumber('contract')->name('print');
-
-        Route::post('/{contract}/approve', [ContractController::class, 'approve'])->whereNumber('contract')
-            ->middleware('role:SuperAdmin,Admin,Operator')->name('approve');
         Route::post('/{contract}/cancel', [ContractController::class, 'cancel'])->whereNumber('contract')
-            ->middleware('role:SuperAdmin,Admin')->name('cancel');
+            ->middleware('role:SuperAdmin,Admin,Operator')->name('cancel');
     });
 
     /**
