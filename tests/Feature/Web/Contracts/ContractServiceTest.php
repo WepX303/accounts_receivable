@@ -11,7 +11,6 @@ use App\Models\SecurityAlert;
 use App\Models\User;
 use App\Services\Contracts\ContractData;
 use App\Services\Contracts\ContractException;
-use App\Services\Contracts\ContractPdfService;
 use App\Services\Contracts\ContractService;
 use Carbon\Carbon;
 use Database\Factories\CreditFactory;
@@ -353,34 +352,6 @@ class ContractServiceTest extends TestCase
         $fresh = $contract->fresh();
         $this->assertTrue($fresh->isCancelled());
         $this->assertSame(2, $fresh->print_count);
-    }
-
-    public function test_every_contract_gets_its_own_unguessable_verify_token(): void
-    {
-        $user = $this->user(UserRoleEnum::CASHIER);
-
-        $a = $this->service->create($user, $this->data());
-        $b = $this->service->create($user, $this->data());
-
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{40}$/', $a->verify_token);
-        $this->assertNotSame($a->verify_token, $b->verify_token);
-        $this->assertStringNotContainsString($a->number, $a->verify_token);
-    }
-
-    public function test_the_printed_contract_carries_the_qr_code_of_its_record(): void
-    {
-        $user = $this->user(UserRoleEnum::CASHIER);
-        $contract = $this->service->create($user, $this->data());
-
-        $this->mock(ContractPdfService::class, function ($mock) use ($contract) {
-            $mock->shouldReceive('render')->once()
-                ->withArgs(fn (array $c, $mark) => $c['verify_url'] === route('contracts.verify', $contract->verify_token) && $mark === null)
-                ->andReturn('%PDF-fake');
-        });
-
-        [, $pdf] = app(ContractService::class)->print($user, $contract);
-
-        $this->assertSame('%PDF-fake', $pdf);
     }
 
     public function test_contracts_never_change_credits_or_payments(): void

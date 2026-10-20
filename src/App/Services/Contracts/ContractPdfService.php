@@ -70,11 +70,9 @@ class ContractPdfService
         // Goods table: the top of each of its seven rows, and the column edges.
         'goods_rows' => [67.4, 71.7, 75.9, 80.5, 84.7, 88.9, 93.1],
         'goods_columns' => [31.9, 43.8, 97.1, 119.7, 156.0, 194.8],
-        // Free space below the stamp, for the earlier credits, kept clear of the QR code.
+        // Free space below the stamp, for the earlier credits.
         'history_top' => 174.0,
-        'history_bottom' => 255.0,
-        // QR code in the bottom right corner: [x, y, size], and its caption below it.
-        'qr' => [172.0, 258.0, 24.0],
+        'history_bottom' => 287.0,
     ];
 
     /**
@@ -108,7 +106,6 @@ class ContractPdfService
      *     months?: int|string|null, monthly_amount?: string|float|null, installment_part?: ?string,
      *     goods?: list<array{name?: ?string, quantity?: string|int|null, price?: string|float|null, total?: string|float|null}>,
      *     history?: list<array<string, ?string>>,
-     *     verify_url?: ?string,
      * }  $c
      * @param  string|null  $mark  written across every page, e.g. that it is only a draft
      */
@@ -133,7 +130,6 @@ class ContractPdfService
 
         $this->templatePage($pdf, 2);
         $this->pageTwo($pdf, $c, $date);
-        $this->qr($pdf, $c['verify_url'] ?? null);
         $this->history($pdf, $c['history'] ?? [], $mark);
         $this->mark($pdf, $mark);
 
@@ -256,18 +252,15 @@ class ContractPdfService
         };
 
         $y = $header($y);
-        $bottom = $f['history_bottom'];
 
         foreach (array_values($rows) as $i => $row) {
-            if ($y + self::HISTORY_ROW_HEIGHT > $bottom) {
+            if ($y + self::HISTORY_ROW_HEIGHT > $f['history_bottom']) {
                 $this->mark($pdf, $mark);
                 $pdf->AddPage('P', 'A4');
                 $pdf->SetFont(self::FONT, 'B', 10);
                 $pdf->SetXY($x0, 15);
                 $pdf->Cell(0, 5, $title . ' (dowamy)', 0, 1, 'L');
                 $y = $header(21);
-                // Further pages have no QR code to keep clear of.
-                $bottom = 287.0;
             }
 
             $pdf->SetFont(self::FONT, '', 7.5);
@@ -280,25 +273,6 @@ class ContractPdfService
             }
             $y += self::HISTORY_ROW_HEIGHT;
         }
-    }
-
-    /**
-     * A QR code leading to the contract's record, so the paper can be checked against it.
-     * Drawn before the history, which may go on to further pages.
-     */
-    private function qr(Fpdi $pdf, ?string $url): void
-    {
-        if ($url === null || $url === '') {
-            return;
-        }
-
-        [$x, $y, $size] = self::P2['qr'];
-
-        $pdf->write2DBarcode($url, 'QRCODE,M', $x, $y, $size, $size, ['border' => false, 'padding' => 0, 'fgcolor' => [0, 0, 0], 'bgcolor' => false], 'N');
-
-        $pdf->SetFont(self::FONT, '', 7);
-        $pdf->SetXY($x - 4, $y + $size + 0.5);
-        $pdf->Cell($size + 8, 3, 'Barlamak üçin skanirläň', 0, 0, 'C');
     }
 
     private function mark(Fpdi $pdf, ?string $mark): void

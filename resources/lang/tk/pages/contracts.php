@@ -40,8 +40,6 @@ return [
     'all_statuses' => 'Ähli ýagdaýlar',
     'filter' => 'Süzgüç',
     'clear' => 'Arassala',
-    'verified' => 'Karekod barlandy: :number belgili şertnama ulgamda bar.',
-    'verified_cancelled' => 'Karekod barlandy: :number belgili şertnama ÝATYRYLAN.',
     'printed_times' => 'Çap edildi',
     'print_confirm' => 'Çap edilenden soň şertnama gulplanýar we ony üýtgedip bolmaýar. Dowam etmelimi?',
     'save_new' => 'Döret',

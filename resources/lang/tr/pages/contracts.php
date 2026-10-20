@@ -40,8 +40,6 @@ return [
     'all_statuses' => 'Tüm durumlar',
     'filter' => 'Filtrele',
     'clear' => 'Temizle',
-    'verified' => 'Karekod doğrulandı: :number numaralı sözleşme sistemde kayıtlı.',
-    'verified_cancelled' => 'Karekod doğrulandı: :number numaralı sözleşme İPTAL EDİLMİŞ.',
     'printed_times' => 'Basıldı',
     'print_confirm' => 'Basıldıktan sonra sözleşme kilitlenir ve değiştirilemez. Devam edilsin mi?',
     'save_new' => 'Oluştur',

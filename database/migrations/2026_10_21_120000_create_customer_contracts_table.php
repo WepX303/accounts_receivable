@@ -18,8 +18,6 @@ return new class extends Migration
             $table->bigIncrements('id');
 
             $table->string('number', 30)->unique(); // UT-2026-0000001
-            // In the QR code on the paper: random, so a valid code cannot be made up from a number.
-            $table->string('verify_token', 64)->unique();
             $table->string('status', 20)->default('draft'); // issued (blank), draft, printed, cancelled
             $table->string('template_version', 10);
             $table->string('branch', 50);

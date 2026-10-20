@@ -6,7 +6,6 @@ use App\Enums\UserRoleEnum;
 use App\Models\CustomerContract;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use LogicException;
 use Tests\TestCase;
 
@@ -18,7 +17,6 @@ class CustomerContractModelTest extends TestCase
     {
         return CustomerContract::create($attributes + [
             'number' => 'UT-2026-' . str_pad((string) random_int(1, 9999999), 7, '0', STR_PAD_LEFT),
-            'verify_token' => Str::random(40),
             'status' => CustomerContract::DRAFT,
             'template_version' => 'v1',
             'branch' => 'Mary',
