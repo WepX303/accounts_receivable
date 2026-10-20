@@ -46,7 +46,7 @@ class AuthTest extends ApiTestCase
                 'users' => false,
                 'logs' => false,
                 'commands' => false,
-                'contracts.create' => true,
+                'contracts.create' => false,
                 'contracts.cancel' => false,
             ])
             ->assertJsonMissingPath('data.user.password')
@@ -268,7 +268,7 @@ class AuthTest extends ApiTestCase
             $abilities(UserRoleEnum::ADMIN)
         );
         $this->assertSame(['customers.list', 'reports.avshocrecat', 'reports'], $abilities(UserRoleEnum::ANALYST));
-        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms', 'contracts.create', 'contracts.cancel'], $abilities(UserRoleEnum::OPERATOR));
+        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms'], $abilities(UserRoleEnum::OPERATOR));
         $this->assertSame(['customers.list'], $abilities(UserRoleEnum::MANAGER));
         $this->assertSame([], $abilities(UserRoleEnum::USER));
     }

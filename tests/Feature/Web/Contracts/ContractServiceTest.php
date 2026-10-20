@@ -110,7 +110,7 @@ class ContractServiceTest extends TestCase
 
     public function test_the_form_is_filled_from_a_credit(): void
     {
-        $this->user(UserRoleEnum::CASHIER, ['Mary']);
+        $this->user(UserRoleEnum::ADMIN, ['Mary']);
         $credit = CreditFactory::new()->create([
             'branch' => 'Mary',
             'name' => ' Aman Amanow ',
@@ -134,7 +134,7 @@ class ContractServiceTest extends TestCase
     public function test_history_lists_the_buyers_credits_of_every_branch(): void
     {
         // A cashier of Mary still sees the buyer's record in Lebap, but only on page 2.
-        $this->user(UserRoleEnum::CASHIER, ['Mary']);
+        $this->user(UserRoleEnum::ADMIN, ['Mary']);
 
         $closed = CreditFactory::new()->debt('1500.00', '1500.00')->create([
             'branch' => 'Lebap', 'passport' => 'I-AŞ 350924', 'contract' => 'OLD-1', 'date_' => '2025-01-10',
@@ -178,7 +178,7 @@ class ContractServiceTest extends TestCase
 
     public function test_numbers_follow_each_other_within_a_year(): void
     {
-        $user = $this->user(UserRoleEnum::CASHIER);
+        $user = $this->user(UserRoleEnum::ADMIN);
 
         $first = $this->service->create($user, $this->data());
         $second = $this->service->create($user, $this->data());
@@ -192,7 +192,7 @@ class ContractServiceTest extends TestCase
 
     public function test_a_cashier_creates_a_draft_and_it_is_logged(): void
     {
-        $user = $this->user(UserRoleEnum::CASHIER, ['Mary']);
+        $user = $this->user(UserRoleEnum::ADMIN, ['Mary']);
 
         $contract = $this->service->create($user, $this->data());
 
@@ -208,20 +208,21 @@ class ContractServiceTest extends TestCase
 
     public function test_who_may_create(): void
     {
-        foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN, UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR] as $role) {
+        foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN] as $role) {
             $this->service->create($this->user($role), $this->data());
         }
 
-        foreach ([UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
+        // Cashiers and operators are to follow; for now only the admins.
+        foreach ([UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR, UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
             $this->assertRefused('forbidden', fn () => $this->service->create($this->user($role), $this->data()));
         }
 
-        $this->assertSame(4, CustomerContract::count());
+        $this->assertSame(2, CustomerContract::count());
     }
 
     public function test_a_contract_cannot_be_made_for_a_branch_the_user_does_not_have(): void
     {
-        $user = $this->user(UserRoleEnum::CASHIER, ['Mary']);
+        $user = $this->user(UserRoleEnum::ADMIN, ['Mary']);
 
         $this->assertRefused('branch_not_allowed', fn () => $this->service->create($user, $this->data(['branch' => 'Lebap'])));
         $this->assertRefused('customer_name_required', fn () => $this->service->create($user, $this->data(['customerName' => ' '])));
@@ -230,14 +231,14 @@ class ContractServiceTest extends TestCase
     public function test_a_credit_of_another_branch_cannot_be_named(): void
     {
         $credit = CreditFactory::new()->create(['branch' => 'Lebap']);
-        $user = $this->user(UserRoleEnum::CASHIER, ['Mary']);
+        $user = $this->user(UserRoleEnum::ADMIN, ['Mary']);
 
         $this->assertRefused('credit_not_found', fn () => $this->service->create($user, $this->data(['creditSourceId' => (int) $credit->source_id])));
     }
 
     public function test_draft_changes_are_logged_with_what_they_replaced(): void
     {
-        $user = $this->user(UserRoleEnum::CASHIER);
+        $user = $this->user(UserRoleEnum::ADMIN);
         $contract = $this->service->create($user, $this->data());
 
         $this->service->update($user, $contract, $this->data(['address' => 'Mary şäheri', 'months' => 8]));
@@ -253,30 +254,30 @@ class ContractServiceTest extends TestCase
 
     public function test_the_first_print_locks_the_contract(): void
     {
-        $cashier = $this->user(UserRoleEnum::CASHIER);
-        $contract = $this->service->create($cashier, $this->data());
+        $user = $this->user(UserRoleEnum::ADMIN);
+        $contract = $this->service->create($user, $this->data());
 
         // Corrected before it went on paper.
-        $this->service->update($cashier, $contract, $this->data(['address' => 'Mary şäheri']));
+        $this->service->update($user, $contract, $this->data(['address' => 'Mary şäheri']));
         $this->assertTrue($contract->fresh()->isDraft());
 
-        $this->service->print($cashier, $contract);
+        $this->service->print($user, $contract);
 
         $fresh = $contract->fresh();
         $this->assertTrue($fresh->isPrinted());
-        $this->assertSame($cashier->id, $fresh->printed_by);
+        $this->assertSame($user->id, $fresh->printed_by);
         $this->assertNotNull($fresh->printed_at);
 
         $log = ActivityLog::where('action', 'contract_printed')->sole();
         $this->assertSame(['status' => 'printed'], $log->new_values);
 
-        $this->assertRefused('locked', fn () => $this->service->update($cashier, $fresh, $this->data(['address' => 'x'])));
+        $this->assertRefused('locked', fn () => $this->service->update($user, $fresh, $this->data(['address' => 'x'])));
         $this->assertSame('Mary şäheri', $contract->fresh()->address);
     }
 
     public function test_reprinting_keeps_who_printed_it_first(): void
     {
-        $first = $this->user(UserRoleEnum::CASHIER);
+        $first = $this->user(UserRoleEnum::ADMIN);
         $contract = $this->service->create($first, $this->data());
         $this->service->print($first, $contract);
 
@@ -289,18 +290,19 @@ class ContractServiceTest extends TestCase
 
     public function test_who_may_cancel(): void
     {
-        $cashier = $this->user(UserRoleEnum::CASHIER);
-        $contract = $this->service->create($cashier, $this->data());
+        $contract = $this->service->create($this->user(UserRoleEnum::ADMIN), $this->data());
 
-        $this->assertRefused('forbidden', fn () => $this->service->cancel($cashier, $contract, 'x'));
+        foreach ([UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR] as $role) {
+            $this->assertRefused('forbidden', fn () => $this->service->cancel($this->user($role), $contract, 'x'));
+        }
 
-        $this->service->cancel($this->user(UserRoleEnum::OPERATOR), $contract, 'Typed twice');
+        $this->service->cancel($this->user(UserRoleEnum::SUPER_ADMIN), $contract, 'Typed twice');
         $this->assertTrue($contract->fresh()->isCancelled());
     }
 
     public function test_cancelling_needs_a_reason_and_a_printed_one_raises_an_alert(): void
     {
-        $contract = $this->service->create($this->user(UserRoleEnum::CASHIER), $this->data());
+        $contract = $this->service->create($this->user(UserRoleEnum::ADMIN), $this->data());
         $admin = $this->user(UserRoleEnum::ADMIN);
         $this->service->print($admin, $contract);
 
@@ -319,7 +321,7 @@ class ContractServiceTest extends TestCase
 
     public function test_an_unprinted_contract_is_cancelled_without_an_alert(): void
     {
-        $contract = $this->service->create($this->user(UserRoleEnum::CASHIER), $this->data());
+        $contract = $this->service->create($this->user(UserRoleEnum::ADMIN), $this->data());
 
         $this->service->cancel($this->user(UserRoleEnum::ADMIN), $contract, 'Typed twice');
 
@@ -329,7 +331,7 @@ class ContractServiceTest extends TestCase
 
     public function test_every_print_is_counted_and_logged(): void
     {
-        $user = $this->user(UserRoleEnum::CASHIER);
+        $user = $this->user(UserRoleEnum::ADMIN);
         $contract = $this->service->create($user, $this->data());
 
         [$name, $pdf] = $this->service->print($user, $contract);

@@ -53,8 +53,8 @@
                         </li>
                     @endif
 
-                    {{-- Contracts (Superadmin + Admin + Cashier + Operator) --}}
-                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Operator'], true))
+                    {{-- Contracts (Superadmin + Admin for now) --}}
+                    @if (in_array($role, ['SuperAdmin', 'Admin'], true))
                         <li class="nav-item">
                             <a class="nav-link menu-link" href="{{ route('contracts.index') }}">
                                 <i class="ri-file-text-line"></i>

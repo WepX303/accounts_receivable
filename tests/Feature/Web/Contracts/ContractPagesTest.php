@@ -57,21 +57,23 @@ class ContractPagesTest extends TestCase
 
     public function test_the_menu_and_the_list_are_there_for_the_roles_that_make_contracts(): void
     {
-        foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN, UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR] as $role) {
+        foreach ([UserRoleEnum::SUPER_ADMIN, UserRoleEnum::ADMIN] as $role) {
             $this->signIn($role);
             $this->get('/contracts')->assertOk()->assertSee(__('pages/contracts.title'))->assertSee(__('pages/contracts.clear'));
             $this->get('/')->assertSee(route('contracts.index'));
         }
 
-        foreach ([UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
+        // Cashiers and operators are to follow; for now the page is the admins' alone.
+        foreach ([UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR, UserRoleEnum::ANALYST, UserRoleEnum::MANAGER, UserRoleEnum::USER] as $role) {
             $this->signIn($role);
             $this->get('/contracts')->assertForbidden();
+            $this->get('/')->assertDontSee(route('contracts.index'));
         }
     }
 
     public function test_choosing_a_customer_fills_the_form(): void
     {
-        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
+        $this->signIn(UserRoleEnum::ADMIN, ['Mary']);
         $credit = CreditFactory::new()->create([
             'branch' => 'Mary', 'name' => 'Aman Amanow', 'passport' => 'I-AŞ 350924', 'assurance' => 'Aşgabat, jaý 5',
         ]);
@@ -96,7 +98,7 @@ class ContractPagesTest extends TestCase
 
     public function test_a_customer_of_another_branch_cannot_be_chosen(): void
     {
-        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
+        $this->signIn(UserRoleEnum::ADMIN, ['Mary']);
         $credit = CreditFactory::new()->create(['branch' => 'Lebap', 'name' => 'Other Customer']);
 
         $this->get('/contracts/create?q=Other')->assertOk()->assertDontSee('Other Customer');
@@ -105,7 +107,7 @@ class ContractPagesTest extends TestCase
 
     public function test_a_contract_is_saved_as_a_draft_and_shown(): void
     {
-        $user = $this->signIn(UserRoleEnum::CASHIER);
+        $user = $this->signIn(UserRoleEnum::ADMIN);
 
         $response = $this->post('/contracts', $this->form());
 
@@ -126,7 +128,7 @@ class ContractPagesTest extends TestCase
 
     public function test_a_contract_can_be_filled_by_hand_without_making_a_customer(): void
     {
-        $this->signIn(UserRoleEnum::CASHIER);
+        $this->signIn(UserRoleEnum::ADMIN);
 
         $this->get('/contracts/create?manual=1')->assertOk()->assertSee(__('pages/contracts.manual_hint'));
 
@@ -138,7 +140,7 @@ class ContractPagesTest extends TestCase
 
     public function test_the_form_is_checked(): void
     {
-        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
+        $this->signIn(UserRoleEnum::ADMIN, ['Mary']);
 
         $this->from('/contracts/create?manual=1')
             ->post('/contracts', $this->form(['customer_name' => '', 'months' => '500', 'monthly_amount' => 'abc']))
@@ -154,7 +156,7 @@ class ContractPagesTest extends TestCase
 
     public function test_a_draft_is_changed_and_the_change_shows_in_its_history(): void
     {
-        $user = $this->signIn(UserRoleEnum::CASHIER);
+        $user = $this->signIn(UserRoleEnum::ADMIN);
         $contract = $this->draft($user);
 
         $this->put(route('contracts.update', $contract), $this->form(['address' => 'Mary şäheri']))
@@ -171,9 +173,9 @@ class ContractPagesTest extends TestCase
             ->assertSessionHas('info', __('pages/contracts.nothing_changed'));
     }
 
-    public function test_a_cashier_prints_the_contract_and_it_locks(): void
+    public function test_printing_the_contract_locks_it(): void
     {
-        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
+        $contract = $this->draft($this->signIn(UserRoleEnum::ADMIN));
 
         $this->get(route('contracts.show', $contract))
             ->assertOk()
@@ -200,13 +202,16 @@ class ContractPagesTest extends TestCase
         $this->assertSame('Aşgabat', $contract->fresh()->address);
     }
 
-    public function test_an_operator_cancels_with_a_reason(): void
+    public function test_an_admin_cancels_with_a_reason(): void
     {
-        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
-        $this->get(route('contracts.show', $contract))->assertDontSee('cancelModal');
-        $this->post(route('contracts.cancel', $contract), ['cancel_reason' => 'x'])->assertForbidden();
+        $contract = $this->draft($this->signIn(UserRoleEnum::ADMIN));
 
-        $this->signIn(UserRoleEnum::OPERATOR);
+        foreach ([UserRoleEnum::CASHIER, UserRoleEnum::OPERATOR] as $role) {
+            $this->signIn($role);
+            $this->post(route('contracts.cancel', $contract), ['cancel_reason' => 'x'])->assertForbidden();
+        }
+
+        $this->signIn(UserRoleEnum::ADMIN);
         $this->post(route('contracts.cancel', $contract), ['cancel_reason' => ''])
             ->assertSessionHas('warning', __('validations/validations.contracts.cancel_reason_required'));
 
@@ -218,7 +223,7 @@ class ContractPagesTest extends TestCase
 
     public function test_printing_opens_the_pdf_and_counts_it(): void
     {
-        $contract = $this->draft($this->signIn(UserRoleEnum::CASHIER));
+        $contract = $this->draft($this->signIn(UserRoleEnum::ADMIN));
 
         $response = $this->get(route('contracts.print', $contract));
 
@@ -232,7 +237,7 @@ class ContractPagesTest extends TestCase
     {
         $contract = $this->draft($this->signIn(UserRoleEnum::ADMIN), ['branch' => 'Lebap', 'customer_name' => 'Other Customer']);
 
-        $this->signIn(UserRoleEnum::CASHIER, ['Mary']);
+        $this->signIn(UserRoleEnum::ADMIN, ['Mary']);
 
         $this->get('/contracts')->assertOk()->assertDontSee('Other Customer');
         $this->get(route('contracts.show', $contract))->assertNotFound();

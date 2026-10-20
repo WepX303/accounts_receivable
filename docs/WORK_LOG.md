@@ -5,6 +5,79 @@
 
 ---
 
+## 2026-10-21
+
+### Ana iş: Elektronik şertnama (sözleşme) modülü
+
+Matbaada bastırılan kâğıt şertnamaların yerine panelden şertnama oluşturup basmak.
+Plan: `/Users/wepx/.claude/plans/smooth-zooming-squirrel.md`.
+
+**Nasıl çalışıyor**
+1. Şertnamalar → Şertnama döret → müşteri aranır → "Saýla" (bilgiler otomatik gelir)
+   ya da "Müşderi ýok — el bilen doldur" (müşteri kaydı oluşturulmaz).
+2. Ayrı bir sayfada şertnama **kâğıt görünümünde** açılır; bilgiler metindeki sarı boşluklara yazılı gelir.
+3. "Döret" → şertnama kaydedilir (durum: Çap edilmedik). Basılana kadar düzeltilebilir, her değişiklik loglanır.
+4. "Çap et" → PDF yeni sekmede açılır; **ilk baskıda kilitlenir** (durum: Çap edildi). Sonra yalnızca tekrar basılabilir.
+5. Hata varsa sebep yazılarak iptal edilir (Ýatyrylan); kayıt ve numara silinmez.
+
+**Kurallar**
+| Konu | Karar |
+|---|---|
+| Sayfa 1 | Banka onaylı; metni **hiç değişmez**. Orijinal PDF olduğu gibi alınır, yalnızca boşluklara yazılır (piksel karşılaştırmasıyla doğrulandı) |
+| Sayfa 2 | Teslim tutanağı + ürün tablosu (isteğe bağlı, genelde IMEI) + **alıcının eski kredileri** (tüm şubelerden, Türkmence) |
+| Numara | Otomatik: `UT-2026-0000001`; tek sıra, her yıl 1'den başlar |
+| Elle doldurulan | "Satyş hünärmeni" ve ALYJY (alıcı) sütunu boş basılır, kalemle doldurulur |
+| 3.1 / 3.2 tutarları | Kasiyer yazar, veritabanından hesaplanmaz |
+| Adres / pasaport | Adres `credits.assurance`'tan gelir; `I-AŞ 350924` → seri `I-AŞ`, numara `350924` |
+| Ayrılık | Modül `credits` ve `credit_payments`'ı yalnızca okur, asla yazmaz (testle kanıtlı) |
+| Erişim | **Şimdilik yalnızca SuperAdmin ve Admin** (oluşturma, basma, iptal). Kasiyer/operatör sonra açılacak: `Access.php`, `routes/web.php`, `sidebar.blade.php` |
+| Türkçe | Arayüzde "Sözleşme"; Türkmence ve PDF'te "Şertnama" |
+
+**Gün içinde denenip vazgeçilenler** (geri getirilmemeli)
+- Onay adımı (Operator/Admin onaylar) → kasiyeri bekletiyordu; yerine "ilk baskıda kilit".
+- Numaralı boş şablon → "elle doldur" ile aynı işi yapıyordu ve bilgiyi yalnızca kâğıtta bırakıyordu.
+- 2. sayfada karekod (doğrulama) → eklendi, sonra kaldırıldı (`29bd6c8` → `740c554`).
+- Menüyü sığdırmak için CSS ile sıkıştırma → beğenilmedi; yerine etiket kısaltıldı.
+
+**Teknik**
+- Yeni paketler: `setasign/fpdi` + `tecnickcom/tcpdf` **6.x** (7.x FPDI ile uyumsuz).
+- Şablon: `resources/contract-templates/v1/` (`storage/app` gitignore'da olduğu için orada değil).
+- Yazılar şablon satırının taban çizgisine basılır (10pt Times, satır üstü + 3,14 mm); sola yaslı alanlar 2 mm içeriden.
+- Yeni tablolar: `customer_contracts`, `contract_sequences` (yalnızca ekleme).
+- Dosyalar: `Services/Contracts/*`, `Models/CustomerContract.php`, `Controllers/Contracts/ContractController.php`,
+  `views/pages/contracts/*`, `lang/*/pages/contracts.php`, `tests/Feature/Web/Contracts/*`.
+
+### Diğer değişiklikler
+- Menü: Türkmence "Dolandyryş Paneli" → **"Baş sahypa"**, Rusça "Панель управления" → **"Главная"** (menü sığmıyordu).
+- Şertnamalar listesine **Arassala** (filtreyi temizle) düğmesi.
+
+### Commit'ler (`mobile-api`)
+| Commit | Açıklama |
+|---|---|
+| `a00a537` | Çalışma günlüğü |
+| `8bb14c3` | Şertnama modülü |
+| `02b5869` | Boş şablon numarası + Türkçede "Sözleşme" (boş şablon sonra kaldırıldı) |
+| `e0a15ac` | Menüde "Baş sahypa" / "Главная" |
+| `eb03b16` | Onaysız akış, kâğıt görünümü, hizalama, boş şablonun kaldırılması |
+| `29bd6c8` / `740c554` | Karekod eklendi / kaldırıldı |
+| (bu kayıtla birlikte) | Erişim yalnızca SuperAdmin + Admin; bu günlük |
+
+### Durum (gün sonu)
+- GitHub `mobile-api` güncel. **Canlıya alınmadı**: `production` ve sunucu hâlâ `31d9c41`.
+- Testler: 211, hepsi geçiyor.
+- Yerel DB'de 2 yeni tablo var (deneme kayıtlarıyla).
+
+### Sırada
+- **Canlıya alma** (onayla): önce DB sunucusunda (10.10.8.20) yedek → `composer install` → `migrate --force`
+  → `production`'ı ileri sar → sunucuya gönder (`CLAUDE.md` §11).
+- Kâğıda gerçek baskıyla son hizalama kontrolü.
+- Sonra: kasiyer/operatöre açmak; mobil uygulamaya şertnama ekranları.
+- `public/build/docs/` altındaki iki fotoğraf gerçek müşteri bilgisi içeriyor → silinmeli (commit'e girmedi).
+- Kararsız test: `DashboardTest::test_admin_sees_todays_totals_by_method_cashier_and_branch` bir kez düştü,
+  tekrarda geçti (muhtemelen eşit tutarlı kasiyerlerin sırası). Şertnamadan bağımsız; incelenmeli.
+
+---
+
 ## 2026-10-20
 
 ### Yapılanlar

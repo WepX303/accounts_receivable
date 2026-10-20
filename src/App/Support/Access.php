@@ -23,8 +23,9 @@ class Access
         'users' => [Role::SUPER_ADMIN, Role::ADMIN],
         'logs' => [Role::SUPER_ADMIN],
         'commands' => [Role::SUPER_ADMIN],
-        'contracts.create' => [Role::SUPER_ADMIN, Role::ADMIN, Role::CASHIER, Role::OPERATOR],
-        'contracts.cancel' => [Role::SUPER_ADMIN, Role::ADMIN, Role::OPERATOR],
+        // For now only the admins; cashiers and operators are to follow.
+        'contracts.create' => [Role::SUPER_ADMIN, Role::ADMIN],
+        'contracts.cancel' => [Role::SUPER_ADMIN, Role::ADMIN],
     ];
 
     /**

@@ -204,6 +204,7 @@ Yetki haritası iki yerde **aynı tutulmalı**: `routes/web.php` (rol grupları)
 | `sms` | SuperAdmin, Admin, Operator |
 | `users` | SuperAdmin, Admin (Admin SuperAdmin'i göremez/oluşturamaz) |
 | `logs`, `commands` | SuperAdmin |
+| `contracts.create`, `contracts.cancel` (şertnama) | **Şimdilik** SuperAdmin, Admin (kasiyer/operatör sonra) |
 
 `User` rolü route'larda hiçbir gruba dahil değil (yalnızca dashboard/profil).
 
@@ -230,6 +231,7 @@ Yetki haritası iki yerde **aynı tutulmalı**: `routes/web.php` (rol grupları)
 | Kullanıcılar | `/users` | `Users/UserController` |
 | Loglar | `/logs` | `LogsController` |
 | Komut merkezi | `/commands` | `CommandCenterController` |
+| Şertnamalar (sözleşme) | `/contracts` | `ContractController`, `Services/Contracts/*` (ayrıntı: `docs/WORK_LOG.md` 2026-10-21) |
 
 **Müşteri listesi hızlı filtreleri:** `all, paid_today, paid_yesterday, paid_7d … paid_12m, due_today, due_3d, due_7d,
 has_debt, no_debt, no_payment, blocked, deleted, active, bermejek, paid_mismatch`.
