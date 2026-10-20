@@ -6,6 +6,7 @@ return [
     'report' => 'Отчёты',
     'customers' => 'Клиенты',
     'payments' => 'Платежи',
+    'contracts' => 'Договоры',
     'customer_info' => 'Информация о клиенте',
     'settings' => 'Настройки',
     'create_user' => 'Создать пользователя',

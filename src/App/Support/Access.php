@@ -23,7 +23,18 @@ class Access
         'users' => [Role::SUPER_ADMIN, Role::ADMIN],
         'logs' => [Role::SUPER_ADMIN],
         'commands' => [Role::SUPER_ADMIN],
+        'contracts.create' => [Role::SUPER_ADMIN, Role::ADMIN, Role::CASHIER, Role::OPERATOR],
+        'contracts.approve' => [Role::SUPER_ADMIN, Role::ADMIN, Role::OPERATOR],
+        'contracts.cancel' => [Role::SUPER_ADMIN, Role::ADMIN],
     ];
+
+    /**
+     * Whether the user holds an ability, for checks made outside the routes.
+     */
+    public static function allows(User $user, string $ability): bool
+    {
+        return $user->hasRole(...self::MAP[$ability]);
+    }
 
     /**
      * The route middleware that guards an ability, e.g. "role:SuperAdmin,Admin".

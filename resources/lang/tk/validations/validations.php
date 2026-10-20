@@ -202,4 +202,14 @@ return [
         'void_success' => 'Töleg üstünlikli ýatyryldy.',
     ],
 
+    'contracts' => [
+        'forbidden' => 'Bu amal üçin rugsadyňyz ýok.',
+        'not_draft' => 'Diňe garalama ýagdaýyndaky şertnama üýtgedilip ýa-da tassyklanyp bilner.',
+        'cancel_reason_required' => 'Ýatyrma sebäbi hökmanydyr.',
+        'already_cancelled' => 'Bu şertnama öňünden ýatyrylan.',
+        'customer_name_required' => 'Alyjynyň ady hökmanydyr.',
+        'branch_not_allowed' => 'Bu şahamça üçin şertnama düzüp bilmersiňiz.',
+        'credit_not_found' => 'Saýlanan karz tapylmady.',
+    ],
+
 ];

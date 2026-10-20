@@ -6,6 +6,7 @@ return [
     'report' => 'Reports',
     'customers' => 'Customers',
     'payments' => 'Payments',
+    'contracts' => 'Contracts',
     'customer_info' => 'Customer Information',
     'settings' => 'Settings',
     'create_user' => 'Create User',

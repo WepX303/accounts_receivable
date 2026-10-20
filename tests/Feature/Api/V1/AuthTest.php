@@ -46,6 +46,9 @@ class AuthTest extends ApiTestCase
                 'users' => false,
                 'logs' => false,
                 'commands' => false,
+                'contracts.create' => true,
+                'contracts.approve' => false,
+                'contracts.cancel' => false,
             ])
             ->assertJsonMissingPath('data.user.password')
             ->assertJsonMissingPath('data.user.token');
@@ -258,15 +261,15 @@ class AuthTest extends ApiTestCase
         ));
 
         $this->assertSame(
-            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'logs', 'commands'],
+            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'logs', 'commands', 'contracts.create', 'contracts.approve', 'contracts.cancel'],
             $abilities(UserRoleEnum::SUPER_ADMIN)
         );
         $this->assertSame(
-            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users'],
+            ['customers.info', 'payments.take', 'payments.void', 'payments.correct', 'customers.list', 'reports.avshocrecat', 'reports', 'sms', 'users', 'contracts.create', 'contracts.approve', 'contracts.cancel'],
             $abilities(UserRoleEnum::ADMIN)
         );
         $this->assertSame(['customers.list', 'reports.avshocrecat', 'reports'], $abilities(UserRoleEnum::ANALYST));
-        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms'], $abilities(UserRoleEnum::OPERATOR));
+        $this->assertSame(['customers.info', 'payments.take', 'customers.list', 'reports.avshocrecat', 'sms', 'contracts.create', 'contracts.approve'], $abilities(UserRoleEnum::OPERATOR));
         $this->assertSame(['customers.list'], $abilities(UserRoleEnum::MANAGER));
         $this->assertSame([], $abilities(UserRoleEnum::USER));
     }

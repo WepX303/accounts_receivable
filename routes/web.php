@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Contracts\ContractController;
 use App\Http\Controllers\Customers\CustomersController;
 use App\Http\Controllers\Customers\CustomersInfoController;
 use App\Http\Controllers\Customers\CustomersExportController;
@@ -111,6 +112,26 @@ Route::middleware(['auth.token'])->group(function () {
     // Export: SyeprAdmin + Admin  + Manager + Analyst + Operator
     Route::middleware(['role:SuperAdmin,Admin,Manager,Analyst,Operator'])->group(function () {
         Route::get('/customers/export', CustomersExportController::class)->name('customers.export');
+    });
+
+    /**
+     * CONTRACTS (şertnama)
+     * Made by SuperAdmin + Admin + Cashier + Operator; approved by SuperAdmin + Admin + Operator;
+     * cancelled by SuperAdmin + Admin. Same roles as App\Support\Access.
+     */
+    Route::middleware(['role:SuperAdmin,Admin,Cashier,Operator'])->prefix('contracts')->name('contracts.')->group(function () {
+        Route::get('/', [ContractController::class, 'index'])->name('index');
+        Route::get('/create', [ContractController::class, 'create'])->name('create');
+        Route::post('/', [ContractController::class, 'store'])->name('store');
+        Route::get('/blank', [ContractController::class, 'blank'])->name('blank');
+        Route::get('/{contract}', [ContractController::class, 'show'])->whereNumber('contract')->name('show');
+        Route::put('/{contract}', [ContractController::class, 'update'])->whereNumber('contract')->name('update');
+        Route::get('/{contract}/print', [ContractController::class, 'print'])->whereNumber('contract')->name('print');
+
+        Route::post('/{contract}/approve', [ContractController::class, 'approve'])->whereNumber('contract')
+            ->middleware('role:SuperAdmin,Admin,Operator')->name('approve');
+        Route::post('/{contract}/cancel', [ContractController::class, 'cancel'])->whereNumber('contract')
+            ->middleware('role:SuperAdmin,Admin')->name('cancel');
     });
 
     /**

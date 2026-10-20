@@ -202,4 +202,14 @@ return [
         'void_success' => 'Ödeme başarıyla iptal edildi.',
     ],
 
+    'contracts' => [
+        'forbidden' => 'Bu işlem için yetkiniz yok.',
+        'not_draft' => 'Yalnızca taslak durumundaki şertnama değiştirilebilir veya onaylanabilir.',
+        'cancel_reason_required' => 'İptal sebebi zorunludur.',
+        'already_cancelled' => 'Bu şertnama zaten iptal edilmiş.',
+        'customer_name_required' => 'Alıcının adı zorunludur.',
+        'branch_not_allowed' => 'Bu şube için şertnama oluşturamazsınız.',
+        'credit_not_found' => 'Seçilen kredi bulunamadı.',
+    ],
+
 ];

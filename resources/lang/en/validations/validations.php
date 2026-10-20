@@ -203,4 +203,14 @@ return [
         'void_success' => 'Payment voided successfully.',
     ],
 
+    'contracts' => [
+        'forbidden' => 'You are not allowed to do this.',
+        'not_draft' => 'Only a draft contract can be changed or approved.',
+        'cancel_reason_required' => 'A cancellation reason is required.',
+        'already_cancelled' => 'This contract is already cancelled.',
+        'customer_name_required' => 'The buyer\'s name is required.',
+        'branch_not_allowed' => 'You cannot make a contract for this branch.',
+        'credit_not_found' => 'The selected credit was not found.',
+    ],
+
 ];

@@ -6,6 +6,7 @@ return [
     'report' => 'Raporlar',
     'customers' => 'Müşteriler',
     'payments' => 'Ödemeler',
+    'contracts' => 'Şertnamalar',
     'customer_info' => 'Müşteri Bilgileri',
     'settings' => 'Ayarlar',
     'create_user' => 'Kullanıcı Oluştur',

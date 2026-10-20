@@ -53,15 +53,16 @@
                         </li>
                     @endif
 
-                    {{-- Report (Superadmin + Admin + Cashier + Analyst + Operator) --}}
-                    {{-- @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
+                    {{-- Contracts (Superadmin + Admin + Cashier + Operator) --}}
+                    @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Operator'], true))
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="{{ route('report') }}">
-                                <i class="ri-folder-chart-line"></i>
-                                <span>{{ __('pages/monthly_report.th.monthly_payment') }}</span>
+                            <a class="nav-link menu-link" href="{{ route('contracts.index') }}">
+                                <i class="ri-file-text-line"></i>
+                                <span>{{ __('menu.contracts') }}</span>
                             </a>
                         </li>
-                    @endif --}}
+                    @endif
+
                     {{-- Reports --}}
                     @if (in_array($role, ['SuperAdmin', 'Admin', 'Cashier', 'Analyst', 'Operator'], true))
                         <li class="nav-item dropdown">
@@ -149,15 +150,7 @@
                         </li>
                     @endif
 
-                    {{-- Logs (SuperAdmin) --}}
-                    {{-- @if (in_array($role, ['SuperAdmin'], true))
-                        <li class="nav-item">
-                            <a href="{{ route('logs') }}" class="nav-link">
-                                <i class="ri-file-list-3-line"></i>
-                                <span>{{ __('pages/logs.title') }}</span>
-                            </a>
-                        </li>
-                    @endif --}}
+                    {{-- Settings (Superadmin + Admin) --}}
 
                     @if (in_array($role, ['SuperAdmin', 'Admin'], true))
                         <li class="nav-item dropdown">

@@ -6,6 +6,7 @@ return [
     'report' => 'Hasabatlar',
     'customers' => 'Müşderiler',
     'payments' => 'Tölegler',
+    'contracts' => 'Şertnamalar',
     'customer_info' => 'Müşderi Maglumatlary',
     'settings' => 'Sazlamalar',
     'create_user' => 'Ulanyjy Döretmek',
