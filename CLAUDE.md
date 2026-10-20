@@ -343,6 +343,10 @@ php artisan view:clear
 php artisan queue:restart
 php artisan up
 ```
+- **Yeni composer paketi varsa:** sunucu internete çıkamaz (Packagist ve GitHub'a erişim yok), `composer install` paketi indiremez.
+  Paketin zip'i yerel Composer önbelleğinden (`~/Library/Caches/composer/files/<vendor>/<paket>/<sha1(dist url)>.zip`)
+  sunucudaki aynı yola (`~/.cache/composer/files/...`) kopyalanır; sunucuda
+  `COMPOSER_DISABLE_NETWORK=1 composer install --no-dev --no-interaction` önbellekten kurar. (2026-10-21'de FPDI + TCPDF böyle kuruldu.)
 - Canlıda **asla**: `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback`, `db:wipe`.
 - Migration içeren deploy'dan önce DB sunucusunda (10.10.8.20) yedek alınmalı; uygulama sunucusunda `pg_dump` yok.
 Geri dönüş için önceki commit: `storage/app/last-deploy-prev.txt`.
