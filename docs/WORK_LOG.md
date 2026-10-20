@@ -63,14 +63,14 @@ Plan: `/Users/wepx/.claude/plans/smooth-zooming-squirrel.md`.
 | (bu kayıtla birlikte) | Erişim yalnızca SuperAdmin + Admin; bu günlük |
 
 ### Durum (gün sonu)
-- GitHub `mobile-api` güncel. **Canlıya alınmadı**: `production` ve sunucu hâlâ `31d9c41`.
+- **Canlıya alındı:** `production` ve sunucu (`crdt-serv`) `5cd0f95`. Önceki sürüm `015b31a` (`storage/app/last-deploy-prev.txt`).
+  - Kullanıcının kararıyla DB yedeği alınmadan yapıldı: iki migration yalnızca yeni tablo oluşturuyor.
+  - Sunucu internete çıkamadığı için paketler yerel Composer önbelleğinden kopyalanıp kuruldu (`CLAUDE.md` §11).
+  - Kontrol: servisler çalışıyor, giriş 200, API 401, bekleyen migration 0, sunucuda PDF üretimi çalışıyor.
 - Testler: 211, hepsi geçiyor.
-- Yerel DB'de 2 yeni tablo var (deneme kayıtlarıyla).
 
 ### Sırada
-- **Canlıya alma** (onayla): önce DB sunucusunda (10.10.8.20) yedek → `composer install` → `migrate --force`
-  → `production`'ı ileri sar → sunucuya gönder (`CLAUDE.md` §11).
-- Kâğıda gerçek baskıyla son hizalama kontrolü.
+- Canlıda Admin ile gerçek bir şertnama oluşturup **kâğıda basarak** son hizalama kontrolü.
 - Sonra: kasiyer/operatöre açmak; mobil uygulamaya şertnama ekranları.
 - `public/build/docs/` altındaki iki fotoğraf gerçek müşteri bilgisi içeriyor → silinmeli (commit'e girmedi).
 - Kararsız test: `DashboardTest::test_admin_sees_todays_totals_by_method_cashier_and_branch` bir kez düştü,
