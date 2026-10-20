@@ -2,6 +2,7 @@
 
 > Projeyi tek dosyada anlatan rehber. Durum: 2026-10-20. Canlı kod `production` dalında, çalışma dalı `mobile-api` (bkz. §12).
 > Ayrıntılı dokümanlar: `docs/PROJECT_OVERVIEW.md` (panel), `docs/mobile-api/MOBILE_API.md` (API + canlı ortam).
+> Çalışma günlüğü: `docs/WORK_LOG.md` — her oturumun sonunda o günün kaydını en üste ekle.
 > `docs/` altındaki eski dosyaların bir kısmı güncel değil (MSSQL, 3 rol vb. anlatır) — kod esas alınır.
 
 ---
