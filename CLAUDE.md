@@ -319,26 +319,29 @@ php artisan test
 ### Deploy (yalnızca onayla)
 Canlıya giden kod `production` dalındadır. Sunucu kendi `crdt-serv` dalında kalır ve yalnızca
 `production`'dan **ileri sarılır** (`--ff-only`; merge commit'i oluşmaz).
+
+**Sunucu GitHub'a erişemez** (`github.com` DNS'te çözülmüyor; 2026-10-20'de denendi), bu yüzden
+`git pull` çalışmaz. Kod yerelden doğrudan sunucu deposuna yan dal olarak itilir:
 ```sh
 # Yerelde
 php artisan test
-git checkout production && git merge --ff-only mobile-api
-git push origin production
+git checkout production && git merge --ff-only mobile-api && git checkout mobile-api
+git push origin mobile-api production
+GIT_SSH_COMMAND="ssh -p 225" git push credit@93.171.223.137:/var/www/accounts_receivable production:refs/heads/deploy-production
 
 # Sunucuda
 cd /var/www/accounts_receivable
 git status --porcelain              # boş olmalı
+git rev-parse --short HEAD > storage/app/last-deploy-prev.txt
 php artisan down --retry=10         # yalnızca migration varsa gerekli
-git pull --ff-only origin production
-php artisan migrate --force
+git merge --ff-only deploy-production
+php artisan migrate --force         # yalnızca çalışmamış migration'ları çalıştırır, veri silmez
 php artisan view:clear
 php artisan queue:restart
 php artisan up
 ```
-- Sunucuda **düz `git pull` yazma**: GitHub'daki `origin/crdt-serv` eski bir kopya. Her zaman `origin production`.
-- Sunucu GitHub'dan çekemezse (otomatik SSH oturumunda çekemiyordu), yerelden doğrudan itilir ve aynı şekilde ileri sarılır:
-  `GIT_SSH_COMMAND="ssh -p 225" git push credit@93.171.223.137:/var/www/accounts_receivable production:refs/heads/deploy-production`,
-  sunucuda `git merge --ff-only deploy-production`.
+- Canlıda **asla**: `migrate:fresh`, `migrate:refresh`, `migrate:reset`, `migrate:rollback`, `db:wipe`.
+- Migration içeren deploy'dan önce DB sunucusunda (10.10.8.20) yedek alınmalı; uygulama sunucusunda `pg_dump` yok.
 Geri dönüş için önceki commit: `storage/app/last-deploy-prev.txt`.
 Kontrol: giriş sayfası 200, tokensiz `GET /api/v1/auth/me` → 401 JSON.
 
@@ -351,7 +354,7 @@ Kontrol: giriş sayfası 200, tokensiz `GET /api/v1/auth/me` → 401 JSON.
 | `production` | **Canlıda çalışan kod.** Yalnızca ileri sarılır (`--ff-only`); doğrudan commit atılmaz |
 | `mobile-api` | **Aktif çalışma dalı.** Test edilen iş buradan `production`'a ileri sarılır |
 | `wepx` | Mobil öncesi ana çalışma dalı (tamamı `mobile-api` içinde) |
-| `crdt-serv` (sunucu) | Sunucudaki yerel dal; `production`'dan `git pull --ff-only origin production` ile güncellenir. GitHub'daki `origin/crdt-serv` eski (Haziran), kullanma |
+| `crdt-serv` (sunucu) | Sunucudaki yerel dal; itilen `deploy-production`'dan `merge --ff-only` ile güncellenir. GitHub'daki `origin/crdt-serv` eski (Haziran), kullanma |
 | `main` | Yalnızca ilk commit — PR hedefi olarak kullanma |
 | `wepx-api`, `wepx-local`, `wepx-reports`, `server`, `prod-server` | Eski; referans |
 
