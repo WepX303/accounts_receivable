@@ -339,6 +339,8 @@ class ContractServiceTest extends TestCase
 
         $this->assertSame('UT-2026-0000001.pdf', $name);
         $this->assertStringStartsWith('%PDF', $pdf);
+        // Page 1 twice (the shop's copy and the buyer's), then the act.
+        $this->assertSame(3, preg_match_all('/\/Type\s*\/Page[^s]/', $pdf));
         $this->assertSame(2, $contract->fresh()->print_count);
         $this->assertSame(2, ActivityLog::where('action', 'contract_printed')->count());
     }

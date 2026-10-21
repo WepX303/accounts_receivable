@@ -50,6 +50,9 @@ Plan: `/Users/wepx/.claude/plans/smooth-zooming-squirrel.md`.
 ### Diğer değişiklikler
 - Menü: Türkmence "Dolandyryş Paneli" → **"Baş sahypa"**, Rusça "Панель управления" → **"Главная"** (menü sığmıyordu).
 - Şertnamalar listesine **Arassala** (filtreyi temizle) düğmesi.
+- Şertnama PDF'i: **1. sayfa iki nüsha** (S1, S1, S2) — biri mağazada, biri alıcıda, ikisi de orijinal, üzerlerine bir şey yazılmaz.
+  Akt + eski krediler tek sayfa. Çap bir kez sayılır.
+- İlk baskıdaki "kilitlenir" uyarısı tarayıcı `confirm()`'u yerine panel **modal'ı** (iki nüsha notuyla).
 
 ### Commit'ler (`mobile-api`)
 | Commit | Açıklama |

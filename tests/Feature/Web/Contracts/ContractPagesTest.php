@@ -180,8 +180,10 @@ class ContractPagesTest extends TestCase
         $this->get(route('contracts.show', $contract))
             ->assertOk()
             ->assertSee(__('pages/contracts.statuses.draft'))
-            // Printing asks first, since it locks the contract.
-            ->assertSee('onclick="if (! confirm(', false)
+            // Printing asks first in a modal, since it locks the contract.
+            ->assertSee('id="printModal"', false)
+            ->assertSee(__('pages/contracts.print_confirm'))
+            ->assertSee(__('pages/contracts.print_copies_hint'))
             ->assertSee('name="_method" value="PUT"', false);
 
         $this->get(route('contracts.print', $contract))->assertOk()->assertHeader('Content-Type', 'application/pdf');
@@ -195,7 +197,7 @@ class ContractPagesTest extends TestCase
             ->assertSee('Aman Amanow')
             ->assertDontSee('name="customer_name"', false)
             ->assertDontSee('name="_method" value="PUT"', false)
-            ->assertDontSee('onclick="if (! confirm(', false);
+            ->assertDontSee('id="printModal"', false);
 
         $this->put(route('contracts.update', $contract), $this->form(['address' => 'x']))
             ->assertSessionHas('warning', __('validations/validations.contracts.locked'));

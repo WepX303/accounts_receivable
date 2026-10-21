@@ -42,6 +42,7 @@ return [
     'clear' => 'Clear',
     'printed_times' => 'Printed',
     'print_confirm' => 'Once printed the contract is locked and cannot be changed. Continue?',
+    'print_copies_hint' => 'Page 1 prints in two copies: one stays in the shop, the other goes to the buyer.',
     'save_new' => 'Create',
 
     'fields' => [

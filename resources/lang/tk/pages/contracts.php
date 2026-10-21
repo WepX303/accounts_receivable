@@ -42,6 +42,7 @@ return [
     'clear' => 'Arassala',
     'printed_times' => 'Çap edildi',
     'print_confirm' => 'Çap edilenden soň şertnama gulplanýar we ony üýtgedip bolmaýar. Dowam etmelimi?',
+    'print_copies_hint' => 'Birinji sahypa iki nusgada çap edilýär: biri dükanda galýar, beýlekisi alyja berilýär.',
     'save_new' => 'Döret',
 
     'fields' => [

@@ -42,6 +42,7 @@ return [
     'clear' => 'Temizle',
     'printed_times' => 'Basıldı',
     'print_confirm' => 'Basıldıktan sonra sözleşme kilitlenir ve değiştirilemez. Devam edilsin mi?',
+    'print_copies_hint' => '1. sayfa iki nüsha basılır: biri mağazada kalır, diğeri müşteriye verilir.',
     'save_new' => 'Oluştur',
 
     'fields' => [

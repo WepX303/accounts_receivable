@@ -11,7 +11,8 @@ use setasign\Fpdi\Tcpdf\Fpdi;
  * The template's pages are imported as they are and the contract's details
  * are written into the blanks on top of them, so the approved wording of
  * page 1 can never change. Page 2 (the hand-over act) also gets the
- * customer's earlier credits below its signatures.
+ * customer's earlier credits below its signatures. Page 1 is printed twice,
+ * one for the shop and one for the buyer.
  *
  * Positions are in millimetres from the top-left corner of the template,
  * measured on resources/contract-templates/v1/shertnama.pdf. A new template
@@ -36,6 +37,9 @@ class ContractPdfService
 
     // Baseline of the text in a goods table row, from the row's top.
     private const ROW_BASELINE = 3.1;
+
+    // Page 1 is signed twice: one copy stays in the shop, the other goes to the buyer. Both are originals.
+    private const PAGE_ONE_COPIES = 2;
 
     private const MONTHS = [
         1 => 'ýanwar', 'fewral', 'mart', 'aprel', 'maý', 'iýun',
@@ -124,9 +128,11 @@ class ContractPdfService
 
         $date = $this->date($c['date'] ?? null);
 
-        $this->templatePage($pdf, 1);
-        $this->pageOne($pdf, $c, $date);
-        $this->mark($pdf, $mark);
+        for ($i = 0; $i < self::PAGE_ONE_COPIES; $i++) {
+            $this->templatePage($pdf, 1);
+            $this->pageOne($pdf, $c, $date);
+            $this->mark($pdf, $mark);
+        }
 
         $this->templatePage($pdf, 2);
         $this->pageTwo($pdf, $c, $date);

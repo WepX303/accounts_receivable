@@ -32,13 +32,16 @@
                             <a href="{{ route('contracts.index') }}" class="btn btn-soft-secondary">
                                 <i class="ri-arrow-left-line align-bottom me-1"></i> {{ __('pages/contracts.back') }}
                             </a>
-                            {{-- The first print locks a contract: ask, then show it locked. --}}
-                            <a href="{{ route('contracts.print', $contract) }}" target="_blank" class="btn btn-primary"
-                                @if ($contract->isDraft())
-                                    onclick="if (! confirm(@js(__('pages/contracts.print_confirm')))) return false; setTimeout(function () { window.location.reload(); }, 1500);"
-                                @endif>
-                                <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.print') }}
-                            </a>
+                            {{-- The first print locks a contract: ask in a modal, then show it locked. --}}
+                            @if ($contract->isDraft())
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#printModal">
+                                    <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.print') }}
+                                </button>
+                            @else
+                                <a href="{{ route('contracts.print', $contract) }}" target="_blank" class="btn btn-primary">
+                                    <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.print') }}
+                                </a>
+                            @endif
                             @if ($canCancel)
                                 <button type="button" class="btn btn-soft-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                     <i class="ri-close-circle-line align-bottom me-1"></i> {{ __('pages/contracts.cancel') }}
@@ -159,6 +162,33 @@
             </div>
         </div>
     </div>
+
+    @if ($contract->isDraft())
+        <div class="modal fade" id="printModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ __('pages/contracts.print') }} — {{ $contract->number }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning d-flex gap-2 mb-3">
+                            <i class="ri-lock-line fs-18"></i>
+                            <div>{{ __('pages/contracts.print_confirm') }}</div>
+                        </div>
+                        <p class="text-muted mb-0">{{ __('pages/contracts.print_copies_hint') }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('pages/contracts.close') }}</button>
+                        <a href="{{ route('contracts.print', $contract) }}" target="_blank" class="btn btn-primary"
+                            onclick="bootstrap.Modal.getInstance(document.getElementById('printModal'))?.hide(); setTimeout(function () { window.location.reload(); }, 1500);">
+                            <i class="ri-printer-line align-bottom me-1"></i> {{ __('pages/contracts.print') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if ($canCancel)
         <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
